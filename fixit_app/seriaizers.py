@@ -5,7 +5,7 @@ from .models import Account
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=6)
     account_type = serializers.ChoiceField( choices=Account.ACCOUNT_TYPES )
 
     class Meta:
