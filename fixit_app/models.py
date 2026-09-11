@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 class Account(models.Model):
     ACCOUNT_TYPES = (
         ("customer", "Customer"),
-        ("technician", "technician"),
+        ("provider", "provider"),
      )
 
     user = models.OneToOneField( User, on_delete=models.CASCADE)
