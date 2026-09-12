@@ -5,6 +5,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny #Registration must be available to people who are not logged in yet
 from rest_framework.response import Response#sends data back to the person or application making the request.
 from rest_framework import status #gives readable HTTP status codes
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import RegistrationSerializer
 from .serializers import LoginSerializer
@@ -49,3 +50,34 @@ def login(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
+
+@api_view(["POST"])
+def logout(request):
+    refresh_token = request.data.get("refresh")
+
+    if not refresh_token:
+        return Response(
+            {
+                "error": "Refresh token is required."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        token = RefreshToken(refresh_token)
+        token.blacklist()
+
+        return Response(
+            {
+                "message": "Logout successful."
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except Exception:
+        return Response(
+            {
+                "error": "Invalid or expired refresh token."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
