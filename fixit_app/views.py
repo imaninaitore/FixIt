@@ -5,7 +5,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny #Registration must be available to people who are not logged in yet
 from rest_framework.response import Response#sends data back to the person or application making the request.
 from rest_framework import status #gives readable HTTP status codes
-from rest_framework.views import APIView
 
 from .serializers import RegistrationSerializer
 from .serializers import LoginSerializer
@@ -14,6 +13,7 @@ from .serializers import LoginSerializer
 # Create your views here.
 @api_view(["POST"]) #API endpoint that accepts POST requests
 @permission_classes([AllowAny]) #allows users to register without logging in first
+
 def register(request):
     serializer = RegistrationSerializer(data=request.data) #pass submitted data to the serializer
 
@@ -34,18 +34,18 @@ def register(request):
         status=status.HTTP_400_BAD_REQUEST,
     )
 
-class LoginView(APIView):
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def login(request):
+    serializer = LoginSerializer(data=request.data)
 
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-
-        if serializer.is_valid():
-            return Response(
-                serializer.validated_data,
-                status=status.HTTP_200_OK
-            )
-
+    if serializer.is_valid():
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            serializer.validated_data,
+            status=status.HTTP_200_OK
         )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
