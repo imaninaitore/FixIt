@@ -29,3 +29,38 @@ class RegistrationSerializer(serializers.ModelSerializer):
         Account.objects.create( user=user, account_type=account_type )
 
         return user
+
+from django.contrib.auth import authenticate
+from rest_framework import serializers
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+class LoginSerializer(serializers.Serializer):
+    #receive login details
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)#means the password can be received, but it won't be displayed as a field in the response.
+
+    def validate(self, data):
+        username = data.get("username")
+        password = data.get("password")
+
+        #Check the credentials
+        user = authenticate(
+            username=username,
+            password=password
+        )
+
+        #Reject incorrect credentials
+        if user is None:
+            raise serializers.ValidationError(
+                "Invalid username or password."
+            )
+
+        refresh = RefreshToken.for_user(user) #create tokens
+
+        return {
+            "message": "Login successful.",
+            "username": user.username,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+        }
