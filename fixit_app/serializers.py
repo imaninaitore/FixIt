@@ -1,7 +1,10 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Account,ProviderProfile
+from .models import Account,ProviderProfile,ProviderEnrolment
+
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -30,9 +33,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
         return user
 
-from django.contrib.auth import authenticate
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
+
 
 
 class LoginSerializer(serializers.Serializer):
@@ -99,3 +100,31 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
             "location",
             "years_of_experience",
         ]
+
+# Converts provider enrolment data between JSON and the database
+class ProviderEnrolmentSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        source="provider.username",
+        read_only=True
+    )
+
+    class Meta:
+        model = ProviderEnrolment
+        fields = [
+            "id",
+            "username",
+            "business_name",
+            "service_category",
+            "description",
+            "location",
+            "years_of_experience",
+            "status",
+            "created_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "username",
+            "status",
+            "created_at",
+        ]        
