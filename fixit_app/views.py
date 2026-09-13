@@ -7,9 +7,8 @@ from rest_framework.response import Response#sends data back to the person or ap
 from rest_framework import status #gives readable HTTP status codes
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer
-from .serializers import LoginSerializer
-
+from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 @api_view(["POST"]) #API endpoint that accepts POST requests
@@ -37,6 +36,7 @@ def register(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+
 def login(request):
     serializer = LoginSerializer(data=request.data)
 
@@ -51,7 +51,9 @@ def login(request):
         status=status.HTTP_400_BAD_REQUEST
     )
 
+
 @api_view(["POST"])
+
 def logout(request):
     refresh_token = request.data.get("refresh")
 
@@ -81,3 +83,13 @@ def logout(request):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
+
+@api_view(["GET"])#This endpoint accepts GET requests
+@permission_classes([IsAuthenticated])#Only logged-in users can access it.
+def my_profile(request):
+    serializer = UserProfileSerializer(request.user)#This takes that user's information and prepares it for the response.
+
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )    
