@@ -7,9 +7,9 @@ from rest_framework.response import Response#sends data back to the person or ap
 from rest_framework import status #gives readable HTTP status codes
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer, ProviderProfileSerializer
+from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer, ProviderProfileSerializer,ProviderEnrolmentSerializer
 from rest_framework.permissions import IsAuthenticated
-from .models import ProviderProfile
+from .models import ProviderProfile,ProviderEnrolment
 
 # Create your views here.
 @api_view(["POST"]) #API endpoint that accepts POST requests
@@ -147,4 +147,46 @@ def provider_profile(request):
         serializer.data,
         status=status.HTTP_200_OK
     )
-    
+
+
+ # Create an enrolment application for the logged-in provider
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def create_provider_enrolment(request):
+    user = request.user
+
+    # Check whether the logged-in user is a provider
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can submit an enrolment application."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Prevent the same provider from creating another application
+    if ProviderEnrolment.objects.filter(provider=user).exists():
+        return Response(
+            {
+                "error": "You already have an enrolment application."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    serializer = ProviderEnrolmentSerializer(data=request.data)
+
+    if serializer.is_valid():
+        enrolment = serializer.save(provider=user)
+
+        return Response(
+            {
+                "message": "Enrolment application created successfully.",
+                "application": ProviderEnrolmentSerializer(enrolment).data
+            },
+            status=status.HTTP_201_CREATED
+        )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )   
