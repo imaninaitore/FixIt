@@ -118,7 +118,7 @@ def my_profile(request):
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def my_provider_profile(request):
+def provider_profile(request):
     user = request.user
 
     # Check whether the logged-in user is a provider
