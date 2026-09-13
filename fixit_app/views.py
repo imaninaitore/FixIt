@@ -7,8 +7,9 @@ from rest_framework.response import Response#sends data back to the person or ap
 from rest_framework import status #gives readable HTTP status codes
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer
+from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer, ProviderProfileSerializer
 from rest_framework.permissions import IsAuthenticated
+from .models import ProviderProfile
 
 # Create your views here.
 @api_view(["POST"]) #API endpoint that accepts POST requests
@@ -113,3 +114,37 @@ def my_profile(request):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_provider_profile(request):
+    user = request.user
+
+    # Check whether the logged-in user is a provider
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can access this profile."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the provider profile belonging to the logged-in user
+    try:
+        provider_profile = ProviderProfile.objects.get(user=user)
+    except ProviderProfile.DoesNotExist:
+        return Response(
+            {
+                "error": "Provider profile has not been created yet."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = ProviderProfileSerializer(provider_profile)
+
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
+    
