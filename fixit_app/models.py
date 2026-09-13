@@ -24,7 +24,7 @@ class ProviderProfile(models.Model):
         related_name="provider_profile"
     )
 
-    business_name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150)
     service_category = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     location = models.CharField(max_length=150)
