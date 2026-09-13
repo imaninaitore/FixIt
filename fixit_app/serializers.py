@@ -64,3 +64,14 @@ class LoginSerializer(serializers.Serializer):
             "access": str(refresh.access_token),
             "refresh": str(refresh),
         }
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    account_type = serializers.CharField(source="account.account_type", read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "username",
+            "email",
+            "account_type",
+        ]    
