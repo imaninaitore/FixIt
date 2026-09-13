@@ -66,7 +66,7 @@ class LoginSerializer(serializers.Serializer):
         }
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    account_type = serializers.CharField(source="account.account_type", read_only=True)
+    account_type = serializers.CharField(  source="account.account_type",  read_only=True )
 
     class Meta:
         model = User
@@ -74,4 +74,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "username",
             "email",
             "account_type",
-        ]    
+        ]
+
+        read_only_fields = [
+            "username",
+            "account_type",
+        ]
