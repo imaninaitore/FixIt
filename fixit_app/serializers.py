@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import Account
+from .models import Account,ProviderProfile
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -79,4 +79,23 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "username",
             "account_type",
+        ]
+
+#this serializer converts the ProviderProfile model into JSON that Postman can understand.
+
+class ProviderProfileSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        source="user.username",
+        read_only=True
+    )
+
+    class Meta:
+        model = ProviderProfile
+        fields = [
+            "username",
+            "business_name",
+            "service_category",
+            "description",
+            "location",
+            "years_of_experience",
         ]
