@@ -84,12 +84,32 @@ def logout(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-@api_view(["GET"])#This endpoint accepts GET requests
+@api_view(["GET","PATCH"])#This endpoint accepts GET requests and PATCH
 @permission_classes([IsAuthenticated])#Only logged-in users can access it.
 def my_profile(request):
-    serializer = UserProfileSerializer(request.user)#This takes that user's information and prepares it for the response.
+    if request.method == "GET":
+       serializer = UserProfileSerializer(request.user)#This takes that user's information and prepares it for the response.
 
-    return Response(
+       return Response(
         serializer.data,
-        status=status.HTTP_200_OK
-    )    
+        status=status.HTTP_200_OK )  
+     
+    if request.method == "PATCH":
+        serializer = UserProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True #allows update of only the field you want to change. You don't have to send every field
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            ) 
+        
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
