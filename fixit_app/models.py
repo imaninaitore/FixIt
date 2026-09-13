@@ -14,3 +14,21 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.account_type}"
+
+
+# Stores additional information about a service provider
+class ProviderProfile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="provider_profile"
+    )
+
+    business_name = models.CharField(max_length=150)
+    service_category = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=150)
+    years_of_experience = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.business_name} - {self.user.username}"    
