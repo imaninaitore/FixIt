@@ -195,18 +195,18 @@ def my_provider_enrolment(request):
     )
 
 
-# View or update the enrolment application belonging to the logged-in provider
-@api_view(["GET", "PATCH"])
+# Update the enrolment application belonging to the logged-in provider
+@api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def my_provider_enrolment(request):
+def update_provider_enrolment(request):
 
     user = request.user
 
-    # Only provider accounts can access enrolment applications
+    # Only provider accounts can update enrolment applications
     if user.account.account_type != "provider":
         return Response(
             {
-                "error": "Only service providers can access enrolment applications."
+                "error": "Only service providers can update enrolment applications."
             },
             status=status.HTTP_403_FORBIDDEN
         )
@@ -225,16 +225,7 @@ def my_provider_enrolment(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # GET: Return the provider's application
-    if request.method == "GET":
-        serializer = ProviderEnrolmentSerializer(enrolment)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
-
-    # PATCH: Only draft applications can be edited
+    # Only draft applications can be edited
     if enrolment.status != "draft":
         return Response(
             {
@@ -243,6 +234,7 @@ def my_provider_enrolment(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # partial=True allows the provider to update only selected fields
     serializer = ProviderEnrolmentSerializer(
         enrolment,
         data=request.data,
