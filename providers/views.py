@@ -256,3 +256,57 @@ def update_provider_enrolment(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+# Withdraw the enrolment application belonging to the logged-in provider
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def withdraw_provider_enrolment(request):
+
+    user = request.user
+
+    # Only provider accounts can withdraw enrolment applications
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can withdraw enrolment applications."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the enrolment application belonging to the logged-in user
+    try:
+        enrolment = ProviderEnrolment.objects.get(
+            provider=user
+        )
+
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {
+                "error": "You do not have an enrolment application yet."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Only draft or submitted applications can be withdrawn
+    if enrolment.status not in ["draft", "submitted"]:
+        return Response(
+            {
+                "error": "Only draft or submitted applications can be withdrawn."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Change the application status to withdrawn
+    enrolment.status = "withdrawn"
+    enrolment.save()
+
+    serializer = ProviderEnrolmentSerializer(enrolment)
+
+    return Response(
+        {
+            "message": "Enrolment application withdrawn successfully.",
+            "application": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
