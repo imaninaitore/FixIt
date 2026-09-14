@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # FixIt apps
     "accounts",
     "providers",
+    "payments",
     "service_requests",
     "messaging",
     "reviews",
