@@ -40,6 +40,9 @@ class ProviderEnrolmentSerializer(serializers.ModelSerializer):
             "location",
             "years_of_experience",
             "status",
+            "payment_status",
+            "payment_reference",
+            "paid_at",
             "created_at",
         ]
 
@@ -47,5 +50,8 @@ class ProviderEnrolmentSerializer(serializers.ModelSerializer):
             "id",
             "username",
             "status",
+            "payment_status",
+            "payment_reference",
+            "paid_at",
             "created_at",
-        ]        
+        ]
