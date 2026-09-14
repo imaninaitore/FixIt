@@ -190,3 +190,73 @@ def create_provider_enrolment(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )   
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_provider_enrolment(request):
+
+    user = request.user
+
+    # Only provider accounts can submit enrolment applications
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only provider accounts can submit an enrolment application."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the provider's enrolment application
+    try:
+        enrolment = ProviderEnrolment.objects.get(
+            provider=user
+        )
+
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {
+                "error": "You must create an enrolment application first."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Prevent submitting an application that is already under review
+    if enrolment.status == "submitted":
+        return Response(
+            {
+                "error": "This application has already been submitted for review."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Prevent submitting an already approved application
+    if enrolment.status == "approved":
+        return Response(
+            {
+                "error": "This application has already been approved."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Payment must be completed before submission
+    if enrolment.payment_status != "paid":
+        return Response(
+            {
+                "error": "You must pay the provider subscription before submitting your application."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Change the application status
+    enrolment.status = "submitted"
+    enrolment.save()
+
+    serializer = ProviderEnrolmentSerializer(enrolment)
+
+    return Response(
+        {
+            "message": "Provider enrolment application submitted for admin review.",
+            "application": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
