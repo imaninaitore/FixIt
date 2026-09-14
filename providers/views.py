@@ -7,7 +7,7 @@ from rest_framework.response import Response#sends data back to the person or ap
 from rest_framework import status #gives readable HTTP status codes
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import RegistrationSerializer,LoginSerializer, UserProfileSerializer, ProviderProfileSerializer,ProviderEnrolmentSerializer
+from .serializers import ProviderProfileSerializer,ProviderEnrolmentSerializer
 from rest_framework.permissions import IsAuthenticated
 from .models import ProviderProfile,ProviderEnrolment
 
