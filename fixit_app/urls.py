@@ -13,6 +13,6 @@ urlpatterns = [
     path("refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("me/", my_profile, name="my_profile"),
     path("providers/me/", provider_profile, name="provider_profile"),
-    path("providers/enrolment/", create_provider_enrolment, name="create_provider_enrolment"),
+    path("enrolment/", create_provider_enrolment, name="create_provider_enrolment"),
 
 ]
