@@ -193,3 +193,66 @@ def my_provider_enrolment(request):
         serializer.data,
         status=status.HTTP_200_OK
     )
+
+
+# Update the enrolment application belonging to the logged-in provider
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_provider_enrolment(request):
+
+    user = request.user
+
+    # Only provider accounts can update enrolment applications
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can update enrolment applications."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the enrolment application belonging to the logged-in user
+    try:
+        enrolment = ProviderEnrolment.objects.get(
+            provider=user
+        )
+
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {
+                "error": "You do not have an enrolment application yet."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Only draft applications can be edited
+    if enrolment.status != "draft":
+        return Response(
+            {
+                "error": "Only draft applications can be updated."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # partial=True allows the provider to update only selected fields
+    serializer = ProviderEnrolmentSerializer(
+        enrolment,
+        data=request.data,
+        partial=True
+    )
+
+    if serializer.is_valid():
+        updated_enrolment = serializer.save()
+
+        return Response(
+            {
+                "message": "Enrolment application updated successfully.",
+                "application": ProviderEnrolmentSerializer(updated_enrolment).data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
