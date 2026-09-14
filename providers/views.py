@@ -156,3 +156,40 @@ def submit_provider_enrolment(request):
         },
         status=status.HTTP_200_OK
     )
+
+# View the enrolment application belonging to the logged-in provider
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_provider_enrolment(request):
+
+    user = request.user
+
+    # Only provider accounts can access provider enrolment
+    if user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can access enrolment applications."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the enrolment application belonging to the logged-in user
+    try:
+        enrolment = ProviderEnrolment.objects.get(
+            provider=user
+        )
+
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {
+                "error": "You do not have an enrolment application yet."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = ProviderEnrolmentSerializer(enrolment)
+
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
