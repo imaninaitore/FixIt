@@ -334,12 +334,12 @@ def withdraw_provider_enrolment(request):
         status=status.HTTP_200_OK
     )
 
-# List all approved service providers
+# List approved service providers with search and filtering
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def provider_directory(request):
 
-    # Find all provider enrolments that have been approved
+    # Get all approved enrolment applications
     approved_enrolments = ProviderEnrolment.objects.filter(
         status="approved"
     )
@@ -350,10 +350,35 @@ def provider_directory(request):
         for enrolment in approved_enrolments
     ]
 
-    # Find provider profiles belonging to those approved users
+    # Get the profiles belonging to approved providers
     profiles = ProviderProfile.objects.filter(
         user__in=approved_users
     )
+
+    # Read search and filter values from the URL
+    search_query = request.query_params.get("search")
+    category_query = request.query_params.get("category")
+    location_query = request.query_params.get("location")
+
+    # Search by business name, service category, or description
+    if search_query:
+        profiles = profiles.filter(
+            models.Q(business_name__icontains=search_query)
+            | models.Q(service_category__icontains=search_query)
+            | models.Q(description__icontains=search_query)
+        )
+
+    # Filter by service category
+    if category_query:
+        profiles = profiles.filter(
+            service_category__icontains=category_query
+        )
+
+    # Filter by location
+    if location_query:
+        profiles = profiles.filter(
+            location__icontains=location_query
+        )
 
     serializer = ProviderProfileSerializer(
         profiles,
