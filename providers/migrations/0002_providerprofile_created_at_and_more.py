@@ -14,7 +14,6 @@ class Migration(migrations.Migration):
             model_name='providerprofile',
             name='created_at',
             field=models.DateTimeField(auto_now_add=True, default=1),
-            preserve_default=False,
         ),
         migrations.AddField(
             model_name='providerprofile',
