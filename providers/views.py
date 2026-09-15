@@ -439,3 +439,35 @@ def public_provider_profile(request, provider_id):
         serializer.data,
         status=status.HTTP_200_OK
     )
+
+# List service categories offered by approved providers
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def provider_categories(request):
+
+    # Get all approved enrolment applications
+    approved_enrolments = ProviderEnrolment.objects.filter(
+        status="approved"
+    )
+
+    # Get the users belonging to approved providers
+    approved_users = [
+        enrolment.provider
+        for enrolment in approved_enrolments
+    ]
+
+    # Get profiles belonging to approved providers
+    profiles = ProviderProfile.objects.filter(
+        user__in=approved_users
+    )
+
+    # Get service categories from the approved provider profiles
+    categories = profiles.values_list(
+        "service_category",
+        flat=True
+    ).distinct()
+
+    return Response(
+        categories,
+        status=status.HTTP_200_OK
+    )
