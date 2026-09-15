@@ -7,7 +7,8 @@ from .views import (
    update_provider_enrolment, 
    submit_provider_enrolment, 
    withdraw_provider_enrolment,
-   provider_directory
+   provider_directory,
+    public_provider_profile,
 )
 
 urlpatterns = [
@@ -19,5 +20,5 @@ urlpatterns = [
     path( "enrolment/me/submit/",submit_provider_enrolment, name="submit_provider_enrolment", ),
     path( "enrolment/me/withdraw/", withdraw_provider_enrolment, name="withdraw-provider-enrolment" ),
     path("", provider_directory, name="provider-directory"),
-
+    path("<int:provider_id>/", public_provider_profile, name="public-provider-profile"),
 ]
