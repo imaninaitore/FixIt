@@ -1,6 +1,5 @@
 from django.shortcuts import render
 
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny #Registration must be available to people who are not logged in yet
 from rest_framework.response import Response#sends data back to the person or application making the request.
@@ -332,5 +331,36 @@ def withdraw_provider_enrolment(request):
             "message": "Enrolment application withdrawn successfully.",
             "application": serializer.data
         },
+        status=status.HTTP_200_OK
+    )
+
+# List all approved service providers
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def provider_directory(request):
+
+    # Find all provider enrolments that have been approved
+    approved_enrolments = ProviderEnrolment.objects.filter(
+        status="approved"
+    )
+
+    # Get the users belonging to approved providers
+    approved_users = [
+        enrolment.provider
+        for enrolment in approved_enrolments
+    ]
+
+    # Find provider profiles belonging to those approved users
+    profiles = ProviderProfile.objects.filter(
+        user__in=approved_users
+    )
+
+    serializer = ProviderProfileSerializer(
+        profiles,
+        many=True
+    )
+
+    return Response(
+        serializer.data,
         status=status.HTTP_200_OK
     )
