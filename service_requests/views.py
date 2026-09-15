@@ -8,6 +8,8 @@ from rest_framework import status
 from .models import ServiceRequest
 from .serializers import ServiceRequestSerializer
 
+from accounts.models import Account
+
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
