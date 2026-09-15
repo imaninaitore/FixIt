@@ -165,3 +165,39 @@ def service_request_detail(request, request_id):
             {"message": "Service request cancelled successfully."},
             status=status.HTTP_200_OK
         )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def provider_service_requests(request):
+    # Check whether the logged-in user has a provider account.
+    try:
+        account = request.user.account
+    except Account.DoesNotExist:
+        return Response(
+            {"error": "Account information not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Only users with the provider account type can access this endpoint.
+    if account.account_type != "provider":
+        return Response(
+            {"error": "Only service providers can view assigned requests."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get only requests assigned to the logged-in provider.
+    requests = ServiceRequest.objects.filter(
+        provider=request.user
+    ).order_by("-created_at")
+
+    # Convert the request objects into JSON.
+    serializer = ServiceRequestSerializer(
+        requests,
+        many=True
+    )
+
+    # Return the provider's assigned requests.
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
