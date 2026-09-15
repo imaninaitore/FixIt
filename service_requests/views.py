@@ -374,3 +374,47 @@ def update_service_request_status(request, request_id):
         },
         status=status.HTTP_200_OK
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def complete_service_request(request, request_id):
+    # Find the service request or return a 404 error.
+    service_request = get_object_or_404(
+        ServiceRequest,
+        id=request_id
+    )
+
+    # Only the assigned provider can mark the request as completed.
+    if request.user != service_request.provider:
+        return Response(
+            {
+                "error": "Only the assigned provider can complete this request."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Only an in-progress request can be completed.
+    if service_request.status != "in_progress":
+        return Response(
+            {
+                "error": "Only in-progress requests can be completed.",
+                "current_status": service_request.status
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Change the request status to completed.
+    service_request.status = "completed"
+    service_request.save()
+
+    # Return the updated request.
+    serializer = ServiceRequestSerializer(service_request)
+
+    return Response(
+        {
+            "message": "Service request marked as completed successfully.",
+            "request": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
