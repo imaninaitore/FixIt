@@ -6,33 +6,55 @@ from rest_framework import status
 from .serializers import ServiceRequestSerializer
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
-def create_service_request(request):
-    # Create a serializer using the data sent by the customer.
-    serializer = ServiceRequestSerializer(
-        data=request.data,
-        context={"request": request}
-    )
+def service_requests_list(request):
+    # Handle GET requests.
+    # GET means the customer wants to view their own requests.
+    if request.method == "GET":
+        # Get only requests belonging to the logged-in user.
+        requests = ServiceRequest.objects.filter(
+            customer=request.user
+        ).order_by("-created_at")
 
-    # Check whether the submitted data is valid.
-    if serializer.is_valid():
-        # Save the service request.
-        # The serializer automatically assigns the logged-in user
-        # as the customer and sets the initial status to pending.
-        service_request = serializer.save()
-
-        # Return the newly created request as JSON.
-        return Response(
-            ServiceRequestSerializer(service_request).data,
-            status=status.HTTP_201_CREATED
+        # Convert the request objects into JSON.
+        serializer = ServiceRequestSerializer(
+            requests,
+            many=True
         )
 
-    # If the submitted data is invalid, return the errors.
-    return Response(
-        serializer.errors,
-        status=status.HTTP_400_BAD_REQUEST
-    )
+        # Return the customer's requests.
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
+
+    # Handle POST requests.
+    # POST means the customer wants to create a new request.
+    if request.method == "POST":
+        # Pass the submitted data to the serializer.
+        serializer = ServiceRequestSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        # Check whether the submitted data is valid.
+        if serializer.is_valid():
+            # Save the request.
+            # The serializer assigns the logged-in user as customer.
+            service_request = serializer.save()
+
+            # Return the newly created request.
+            return Response(
+                ServiceRequestSerializer(service_request).data,
+                status=status.HTTP_201_CREATED
+            )
+
+        # Return validation errors if the data is invalid.
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 @api_view(["GET"])
