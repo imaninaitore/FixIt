@@ -364,3 +364,52 @@ def provider_directory(request):
         serializer.data,
         status=status.HTTP_200_OK
     )
+
+# View one approved provider's public profile
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def public_provider_profile(request, provider_id):
+
+    # Find the provider profile using its ID
+    try:
+        profile = ProviderProfile.objects.get(
+            id=provider_id
+        )
+
+    except ProviderProfile.DoesNotExist:
+        return Response(
+            {
+                "error": "Provider profile not found."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Check whether the provider has an enrolment application
+    try:
+        enrolment = ProviderEnrolment.objects.get(
+            provider=profile.user
+        )
+
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {
+                "error": "This provider is not available in the directory."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Only approved providers can be viewed publicly
+    if enrolment.status != "approved":
+        return Response(
+            {
+                "error": "This provider is not currently approved."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    serializer = ProviderProfileSerializer(profile)
+
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
