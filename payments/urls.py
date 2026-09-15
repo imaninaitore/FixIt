@@ -5,6 +5,7 @@ from .views import ( initiate_payment,
                      payment_detail,
                      payment_status,
                      mpesa_callback,
+                     verify_payment
                    )
 
 
@@ -13,5 +14,6 @@ urlpatterns = [
     path("me/", my_payments, name="my-payments"),
     path("mpesa/callback/", mpesa_callback, name="mpesa-callback"),
     path("<int:payment_id>/status/", payment_status, name="payment-status"),
+     path("<int:payment_id>/verify/", verify_payment, name="verify-payment"),
     path("<int:payment_id>/", payment_detail, name="payment-detail"),
 ]
