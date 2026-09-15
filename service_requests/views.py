@@ -287,3 +287,90 @@ def reject_service_request(request, request_id):
         },
         status=status.HTTP_200_OK
     )
+
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def update_service_request_status(request, request_id):
+    # Find the service request or return a 404 error.
+    service_request = get_object_or_404(
+        ServiceRequest,
+        id=request_id
+    )
+
+    # Only the assigned provider can update the request status.
+    if request.user != service_request.provider:
+        return Response(
+            {
+                "error": "Only the assigned provider can update this request."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get the new status from the request body.
+    new_status = request.data.get("status")
+
+    # Make sure a status was provided.
+    if not new_status:
+        return Response(
+            {
+                "error": "The status field is required."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # These are the statuses that providers are allowed to set.
+    allowed_statuses = [
+        "in_progress",
+        "completed"
+    ]
+
+    # Reject statuses that are not allowed through this endpoint.
+    if new_status not in allowed_statuses:
+        return Response(
+            {
+                "error": "Invalid status. Use 'in_progress' or 'completed'."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # A provider can only start working after accepting the request.
+    if (
+        new_status == "in_progress"
+        and service_request.status != "accepted"
+    ):
+        return Response(
+            {
+                "error": "Only accepted requests can be moved to in_progress.",
+                "current_status": service_request.status
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # A provider can only mark a request completed after work has started.
+    if (
+        new_status == "completed"
+        and service_request.status != "in_progress"
+    ):
+        return Response(
+            {
+                "error": "Only in-progress requests can be marked as completed.",
+                "current_status": service_request.status
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Update and save the new status.
+    service_request.status = new_status
+    service_request.save()
+
+    # Return the updated service request.
+    serializer = ServiceRequestSerializer(service_request)
+
+    return Response(
+        {
+            "message": "Service request status updated successfully.",
+            "request": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
