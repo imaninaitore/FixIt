@@ -203,3 +203,87 @@ def provider_service_requests(request):
         serializer.data,
         status=status.HTTP_200_OK
     )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def accept_service_request(request, request_id):
+    # Find the service request or return a 404 error.
+    service_request = get_object_or_404(
+        ServiceRequest,
+        id=request_id
+    )
+
+    # Only the provider assigned to this request can accept it.
+    if request.user != service_request.provider:
+        return Response(
+            {"error": "Only the assigned provider can accept this request."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # A request can only be accepted while it is pending.
+    if service_request.status != "pending":
+        return Response(
+            {
+                "error": "Only pending requests can be accepted.",
+                "current_status": service_request.status
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Change the request status to accepted.
+    service_request.status = "accepted"
+    service_request.save()
+
+    # Return the updated request.
+    serializer = ServiceRequestSerializer(service_request)
+
+    return Response(
+        {
+            "message": "Service request accepted successfully.",
+            "request": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def reject_service_request(request, request_id):
+    # Find the service request or return a 404 error.
+    service_request = get_object_or_404(
+        ServiceRequest,
+        id=request_id
+    )
+
+    # Only the provider assigned to this request can reject it.
+    if request.user != service_request.provider:
+        return Response(
+            {"error": "Only the assigned provider can reject this request."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # A request can only be rejected while it is pending.
+    if service_request.status != "pending":
+        return Response(
+            {
+                "error": "Only pending requests can be rejected.",
+                "current_status": service_request.status
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Change the request status to rejected.
+    service_request.status = "rejected"
+    service_request.save()
+
+    # Return the updated request.
+    serializer = ServiceRequestSerializer(service_request)
+
+    return Response(
+        {
+            "message": "Service request rejected successfully.",
+            "request": serializer.data
+        },
+        status=status.HTTP_200_OK
+    )
