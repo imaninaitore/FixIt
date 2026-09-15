@@ -76,3 +76,43 @@ def initiate_payment(request):
         },
         status=status.HTTP_201_CREATED
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_payments(request):
+    user = request.user
+
+    # Check whether the logged-in user is a provider
+    if not hasattr(user, "account") or user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can view payment history."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Get payments belonging only to the logged-in provider
+    payments = Payment.objects.filter(
+        provider=user
+    ).order_by("-created_at")
+
+    payment_data = []
+
+    for payment in payments:
+        payment_data.append(
+            {
+                "id": payment.id,
+                "phone_number": payment.phone_number,
+                "plan": payment.plan,
+                "amount": payment.amount,
+                "status": payment.status,
+                "mpesa_receipt_number": payment.mpesa_receipt_number,
+                "transaction_date": payment.transaction_date,
+                "created_at": payment.created_at,
+            }
+        )
+
+    return Response(
+        payment_data,
+        status=status.HTTP_200_OK
+    )
