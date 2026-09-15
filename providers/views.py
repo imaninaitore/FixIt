@@ -11,6 +11,7 @@ from rest_framework.permissions import IsAuthenticated #requires the user to be 
 from .models import ProviderProfile,ProviderEnrolment
 
 from django.db import models
+
 # Create your views here.
 
 # View or update the logged-in provider's profile
@@ -390,6 +391,7 @@ def provider_directory(request):
         serializer.data,
         status=status.HTTP_200_OK
     )
+
 
 # View one approved provider's public profile
 @api_view(["GET"])
