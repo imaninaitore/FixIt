@@ -33,3 +33,25 @@ def create_service_request(request):
         serializer.errors,
         status=status.HTTP_400_BAD_REQUEST
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def my_service_requests(request):
+    # Get only the requests created by the currently logged-in user.
+    # This prevents customers from seeing other customers' requests.
+    requests = ServiceRequest.objects.filter(
+        customer=request.user
+    ).order_by("-created_at")
+
+    # Convert the request objects into JSON.
+    serializer = ServiceRequestSerializer(
+        requests,
+        many=True
+    )
+
+    # Return the customer's requests.
+    return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+    )
