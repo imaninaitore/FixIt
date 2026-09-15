@@ -8,11 +8,13 @@ from rest_framework import status #gives readable HTTP status codes
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import ProviderProfileSerializer,ProviderEnrolmentSerializer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated #requires the user to be logged in.
 from .models import ProviderProfile,ProviderEnrolment
 
 # Create your views here.
-@api_view(["GET"])
+
+# View or update the logged-in provider's profile
+@api_view(["GET", "PATCH"])
 @permission_classes([IsAuthenticated])
 def provider_profile(request):
     user = request.user
@@ -28,7 +30,7 @@ def provider_profile(request):
 
     # Find the provider profile belonging to the logged-in user
     try:
-        provider_profile = ProviderProfile.objects.get(user=user)
+        profile = ProviderProfile.objects.get(user=user)
     except ProviderProfile.DoesNotExist:
         return Response(
             {
@@ -37,13 +39,35 @@ def provider_profile(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    serializer = ProviderProfileSerializer(provider_profile)
+    # GET: Return the provider's profile
+    if request.method == "GET":
+        serializer = ProviderProfileSerializer(profile)
 
-    return Response(
-        serializer.data,
-        status=status.HTTP_200_OK
-    )
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
+    # PATCH: Update the provider's profile
+    if request.method == "PATCH":
+        serializer = ProviderProfileSerializer(
+            profile,
+            data=request.data,
+            partial=True
+        )
+
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
  # Create an enrolment application for the logged-in provider
 @api_view(["POST"])

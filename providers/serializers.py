@@ -20,6 +20,10 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
             "description",
             "location",
             "years_of_experience",
+            "phone_number",
+            "is_available",
+            "created_at",
+            "updated_at",
         ]
 
 # Converts provider enrolment data between JSON and the database
