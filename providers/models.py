@@ -17,9 +17,14 @@ class ProviderProfile(models.Model):
     description = models.TextField(blank=True)
     location = models.CharField(max_length=150)
     years_of_experience = models.PositiveIntegerField(default=0)
+    phone_number = models.CharField(max_length=20, blank=True)
+    is_available = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.business_name} - {self.user.username}"    
+        return f"{self.business_name} - {self.user.username}"
 
 # Stores a service provider's enrolment application
 class ProviderEnrolment(models.Model):
