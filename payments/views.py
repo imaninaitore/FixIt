@@ -160,3 +160,44 @@ def payment_detail(request, payment_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def payment_status(request, payment_id):
+    user = request.user
+
+    # Check whether the logged-in user is a provider
+    if not hasattr(user, "account") or user.account.account_type != "provider":
+        return Response(
+            {
+                "error": "Only service providers can check payment status."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Find the payment belonging to the logged-in provider
+    try:
+        payment = Payment.objects.get(
+            id=payment_id,
+            provider=user
+        )
+    except Payment.DoesNotExist:
+        return Response(
+            {
+                "error": "Payment not found."
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    return Response(
+        {
+            "payment_id": payment.id,
+            "plan": payment.plan,
+            "amount": payment.amount,
+            "status": payment.status,
+            "mpesa_receipt_number": payment.mpesa_receipt_number,
+            "transaction_date": payment.transaction_date,
+            "updated_at": payment.updated_at,
+        },
+        status=status.HTTP_200_OK
+    )
