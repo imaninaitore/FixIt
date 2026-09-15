@@ -10,6 +10,7 @@ from .serializers import ProviderProfileSerializer,ProviderEnrolmentSerializer
 from rest_framework.permissions import IsAuthenticated #requires the user to be logged in.
 from .models import ProviderProfile,ProviderEnrolment
 
+from django.db import models
 # Create your views here.
 
 # View or update the logged-in provider's profile
