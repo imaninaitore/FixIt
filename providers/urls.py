@@ -7,6 +7,7 @@ from .views import (
    update_provider_enrolment, 
    submit_provider_enrolment, 
    withdraw_provider_enrolment,
+   provider_directory
 )
 
 urlpatterns = [
@@ -17,5 +18,6 @@ urlpatterns = [
     path( "enrolment/me/", update_provider_enrolment, name="update-provider-enrolment" ),
     path( "enrolment/me/submit/",submit_provider_enrolment, name="submit_provider_enrolment", ),
     path( "enrolment/me/withdraw/", withdraw_provider_enrolment, name="withdraw-provider-enrolment" ),
+    path("", provider_directory, name="provider-directory"),
 
 ]
