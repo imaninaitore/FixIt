@@ -203,3 +203,38 @@ def admin_service_requests(request):
         },
         status=status.HTTP_200_OK
     )
+
+
+# GET /api/admin/payments/
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_payments(request):
+    payments = Payment.objects.all().order_by("-created_at")
+
+    payment_data = []
+
+    for payment in payments:
+        payment_data.append(
+            {
+                "id": payment.id,
+                "provider_id": payment.provider.id,
+                "provider_username": payment.provider.username,
+                "phone_number": payment.phone_number,
+                "plan": payment.plan,
+                "amount": payment.amount,
+                "status": payment.status,
+                "mpesa_checkout_request_id": payment.mpesa_checkout_request_id,
+                "mpesa_receipt_number": payment.mpesa_receipt_number,
+                "transaction_date": payment.transaction_date,
+                "created_at": payment.created_at,
+                "updated_at": payment.updated_at,
+            }
+        )
+
+    return Response(
+        {
+            "count": len(payment_data),
+            "payments": payment_data,
+        },
+        status=status.HTTP_200_OK
+    )
