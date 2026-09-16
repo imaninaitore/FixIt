@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-# Create your models here.
+
 
 class Payment(models.Model):
 
@@ -15,33 +15,56 @@ class Payment(models.Model):
         ("provider_subscription", "Provider Subscription"),
     ]
 
-    provider = models.ForeignKey( User, on_delete=models.CASCADE,  related_name="payments")
+    provider = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
 
     phone_number = models.CharField(max_length=20)
 
-    plan = models.CharField( max_length=100, choices=PLAN_CHOICES )
+    plan = models.CharField(
+        max_length=100,
+        choices=PLAN_CHOICES
+    )
 
-    amount = models.DecimalField(max_digits=10,decimal_places=2)
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
 
-    status = models.CharField( max_length=20, choices=PAYMENT_STATUS_CHOICES, default="pending" )
+    transaction_code = models.CharField(
+        max_length=100,
+        unique=True
+    )
 
-    mpesa_checkout_request_id = models.CharField( max_length=255, unique=True, blank=True, null=True)
+    payment_date = models.DateField()
 
-    mpesa_receipt_number = models.CharField(  max_length=100,  blank=True,  null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default="pending"
+    )
 
-    transaction_date = models.DateTimeField(blank=True, null=True )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    created_at = models.DateTimeField( auto_now_add=True )
-
-    updated_at = models.DateTimeField( auto_now=True )
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.provider.username} - {self.plan} - {self.status}"
 
+
 class SubscriptionPlan(models.Model):
+
     name = models.CharField(max_length=100)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
     duration_days = models.PositiveIntegerField(default=30)
+
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
