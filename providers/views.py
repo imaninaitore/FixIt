@@ -10,6 +10,7 @@ from .serializers import (
 )
 
 from payments.models import Payment
+from django.utils import timezone
 
 # Create your views here.
 
@@ -531,4 +532,68 @@ def submit_enrolment(request):
             }
         },
         status=status.HTTP_201_CREATED
+    )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def approve_provider_enrolment(request, enrolment_id):
+    # Only administrators can approve provider enrolments.
+    if not request.user.is_staff:
+        return Response(
+            {"error": "Only administrators can approve provider enrolments."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    try:
+        enrolment = ProviderEnrolment.objects.get(id=enrolment_id)
+    except ProviderEnrolment.DoesNotExist:
+        return Response(
+            {"error": "Provider enrolment not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Find the latest pending payment for this enrolment.
+    payment = Payment.objects.filter(
+        enrolment=enrolment,
+        status="pending"
+    ).order_by("-created_at").first()
+
+    if not payment:
+        return Response(
+            {"error": "No pending payment was found for this enrolment."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Mark the payment as completed.
+    payment.status = "completed"
+    payment.save()
+
+    # Mark the enrolment as paid and approved.
+    enrolment.payment_status = "paid"
+    enrolment.status = "approved"
+    enrolment.paid_at = timezone.now()
+    enrolment.save()
+
+    return Response(
+        {
+            "message": "Provider enrolment and payment approved successfully.",
+            "enrolment": {
+                "id": enrolment.id,
+                "provider": enrolment.provider.id,
+                "business_name": enrolment.business_name,
+                "status": enrolment.status,
+                "payment_status": enrolment.payment_status,
+                "payment_reference": enrolment.payment_reference,
+                "paid_at": enrolment.paid_at,
+            },
+            "payment": {
+                "id": payment.id,
+                "provider": payment.provider.id,
+                "enrolment": payment.enrolment.id,
+                "amount": str(payment.amount),
+                "transaction_code": payment.transaction_code,
+                "status": payment.status,
+            },
+        },
+        status=status.HTTP_200_OK
     )
