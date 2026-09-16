@@ -37,3 +37,12 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.provider.username} - {self.plan} - {self.status}"
+
+class SubscriptionPlan(models.Model):
+    name = models.CharField(max_length=100)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.PositiveIntegerField(default=30)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} - KSh {self.amount}"
