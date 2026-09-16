@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from .models import ProviderEnrolment
+from .models import ProviderProfile,ProviderEnrolment
 
 #this serializer converts the ProviderProfile model into JSON that Postman can understand.
 
