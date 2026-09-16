@@ -156,3 +156,26 @@ def admin_approve_enrolment(request, enrolment_id):
         },
         status=status.HTTP_200_OK
     )
+
+
+# PATCH /api/admin/enrolments/<id>/reject/
+@api_view(["PATCH"])
+@permission_classes([IsAdminUser])
+def admin_reject_enrolment(request, enrolment_id):
+    enrolment = get_object_or_404(
+        ProviderEnrolment,
+        id=enrolment_id
+    )
+
+    enrolment.status = "rejected"
+    enrolment.save()
+
+    return Response(
+        {
+            "message": "Provider enrolment rejected successfully.",
+            "id": enrolment.id,
+            "provider": enrolment.provider.username,
+            "status": enrolment.status,
+        },
+        status=status.HTTP_200_OK
+    )
