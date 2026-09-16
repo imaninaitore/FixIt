@@ -1,16 +1,16 @@
-from django.shortcuts import render
-
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny #Registration must be available to people who are not logged in yet
-from rest_framework.response import Response#sends data back to the person or application making the request.
-from rest_framework import status #gives readable HTTP status codes
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
 
-from .serializers import ProviderProfileSerializer,ProviderEnrolmentSerializer
-from rest_framework.permissions import IsAuthenticated #requires the user to be logged in.
-from .models import ProviderProfile,ProviderEnrolment
+from .models import ProviderProfile, ProviderEnrolment
+from .serializers import (
+    ProviderProfileSerializer,
+    ProviderEnrolmentSerializer,
+    ProviderEnrolmentSubmissionSerializer,
+)
 
-from django.db import models
+from payments.models import Payment
 
 # Create your views here.
 
