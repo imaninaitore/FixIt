@@ -331,3 +331,133 @@ def get_mpesa_access_token():
     response.raise_for_status()
 
     return response.json()["access_token"]
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mpesa_stk_push(request):
+    if request.user.account.account_type != "provider":
+        return Response(
+            {"error": "Only providers can make subscription payments."},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    phone_number = request.data.get("phone_number")
+    plan_id = request.data.get("plan_id")
+
+    if not phone_number or not plan_id:
+        return Response(
+            {"error": "phone_number and plan_id are required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        plan = SubscriptionPlan.objects.get(
+            id=plan_id,
+            is_active=True
+        )
+    except SubscriptionPlan.DoesNotExist:
+        return Response(
+            {"error": "Subscription plan not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Convert 07XXXXXXXX or 01XXXXXXXX to 2547XXXXXXXX or 2541XXXXXXXX
+    phone_number = phone_number.replace(" ", "").replace("+", "")
+
+    if phone_number.startswith("0"):
+        phone_number = "254" + phone_number[1:]
+    elif phone_number.startswith("7") or phone_number.startswith("1"):
+        phone_number = "254" + phone_number
+
+    if not phone_number.isdigit() or len(phone_number) != 12:
+        return Response(
+            {"error": "Enter a valid Kenyan phone number."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    try:
+        access_token = get_mpesa_access_token()
+
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        shortcode = config("MPESA_SHORTCODE")
+        passkey = config("MPESA_PASSKEY")
+
+        password_string = shortcode + passkey + timestamp
+
+        password = base64.b64encode(
+            password_string.encode("utf-8")
+        ).decode("utf-8")
+
+        payment = Payment.objects.create(
+            provider=request.user,
+            plan=plan,
+            amount=plan.amount,
+            status="pending"
+        )
+
+        payload = {
+            "BusinessShortCode": shortcode,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": "CustomerPayBillOnline",
+            "Amount": int(plan.amount),
+            "PartyA": phone_number,
+            "PartyB": shortcode,
+            "PhoneNumber": phone_number,
+            "CallBackURL": config("MPESA_CALLBACK_URL"),
+            "AccountReference": f"FIXIT{payment.id}",
+            "TransactionDesc": "FixIt subscription"
+        }
+
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
+        }
+
+        mpesa_response = requests.post(
+            "https://sandbox.safaricom.co.ke/"
+            "mpesa/stkpush/v1/processrequest",
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+
+        response_data = mpesa_response.json()
+
+        if mpesa_response.status_code != 200:
+            payment.status = "failed"
+            payment.save()
+
+            return Response(
+                {
+                    "error": "M-Pesa request failed.",
+                    "details": response_data
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        payment.transaction_reference = response_data.get(
+            "CheckoutRequestID"
+        )
+        payment.save()
+
+        return Response(
+            {
+                "message": "STK Push sent. Check your phone and enter your M-Pesa PIN.",
+                "payment_id": payment.id,
+                "checkout_request_id": response_data.get(
+                    "CheckoutRequestID"
+                ),
+                "mpesa_response": response_data
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except requests.RequestException as error:
+        return Response(
+            {
+                "error": "Could not connect to M-Pesa.",
+                "details": str(error)
+            },
+            status=status.HTTP_502_BAD_GATEWAY
+        )
