@@ -179,3 +179,27 @@ def admin_reject_enrolment(request, enrolment_id):
         },
         status=status.HTTP_200_OK
     )
+
+
+# GET /api/admin/requests/
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_service_requests(request):
+    service_requests = ServiceRequest.objects.all().order_by("-id")
+
+    request_data = []
+
+    for service_request in service_requests:
+        request_data.append(
+            {
+                "id": service_request.id,
+            }
+        )
+
+    return Response(
+        {
+            "count": len(request_data),
+            "service_requests": request_data,
+        },
+        status=status.HTTP_200_OK
+    )
