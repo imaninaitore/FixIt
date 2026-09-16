@@ -25,7 +25,7 @@ class Payment(models.Model):
 
     status = models.CharField( max_length=20, choices=PAYMENT_STATUS_CHOICES, default="pending" )
 
-    mpesa_checkout_request_id = models.CharField( max_length=255, blank=True, null=True)
+    mpesa_checkout_request_id = models.CharField( max_length=255, unique=True, blank=True, null=True)
 
     mpesa_receipt_number = models.CharField(  max_length=100,  blank=True,  null=True)
 
