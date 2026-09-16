@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_users(request):
@@ -116,6 +117,21 @@ def admin_enrolments(request):
         {
             "count": len(profile_data),
             "provider_profiles": profile_data,
+        },
+        status=status.HTTP_200_OK
+    )
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_enrolment_detail(request, enrolment_id):
+    profile = get_object_or_404(
+        ProviderProfile,
+        id=enrolment_id
+    )
+
+    return Response(
+        {
+            "id": profile.id,
         },
         status=status.HTTP_200_OK
     )
