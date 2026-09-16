@@ -135,3 +135,24 @@ def admin_enrolment_detail(request, enrolment_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["PATCH"])
+@permission_classes([IsAdminUser])
+def admin_approve_enrolment(request, enrolment_id):
+    enrolment = get_object_or_404(
+        ProviderEnrolment,
+        id=enrolment_id
+    )
+
+    enrolment.status = "approved"
+    enrolment.save()
+
+    return Response(
+        {
+            "message": "Provider enrolment approved successfully.",
+            "id": enrolment.id,
+            "provider": enrolment.provider.username,
+            "status": enrolment.status,
+        },
+        status=status.HTTP_200_OK
+    )
