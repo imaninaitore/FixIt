@@ -552,31 +552,59 @@ def approve_provider_enrolment(request, enrolment_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # Find the latest pending payment for this enrolment.
+    # Find the pending payment connected to this enrolment.
     payment = Payment.objects.filter(
         enrolment=enrolment,
         status="pending"
     ).order_by("-created_at").first()
 
-    if not payment:
-        return Response(
-            {"error": "No pending payment was found for this enrolment."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # If the enrolment was already approved, do not require another payment.
+    if enrolment.status == "approved":
+        payment = Payment.objects.filter(
+            enrolment=enrolment,
+            status="completed"
+        ).order_by("-created_at").first()
 
-    # Mark the payment as completed.
-    payment.status = "completed"
-    payment.save()
+        if not payment:
+            return Response(
+                {"error": "This enrolment is approved, but no completed payment was found."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    # Mark the enrolment as paid and approved.
-    enrolment.payment_status = "paid"
-    enrolment.status = "approved"
-    enrolment.paid_at = timezone.now()
-    enrolment.save()
+    else:
+        if not payment:
+            return Response(
+                {"error": "No pending payment was found for this enrolment."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Mark the payment as completed.
+        payment.status = "completed"
+        payment.save()
+
+        # Mark the enrolment as paid and approved.
+        enrolment.payment_status = "paid"
+        enrolment.status = "approved"
+        enrolment.paid_at = timezone.now()
+        enrolment.save()
+
+    # Create the public provider profile if it does not already exist.
+    provider_profile, created = ProviderProfile.objects.get_or_create(
+        user=enrolment.provider,
+        defaults={
+            "business_name": enrolment.business_name,
+            "service_category": enrolment.service_category,
+            "description": enrolment.description,
+            "location": enrolment.location,
+            "years_of_experience": enrolment.years_of_experience,
+            "phone_number": "",
+            "is_available": True,
+        }
+    )
 
     return Response(
         {
-            "message": "Provider enrolment and payment approved successfully.",
+            "message": "Provider enrolment approved and provider profile created successfully.",
             "enrolment": {
                 "id": enrolment.id,
                 "provider": enrolment.provider.id,
@@ -587,12 +615,20 @@ def approve_provider_enrolment(request, enrolment_id):
                 "paid_at": enrolment.paid_at,
             },
             "payment": {
-                "id": payment.id,
-                "provider": payment.provider.id,
-                "enrolment": payment.enrolment.id,
-                "amount": str(payment.amount),
-                "transaction_code": payment.transaction_code,
-                "status": payment.status,
+                "id": payment.id if payment else None,
+                "provider": payment.provider.id if payment else None,
+                "enrolment": payment.enrolment.id if payment else None,
+                "amount": str(payment.amount) if payment else None,
+                "transaction_code": payment.transaction_code if payment else None,
+                "status": payment.status if payment else None,
+            },
+            "provider_profile": {
+                "id": provider_profile.id,
+                "user": provider_profile.user.id,
+                "business_name": provider_profile.business_name,
+                "service_category": provider_profile.service_category,
+                "location": provider_profile.location,
+                "created": created,
             },
         },
         status=status.HTTP_200_OK
