@@ -312,3 +312,22 @@ def verify_payment(request, payment_id):
         },
         status=status.HTTP_200_OK
     )
+
+def get_mpesa_access_token():
+    consumer_key = config("MPESA_CONSUMER_KEY")
+    consumer_secret = config("MPESA_CONSUMER_SECRET")
+
+    url = (
+        "https://sandbox.safaricom.co.ke/"
+        "oauth/v1/generate?grant_type=client_credentials"
+    )
+
+    response = requests.get(
+        url,
+        auth=(consumer_key, consumer_secret),
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    return response.json()["access_token"]
