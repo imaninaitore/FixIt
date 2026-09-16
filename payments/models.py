@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from providers.models import ProviderEnrolment
 
 
 class Payment(models.Model):
@@ -17,6 +18,12 @@ class Payment(models.Model):
 
     provider = models.ForeignKey(
         User,
+        on_delete=models.CASCADE,
+        related_name="payments"
+    )
+
+    enrolment = models.ForeignKey(
+        ProviderEnrolment,
         on_delete=models.CASCADE,
         related_name="payments"
     )
@@ -39,8 +46,8 @@ class Payment(models.Model):
     )
 
     payment_date = models.DateField(
-    blank=True,
-    null=True
+        blank=True,
+        null=True
     )
 
     status = models.CharField(
@@ -49,9 +56,13 @@ class Payment(models.Model):
         default="pending"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
 
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
 
     def __str__(self):
         return f"{self.provider.username} - {self.plan} - {self.status}"
@@ -66,9 +77,13 @@ class SubscriptionPlan(models.Model):
         decimal_places=2
     )
 
-    duration_days = models.PositiveIntegerField(default=30)
+    duration_days = models.PositiveIntegerField(
+        default=30
+    )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(
+        default=True
+    )
 
     def __str__(self):
         return f"{self.name} - KSh {self.amount}"

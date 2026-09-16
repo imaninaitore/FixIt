@@ -6,10 +6,7 @@ from .models import ProviderProfile,ProviderEnrolment
 #this serializer converts the ProviderProfile model into JSON that Postman can understand.
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        source="user.username",
-        read_only=True
-    )
+    username = serializers.CharField( source="user.username", read_only=True)
 
     class Meta:
         model = ProviderProfile
