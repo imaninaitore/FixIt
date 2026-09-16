@@ -11,6 +11,7 @@ from .views import (
     public_provider_profile,
     provider_categories ,
     submit_enrolment, 
+    approve_provider_enrolment,
 )
 
 urlpatterns = [
@@ -25,4 +26,10 @@ urlpatterns = [
     path("", provider_directory, name="provider-directory"),
     path( "categories/", provider_categories, name="provider-categories"),
     path("<int:provider_id>/", public_provider_profile, name="public-provider-profile"),
+
+    path(
+    "enrolment/<int:enrolment_id>/approve/",
+    approve_provider_enrolment,
+    name="approve_provider_enrolment",
+),
 ]
