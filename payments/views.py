@@ -214,63 +214,93 @@ def payment_status(request, payment_id):
 def mpesa_callback(request):
     callback_data = request.data
 
-    # Get the callback information sent by M-Pesa
-    stk_callback = callback_data.get("Body", {}).get("stkCallback", {})
-
-    checkout_request_id = stk_callback.get("CheckoutRequestID")
-    result_code = stk_callback.get("ResultCode")
-    result_description = stk_callback.get("ResultDesc")
-
-    # Validate the callback data
-    if not checkout_request_id:
-        return Response(
-            {
-                "error": "Checkout request ID is missing."
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Find the payment using the M-Pesa checkout request ID
     try:
+        stk_callback = (
+            callback_data
+            .get("Body", {})
+            .get("stkCallback", {})
+        )
+
+        checkout_request_id = stk_callback.get("CheckoutRequestID")
+        result_code = stk_callback.get("ResultCode")
+        result_description = stk_callback.get("ResultDesc")
+
+        if not checkout_request_id:
+            return Response(
+                {"error": "CheckoutRequestID is missing."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         payment = Payment.objects.get(
-            mpesa_checkout_request_id=checkout_request_id
-        )
-    except Payment.DoesNotExist:
-        return Response(
-            {
-                "error": "Payment not found."
-            },
-            status=status.HTTP_404_NOT_FOUND
+            transaction_reference=checkout_request_id
         )
 
-    # ResultCode 0 means the payment was successful
-    if result_code == 0:
-        payment.status = "completed"
-        payment.save()
+        if result_code == 0:
+            payment.status = "completed"
+
+            callback_metadata = stk_callback.get(
+                "CallbackMetadata",
+                {}
+            )
+
+            metadata_items = callback_metadata.get("Item", [])
+
+            mpesa_receipt = None
+
+            for item in metadata_items:
+                if item.get("Name") == "MpesaReceiptNumber":
+                    mpesa_receipt = item.get("Value")
+                    break
+
+            if mpesa_receipt:
+                payment.transaction_reference = mpesa_receipt
+
+            payment.save()
+
+            start_date = timezone.now()
+            end_date = start_date + timezone.timedelta(
+                days=payment.plan.duration_days
+            )
+
+            Subscription.objects.update_or_create(
+                provider=payment.provider,
+                defaults={
+                    "plan": payment.plan,
+                    "payment": payment,
+                    "start_date": start_date,
+                    "end_date": end_date,
+                    "is_active": True
+                }
+            )
+
+        else:
+            payment.status = "failed"
+            payment.save()
 
         return Response(
             {
-                "message": "Payment completed successfully.",
-                "payment_id": payment.id,
-                "status": payment.status,
+                "message": "Callback received.",
+                "result_code": result_code,
+                "result_description": result_description
             },
             status=status.HTTP_200_OK
         )
 
-    # Any other result code means the payment failed or was cancelled
-    payment.status = "failed"
-    payment.save()
+    except Payment.DoesNotExist:
+        return Response(
+            {"error": "Payment not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-    return Response(
-        {
-            "message": "Payment failed or was cancelled.",
-            "payment_id": payment.id,
-            "status": payment.status,
-            "reason": result_description,
-        },
-        status=status.HTTP_200_OK
-    )
-
+    except Exception as error:
+        return Response(
+            {
+                "error": "Callback processing failed.",
+                "details": str(error)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def verify_payment(request, payment_id):
