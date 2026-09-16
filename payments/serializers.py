@@ -1,40 +1,27 @@
 from rest_framework import serializers
-
-from .models import Payment
+from .models import Payment, SubscriptionPlan
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-
-    username = serializers.CharField(
-        source="provider.username",
-        read_only=True
-    )
-
     class Meta:
         model = Payment
-
         fields = [
             "id",
-            "username",
+            "provider",
             "phone_number",
             "plan",
             "amount",
+            "transaction_code",
+            "payment_date",
             "status",
-            "mpesa_checkout_request_id",
-            "mpesa_receipt_number",
-            "transaction_date",
             "created_at",
             "updated_at",
         ]
 
         read_only_fields = [
             "id",
-            "username",
-            "amount",
+            "provider",
             "status",
-            "mpesa_checkout_request_id",
-            "mpesa_receipt_number",
-            "transaction_date",
             "created_at",
             "updated_at",
         ]
