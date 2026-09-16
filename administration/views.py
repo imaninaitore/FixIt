@@ -61,3 +61,39 @@ def admin_user_detail(request, user_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["PATCH"])
+@permission_classes([IsAdminUser])
+def admin_user_status(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    is_active = request.data.get("is_active")
+
+    if is_active is None:
+        return Response(
+            {
+                "error": "is_active is required. Use true or false."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not isinstance(is_active, bool):
+        return Response(
+            {
+                "error": "is_active must be either true or false."
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    user.is_active = is_active
+    user.save()
+
+    return Response(
+        {
+            "message": "User status updated successfully.",
+            "user_id": user.id,
+            "username": user.username,
+            "is_active": user.is_active,
+        },
+        status=status.HTTP_200_OK
+    )
