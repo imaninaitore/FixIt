@@ -1,40 +1,14 @@
-from django.contrib.auth.models import User
 from rest_framework import serializers
+from .models import ProviderEnrolment
 
-from .models import ProviderProfile,ProviderEnrolment
 
-#this serializer converts the ProviderProfile model into JSON that Postman can understand.
-
-class ProviderProfileSerializer(serializers.ModelSerializer):
-    username = serializers.CharField( source="user.username", read_only=True)
-
-    class Meta:
-        model = ProviderProfile
-        fields = [
-            "username",
-            "business_name",
-            "service_category",
-            "description",
-            "location",
-            "years_of_experience",
-            "phone_number",
-            "is_available",
-            "created_at",
-            "updated_at",
-        ]
-
-# Converts provider enrolment data between JSON and the database
 class ProviderEnrolmentSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        source="provider.username",
-        read_only=True
-    )
 
     class Meta:
         model = ProviderEnrolment
         fields = [
             "id",
-            "username",
+            "provider",
             "business_name",
             "service_category",
             "description",
@@ -45,14 +19,36 @@ class ProviderEnrolmentSerializer(serializers.ModelSerializer):
             "payment_reference",
             "paid_at",
             "created_at",
+            "updated_at",
         ]
 
         read_only_fields = [
             "id",
-            "username",
+            "provider",
             "status",
             "payment_status",
-            "payment_reference",
             "paid_at",
             "created_at",
+            "updated_at",
         ]
+
+class ProviderEnrolmentSubmissionSerializer(serializers.Serializer):
+
+    business_name = serializers.CharField(max_length=255)
+    service_category = serializers.CharField(max_length=100)
+    description = serializers.CharField()
+    location = serializers.CharField(max_length=255)
+    years_of_experience = serializers.IntegerField(min_value=0)
+
+    phone_number = serializers.CharField(max_length=20)
+    plan = serializers.ChoiceField(
+        choices=[
+            ("provider_subscription", "Provider Subscription")
+        ]
+    )
+    amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+    transaction_code = serializers.CharField(max_length=100)
+    payment_date = serializers.DateField()      
