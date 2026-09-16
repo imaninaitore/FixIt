@@ -29,12 +29,6 @@ urlpatterns = [
         name="admin-reject-enrolment"
     ),
 
-    path(
-        "enrolments/<int:enrolment_id>/",
-        admin_enrolment_detail,
-        name="admin-enrolment-detail"
-    ),
-
     # Platform management
     path(
         "requests/",

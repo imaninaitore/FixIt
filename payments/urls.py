@@ -18,6 +18,5 @@ urlpatterns = [
      path("<int:payment_id>/verify/", verify_payment, name="verify-payment"),
     path("<int:payment_id>/", payment_detail, name="payment-detail"),
 
-     path("mpesa/callback/", mpesa_callback, name="mpesa-callback"),
     path("mpesa/stk-push/", mpesa_stk_push, name="mpesa-stk-push"),
 ]
