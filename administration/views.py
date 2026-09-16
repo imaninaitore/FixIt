@@ -34,3 +34,30 @@ def admin_users(request):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_user_detail(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    account_type = None
+
+    if hasattr(user, "account"):
+        account_type = user.account.account_type
+
+    return Response(
+        {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "account_type": account_type,
+            "is_active": user.is_active,
+            "is_staff": user.is_staff,
+            "is_superuser": user.is_superuser,
+            "date_joined": user.date_joined,
+            "last_login": user.last_login,
+        },
+        status=status.HTTP_200_OK
+    )
