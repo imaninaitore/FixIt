@@ -238,3 +238,69 @@ def admin_payments(request):
         },
         status=status.HTTP_200_OK
     )
+
+
+# GET /api/admin/reports/
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_reports(request):
+    total_users = User.objects.count()
+
+    total_providers = ProviderProfile.objects.count()
+
+    total_enrolments = ProviderEnrolment.objects.count()
+
+    approved_enrolments = ProviderEnrolment.objects.filter(
+        status="approved"
+    ).count()
+
+    rejected_enrolments = ProviderEnrolment.objects.filter(
+        status="rejected"
+    ).count()
+
+    pending_enrolments = ProviderEnrolment.objects.filter(
+        status="submitted"
+    ).count()
+
+    total_service_requests = ServiceRequest.objects.count()
+
+    total_payments = Payment.objects.count()
+
+    completed_payments = Payment.objects.filter(
+        status="completed"
+    ).count()
+
+    failed_payments = Payment.objects.filter(
+        status="failed"
+    ).count()
+
+    total_revenue = Payment.objects.filter(
+        status="completed"
+    ).aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    return Response(
+        {
+            "users": {
+                "total": total_users,
+            },
+            "providers": {
+                "total_profiles": total_providers,
+                "total_enrolments": total_enrolments,
+                "approved_enrolments": approved_enrolments,
+                "pending_enrolments": pending_enrolments,
+                "rejected_enrolments": rejected_enrolments,
+            },
+            "service_requests": {
+                "total": total_service_requests,
+            },
+            "payments": {
+                "total": total_payments,
+                "completed": completed_payments,
+                "failed": failed_payments,
+                "total_revenue": total_revenue,
+            },
+        },
+        status=status.HTTP_200_OK
+    )
