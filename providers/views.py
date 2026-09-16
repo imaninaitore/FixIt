@@ -473,3 +473,63 @@ def provider_categories(request):
         categories,
         status=status.HTTP_200_OK
     )
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def submit_enrolment(request):
+
+    serializer = ProviderEnrolmentSubmissionSerializer(
+        data=request.data
+    )
+
+    if not serializer.is_valid():
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    data = serializer.validated_data
+
+    enrolment, created = ProviderEnrolment.objects.update_or_create(
+        provider=request.user,
+        defaults={
+            "business_name": data["business_name"],
+            "service_category": data["service_category"],
+            "description": data["description"],
+            "location": data["location"],
+            "years_of_experience": data["years_of_experience"],
+            "status": "submitted",
+            "payment_status": "pending",
+            "payment_reference": data["transaction_code"],
+        }
+    )
+
+    payment = Payment.objects.create(
+        provider=request.user,
+        enrolment=enrolment,
+        phone_number=data["phone_number"],
+        plan=data["plan"],
+        amount=data["amount"],
+        transaction_code=data["transaction_code"],
+        payment_date=data["payment_date"],
+        status="pending",
+    )
+
+    return Response(
+        {
+            "message": "Enrolment and payment submitted successfully. Awaiting admin review.",
+            "enrolment": ProviderEnrolmentSerializer(enrolment).data,
+            "payment": {
+                "id": payment.id,
+                "provider": payment.provider.id,
+                "enrolment": payment.enrolment.id,
+                "phone_number": payment.phone_number,
+                "plan": payment.plan,
+                "amount": str(payment.amount),
+                "transaction_code": payment.transaction_code,
+                "payment_date": payment.payment_date,
+                "status": payment.status,
+            }
+        },
+        status=status.HTTP_201_CREATED
+    )
