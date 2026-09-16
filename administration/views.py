@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .models import ProviderEnrolment,ProviderProfile
+from accounts.models import Account
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
@@ -318,10 +319,8 @@ def admin_dashboard(request):
 
     # Account stores whether a user is a customer or provider.
     # This assumes the Account model has an account_type field.
-    if hasattr(User, "account"):
-        pass
 
-    from accounts.models import Account
+   
 
     total_customers = Account.objects.filter(
         account_type="customer"
