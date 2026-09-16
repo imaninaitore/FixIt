@@ -5,7 +5,6 @@ from rest_framework import status
 
 from .models import ProviderProfile, ProviderEnrolment
 from .serializers import (
-    ProviderProfileSerializer,
     ProviderEnrolmentSerializer,
     ProviderEnrolmentSubmissionSerializer,
 )
