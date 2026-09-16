@@ -304,3 +304,77 @@ def admin_reports(request):
         },
         status=status.HTTP_200_OK
     )
+
+
+
+# GET /api/admin/dashboard/
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_dashboard(request):
+    total_users = User.objects.count()
+
+    total_customers = 0
+    total_provider_accounts = 0
+
+    # Account stores whether a user is a customer or provider.
+    # This assumes the Account model has an account_type field.
+    if hasattr(User, "account"):
+        pass
+
+    from accounts.models import Account
+
+    total_customers = Account.objects.filter(
+        account_type="customer"
+    ).count()
+
+    total_provider_accounts = Account.objects.filter(
+        account_type="provider"
+    ).count()
+
+    total_provider_profiles = ProviderProfile.objects.count()
+
+    approved_providers = ProviderEnrolment.objects.filter(
+        status="approved"
+    ).count()
+
+    pending_providers = ProviderEnrolment.objects.filter(
+        status="submitted"
+    ).count()
+
+    total_requests = ServiceRequest.objects.count()
+
+    total_payments = Payment.objects.count()
+
+    completed_payments = Payment.objects.filter(
+        status="completed"
+    ).count()
+
+    total_revenue = Payment.objects.filter(
+        status="completed"
+    ).aggregate(
+        total=Sum("amount")
+    )["total"] or 0
+
+    return Response(
+        {
+            "users": {
+                "total": total_users,
+                "customers": total_customers,
+                "provider_accounts": total_provider_accounts,
+            },
+            "providers": {
+                "total_profiles": total_provider_profiles,
+                "approved": approved_providers,
+                "pending": pending_providers,
+            },
+            "service_requests": {
+                "total": total_requests,
+            },
+            "payments": {
+                "total": total_payments,
+                "completed": completed_payments,
+                "total_revenue": total_revenue,
+            },
+        },
+        status=status.HTTP_200_OK
+    )
