@@ -38,7 +38,10 @@ class Payment(models.Model):
         unique=True
     )
 
-    payment_date = models.DateField()
+    payment_date = models.DateField(
+    blank=True,
+    null=True
+    )
 
     status = models.CharField(
         max_length=20,
