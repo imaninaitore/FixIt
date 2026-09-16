@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Payment, SubscriptionPlan, Subscription
+from .models import Payment
 
 # Create your views here.
 @api_view(["POST"])
