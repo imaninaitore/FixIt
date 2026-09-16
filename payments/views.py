@@ -5,14 +5,16 @@ import requests
 from decouple import config
 
 from django.utils import timezone
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Payment
+from .models import Payment, SubscriptionPlan
 
-# Create your views here.
+
+# Create a pending payment record before integrating or sending an STK Push
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def initiate_payment(request):
@@ -79,11 +81,13 @@ def initiate_payment(request):
             "plan": payment.plan,
             "amount": payment.amount,
             "status": payment.status,
-            "next_step": "M-Pesa STK Push will be integrated next."
+            "next_step": "Use the M-Pesa STK Push endpoint to send the payment prompt."
         },
         status=status.HTTP_201_CREATED
     )
 
+
+# View payment history for the logged-in provider
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def my_payments(request):
@@ -113,6 +117,7 @@ def my_payments(request):
                 "plan": payment.plan,
                 "amount": payment.amount,
                 "status": payment.status,
+                "mpesa_checkout_request_id": payment.mpesa_checkout_request_id,
                 "mpesa_receipt_number": payment.mpesa_receipt_number,
                 "transaction_date": payment.transaction_date,
                 "created_at": payment.created_at,
@@ -124,6 +129,8 @@ def my_payments(request):
         status=status.HTTP_200_OK
     )
 
+
+# View details of one payment belonging to the logged-in provider
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def payment_detail(request, payment_id):
@@ -168,6 +175,8 @@ def payment_detail(request, payment_id):
         status=status.HTTP_200_OK
     )
 
+
+# Check the status of one payment
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def payment_status(request, payment_id):
@@ -202,6 +211,7 @@ def payment_status(request, payment_id):
             "plan": payment.plan,
             "amount": payment.amount,
             "status": payment.status,
+            "mpesa_checkout_request_id": payment.mpesa_checkout_request_id,
             "mpesa_receipt_number": payment.mpesa_receipt_number,
             "transaction_date": payment.transaction_date,
             "updated_at": payment.updated_at,
@@ -209,6 +219,8 @@ def payment_status(request, payment_id):
         status=status.HTTP_200_OK
     )
 
+
+# Receive the callback sent by Safaricom after an STK Push
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def mpesa_callback(request):
@@ -227,13 +239,27 @@ def mpesa_callback(request):
 
         if not checkout_request_id:
             return Response(
-                {"error": "CheckoutRequestID is missing."},
+                {
+                    "error": "CheckoutRequestID is missing."
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Find the payment using the correct model field
         payment = Payment.objects.get(
-            transaction_reference=checkout_request_id
+            mpesa_checkout_request_id=checkout_request_id
         )
+
+        # Avoid processing the same successful callback repeatedly
+        if payment.status == "completed":
+            return Response(
+                {
+                    "message": "Payment callback has already been processed.",
+                    "payment_id": payment.id,
+                    "status": payment.status,
+                },
+                status=status.HTTP_200_OK
+            )
 
         if result_code == 0:
             payment.status = "completed"
@@ -246,32 +272,25 @@ def mpesa_callback(request):
             metadata_items = callback_metadata.get("Item", [])
 
             mpesa_receipt = None
+            transaction_date_value = None
 
             for item in metadata_items:
-                if item.get("Name") == "MpesaReceiptNumber":
-                    mpesa_receipt = item.get("Value")
-                    break
+                item_name = item.get("Name")
+                item_value = item.get("Value")
+
+                if item_name == "MpesaReceiptNumber":
+                    mpesa_receipt = item_value
+
+                elif item_name == "TransactionDate":
+                    transaction_date_value = item_value
 
             if mpesa_receipt:
-                payment.transaction_reference = mpesa_receipt
+                payment.mpesa_receipt_number = str(mpesa_receipt)
+
+            # Save the date and time when the callback was processed
+            payment.transaction_date = timezone.now()
 
             payment.save()
-
-            start_date = timezone.now()
-            end_date = start_date + timezone.timedelta(
-                days=payment.plan.duration_days
-            )
-
-            Subscription.objects.update_or_create(
-                provider=payment.provider,
-                defaults={
-                    "plan": payment.plan,
-                    "payment": payment,
-                    "start_date": start_date,
-                    "end_date": end_date,
-                    "is_active": True
-                }
-            )
 
         else:
             payment.status = "failed"
@@ -280,15 +299,19 @@ def mpesa_callback(request):
         return Response(
             {
                 "message": "Callback received.",
+                "payment_id": payment.id,
                 "result_code": result_code,
-                "result_description": result_description
+                "result_description": result_description,
+                "payment_status": payment.status,
             },
             status=status.HTTP_200_OK
         )
 
     except Payment.DoesNotExist:
         return Response(
-            {"error": "Payment not found."},
+            {
+                "error": "Payment not found."
+            },
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -300,7 +323,9 @@ def mpesa_callback(request):
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-    
+
+
+# Return the current status of a payment
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def verify_payment(request, payment_id):
@@ -337,12 +362,15 @@ def verify_payment(request, payment_id):
             "plan": payment.plan,
             "amount": payment.amount,
             "status": payment.status,
+            "mpesa_checkout_request_id": payment.mpesa_checkout_request_id,
             "mpesa_receipt_number": payment.mpesa_receipt_number,
             "transaction_date": payment.transaction_date,
         },
         status=status.HTTP_200_OK
     )
 
+
+# Generate an access token for the Daraja API
 def get_mpesa_access_token():
     consumer_key = config("MPESA_CONSUMER_KEY")
     consumer_secret = config("MPESA_CONSUMER_SECRET")
@@ -362,12 +390,20 @@ def get_mpesa_access_token():
 
     return response.json()["access_token"]
 
+
+# Send an M-Pesa STK Push to the provider's phone
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def mpesa_stk_push(request):
-    if request.user.account.account_type != "provider":
+    # Check whether the logged-in user is a provider
+    if (
+        not hasattr(request.user, "account")
+        or request.user.account.account_type != "provider"
+    ):
         return Response(
-            {"error": "Only providers can make subscription payments."},
+            {
+                "error": "Only providers can make subscription payments."
+            },
             status=status.HTTP_403_FORBIDDEN
         )
 
@@ -376,10 +412,13 @@ def mpesa_stk_push(request):
 
     if not phone_number or not plan_id:
         return Response(
-            {"error": "phone_number and plan_id are required."},
+            {
+                "error": "phone_number and plan_id are required."
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
 
+    # Find the selected active subscription plan
     try:
         plan = SubscriptionPlan.objects.get(
             id=plan_id,
@@ -387,44 +426,61 @@ def mpesa_stk_push(request):
         )
     except SubscriptionPlan.DoesNotExist:
         return Response(
-            {"error": "Subscription plan not found."},
+            {
+                "error": "Subscription plan not found."
+            },
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # Convert 07XXXXXXXX or 01XXXXXXXX to 2547XXXXXXXX or 2541XXXXXXXX
+    # Normalize the Kenyan phone number
     phone_number = phone_number.replace(" ", "").replace("+", "")
 
+    # Convert 07XXXXXXXX or 01XXXXXXXX to 2547XXXXXXXX or 2541XXXXXXXX
     if phone_number.startswith("0"):
         phone_number = "254" + phone_number[1:]
     elif phone_number.startswith("7") or phone_number.startswith("1"):
         phone_number = "254" + phone_number
 
-    if not phone_number.isdigit() or len(phone_number) != 12:
+    # Validate the normalized phone number
+    if (
+        not phone_number.isdigit()
+        or len(phone_number) != 12
+        or not phone_number.startswith("254")
+    ):
         return Response(
-            {"error": "Enter a valid Kenyan phone number."},
+            {
+                "error": "Enter a valid Kenyan phone number."
+            },
             status=status.HTTP_400_BAD_REQUEST
         )
 
     try:
+        # Get the M-Pesa access token
         access_token = get_mpesa_access_token()
 
+        # Generate the timestamp required by M-Pesa
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
         shortcode = config("MPESA_SHORTCODE")
         passkey = config("MPESA_PASSKEY")
 
+        # Generate the STK Push password
         password_string = shortcode + passkey + timestamp
 
         password = base64.b64encode(
             password_string.encode("utf-8")
         ).decode("utf-8")
 
+        # Create a pending payment record
         payment = Payment.objects.create(
             provider=request.user,
-            plan=plan,
+            phone_number=phone_number,
+            plan="provider_subscription",
             amount=plan.amount,
             status="pending"
         )
 
+        # Prepare the STK Push request
         payload = {
             "BusinessShortCode": shortcode,
             "Password": password,
@@ -444,6 +500,7 @@ def mpesa_stk_push(request):
             "Content-Type": "application/json"
         }
 
+        # Send the STK Push request to Safaricom
         mpesa_response = requests.post(
             "https://sandbox.safaricom.co.ke/"
             "mpesa/stkpush/v1/processrequest",
@@ -454,6 +511,7 @@ def mpesa_stk_push(request):
 
         response_data = mpesa_response.json()
 
+        # Handle an unsuccessful M-Pesa request
         if mpesa_response.status_code != 200:
             payment.status = "failed"
             payment.save()
@@ -466,14 +524,18 @@ def mpesa_stk_push(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        payment.transaction_reference = response_data.get(
+        # Save the M-Pesa checkout request ID
+        payment.mpesa_checkout_request_id = response_data.get(
             "CheckoutRequestID"
         )
         payment.save()
 
         return Response(
             {
-                "message": "STK Push sent. Check your phone and enter your M-Pesa PIN.",
+                "message": (
+                    "STK Push sent. Check your phone "
+                    "and enter your M-Pesa PIN."
+                ),
                 "payment_id": payment.id,
                 "checkout_request_id": response_data.get(
                     "CheckoutRequestID"
@@ -490,4 +552,13 @@ def mpesa_stk_push(request):
                 "details": str(error)
             },
             status=status.HTTP_502_BAD_GATEWAY
+        )
+
+    except Exception as error:
+        return Response(
+            {
+                "error": "An error occurred while processing the payment.",
+                "details": str(error)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
