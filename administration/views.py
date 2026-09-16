@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import ProviderEnrolment,ProviderProfile
+from providers.models import ProviderEnrolment,ProviderProfile
 from accounts.models import Account
 
 @api_view(["GET"])
