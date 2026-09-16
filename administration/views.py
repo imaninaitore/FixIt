@@ -97,3 +97,25 @@ def admin_user_status(request, user_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_enrolments(request):
+    profiles = ProviderProfile.objects.all().order_by("-id")
+
+    profile_data = []
+
+    for profile in profiles:
+        profile_data.append(
+            {
+                "id": profile.id,
+            }
+        )
+
+    return Response(
+        {
+            "count": len(profile_data),
+            "provider_profiles": profile_data,
+        },
+        status=status.HTTP_200_OK
+    )
