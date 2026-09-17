@@ -11,7 +11,7 @@ from .serializers import (
 
 from payments.models import Payment
 from django.utils import timezone
-
+from django.db import models
 # Create your views here.
 
 # View or update the logged-in provider's profile
@@ -42,7 +42,7 @@ def provider_profile(request):
 
     # GET: Return the provider's profile
     if request.method == "GET":
-        serializer = ProviderProfileSerializer(profile)
+        serializer = ProviderEnrolmentSerializer(profile)
 
         return Response(
             serializer.data,
@@ -51,7 +51,7 @@ def provider_profile(request):
 
     # PATCH: Update the provider's profile
     if request.method == "PATCH":
-        serializer = ProviderProfileSerializer(
+        serializer = ProviderEnrolmentSerializer(
             profile,
             data=request.data,
             partial=True
@@ -271,7 +271,7 @@ def provider_directory(request):
             location__icontains=location_query
         )
 
-    serializer = ProviderProfileSerializer(
+    serializer = ProviderEnrolmentSerializer(
         profiles,
         many=True
     )
@@ -324,7 +324,7 @@ def public_provider_profile(request, provider_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    serializer = ProviderProfileSerializer(profile)
+    serializer = ProviderEnrolmentSerializer(profile)
 
     return Response(
         serializer.data,
