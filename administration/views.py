@@ -8,6 +8,8 @@ from rest_framework import status
 
 from providers.models import ProviderEnrolment,ProviderProfile
 from accounts.models import Account
+from service_requests.models import ServiceRequest
+
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
