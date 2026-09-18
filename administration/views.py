@@ -214,7 +214,7 @@ def admin_service_requests(request):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_payments(request):
-    payments = Payment.objects.all().order_by("-created_at")
+    payments = Payment.objects.all().order_by("-id")
 
     payment_data = []
 
@@ -227,12 +227,9 @@ def admin_payments(request):
                 "phone_number": payment.phone_number,
                 "plan": payment.plan,
                 "amount": payment.amount,
+                "transaction_code": payment.transaction_code,
+                "payment_date": payment.payment_date,
                 "status": payment.status,
-                "mpesa_checkout_request_id": payment.mpesa_checkout_request_id,
-                "mpesa_receipt_number": payment.mpesa_receipt_number,
-                "transaction_date": payment.transaction_date,
-                "created_at": payment.created_at,
-                "updated_at": payment.updated_at,
             }
         )
 
@@ -243,7 +240,6 @@ def admin_payments(request):
         },
         status=status.HTTP_200_OK
     )
-
 
 # GET /api/admin/reports/
 @api_view(["GET"])
