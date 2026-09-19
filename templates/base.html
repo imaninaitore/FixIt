@@ -1,0 +1,110 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}FixIt{% endblock %}</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="absolute left-0 right-0 top-0 z-50">
+
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+
+            <!-- FixIt logo -->
+            <a href="{% url 'home' %}" class="text-2xl font-semibold text-white">
+                Fix<span class="text-blue-400">It</span>
+            </a>
+
+            <!-- Navigation links -->
+            <div class="hidden items-center gap-8 md:flex">
+
+                <a
+                    href="{% url 'home' %}"
+                    class="text-sm font-medium text-white"
+                >
+                    Home
+                </a>
+
+                <a
+                    href="#providers"
+                    class="text-sm font-medium text-white/80 transition hover:text-white"
+                >
+                    Find a Provider
+                </a>
+
+                <a
+                    href="#how-it-works"
+                    class="text-sm font-medium text-white/80 transition hover:text-white"
+                >
+                    How It Works
+                </a>
+
+                <a
+                    href="#about"
+                    class="text-sm font-medium text-white/80 transition hover:text-white"
+                >
+                    About
+                </a>
+
+                <a
+                    href="#contact"
+                    class="text-sm font-medium text-white/80 transition hover:text-white"
+                >
+                    Contact
+                </a>
+
+            </div>
+
+            <!-- Authentication -->
+            <div class="hidden items-center gap-3 sm:flex">
+
+                <a
+                    href="#"
+                    class="rounded-lg border border-white/50 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+                >
+                    Log In
+                </a>
+
+                <a
+                    href="#"
+                    class="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                >
+                    Sign Up
+                </a>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- Page content -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+
+    <script src="{% static 'js/main.js' %}"></script>
+
+</body>
+</html>
