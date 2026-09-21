@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 function Home() {
     return (
         <main>
+            <Navbar/>
             <section
                 className="relative min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
                 style={{
