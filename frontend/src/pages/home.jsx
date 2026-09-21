@@ -1,14 +1,12 @@
-import Navbar from "/components/Navbar";
+import Navbar from "../components/Navbar";
 
 function Home() {
     return (
         <main>
-             <Navbar />
-            {/* Hero section */}
             <section
                 className="relative min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
                 style={{
-                    backgroundImage: "url('/images/bg.png')",
+                    backgroundImage: "url('/assets/bg.png')",
                 }}
             >
                 {/* Background overlay */}
@@ -17,6 +15,7 @@ function Home() {
                 {/* Hero content */}
                 <div className="relative z-10 flex min-h-screen items-center">
                     <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
+
                         <div className="max-w-3xl pt-20">
 
                             {/* Small heading */}
@@ -63,6 +62,7 @@ function Home() {
                             </div>
 
                         </div>
+
                     </div>
                 </div>
             </section>
