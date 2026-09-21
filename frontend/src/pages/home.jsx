@@ -7,7 +7,7 @@ function Home() {
             <section
                 className="relative min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
                 style={{
-                    backgroundImage: "url('/assets/bg.png')",
+                    backgroundImage: "url('/images/bg.png')",
                 }}
             >
                 {/* Background overlay */}
