@@ -2,6 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from django.shortcuts import render
 
 from .models import ProviderProfile, ProviderEnrolment
 from .serializers import (
@@ -13,6 +14,9 @@ from payments.models import Payment
 from django.utils import timezone
 from django.db import models
 # Create your views here.
+
+def find_provider(request):
+    return render(request, "find-provider.html")
 
 # View or update the logged-in provider's profile
 @api_view(["GET", "PATCH"])
