@@ -11,6 +11,8 @@ from .views import (
     provider_categories ,
     submit_enrolment, 
     approve_provider_enrolment,
+
+    find_provider
 )
 
 urlpatterns = [
@@ -36,4 +38,6 @@ urlpatterns = [
         approve_provider_enrolment,
         name="approve_provider_enrolment",
     ),
+
+    path("find/", find_provider, name="find_provider"),
 ]
