@@ -1,6 +1,9 @@
+import Navbar from "/components/Navbar";
+
 function Home() {
     return (
         <main>
+             <Navbar />
             {/* Hero section */}
             <section
                 className="relative min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
