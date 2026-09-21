@@ -1,4 +1,6 @@
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import About from "../components/About";
 
 function Home() {
     return (
@@ -67,6 +69,8 @@ function Home() {
                     </div>
                 </div>
             </section>
+            <About/>
+            <Footer/>
         </main>
     );
 }

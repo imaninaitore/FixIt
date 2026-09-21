@@ -25,13 +25,6 @@ function Navbar() {
                     </a>
 
                     <a
-                        href="#how-it-works"
-                        className="text-sm font-medium text-white transition hover:text-blue-300"
-                    >
-                        How It Works
-                    </a>
-
-                    <a
                         href="#about"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
@@ -42,21 +35,28 @@ function Navbar() {
                         href="#contact"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
-                        Contact
+                        Contacts
                     </a>
                 </div>
 
                 {/* Authentication buttons */}
                 <div className="flex items-center gap-3">
                     <a
+                        href=""
+                        className="text-sm font-medium text-white transition hover:underline"
+                    >
+                        Register as a provider
+                    </a>
+
+                    <a
                         href="/login"
-                        className="rounded-lg px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                        className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
                     >
                         Log In
                     </a>
 
                     <a
-                        href="/signup"
+                        href="/register"
                         className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
                     >
                         Sign Up
