@@ -1,4 +1,8 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+
+const [username, setUsername] = useState("");
+const [password, setPassword] = useState("");
 
 const handleLogin = async (e) => {
     e.preventDefault();
@@ -23,17 +27,24 @@ const handleLogin = async (e) => {
         console.log("Login response:", data);
 
         if (response.ok) {
+            // Save the JWT tokens
             localStorage.setItem("access_token", data.access);
             localStorage.setItem("refresh_token", data.refresh);
 
-            alert("Login successful");
+            // Save the username
+            localStorage.setItem("username", data.username);
+
+            alert(data.message);
+
         } else {
-            alert("Login failed");
+            // Show the error returned by Django
+            console.log("Login failed:", data);
+            alert("Login failed. Please check your username and password.");
         }
 
     } catch (error) {
-        console.error("Error:", error);
-        alert("Could not connect to the server");
+        console.error("Connection error:", error);
+        alert("Could not connect to the Django server.");
     }
 };
 
@@ -97,7 +108,9 @@ function Login() {
                             </p>
                         </div>
 
-                        <form className="mt-8 space-y-5">
+                        <form className="mt-8 space-y-5"
+                        onSubmit={handleLogin}
+                        >
 
                             {/* Email */}
                             <div>
@@ -109,9 +122,11 @@ function Login() {
                                 </label>
 
                                 <input
-                                    id="email"
-                                    type="email"
-                                    placeholder="you@example.com"
+                                    id="username"
+                                    type="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    placeholder="username"
                                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                 />
                             </div>
@@ -137,6 +152,8 @@ function Login() {
                                 <input
                                     id="password"
                                     type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter your password"
                                     className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                 />
