@@ -1,5 +1,42 @@
 import { Link } from "react-router-dom";
 
+const handleLogin = async (e) => {
+    e.preventDefault();
+
+    try {
+        const response = await fetch(
+            "http://127.0.0.1:8000/api/auth/login/",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                }),
+            }
+        );
+
+        const data = await response.json();
+
+        console.log("Login response:", data);
+
+        if (response.ok) {
+            localStorage.setItem("access_token", data.access);
+            localStorage.setItem("refresh_token", data.refresh);
+
+            alert("Login successful");
+        } else {
+            alert("Login failed");
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Could not connect to the server");
+    }
+};
+
 function Login() {
     return (
         <main className="min-h-screen bg-slate-950">
