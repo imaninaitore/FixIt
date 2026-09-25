@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { loginUser } from "../services/authService";
+import { API_URL } from "../services/api";
+import { getMyProviderEnrolment } from "../services/providerService";
 
 function Login() {
     const navigate = useNavigate();
@@ -18,10 +21,51 @@ function Login() {
         setLoading(true);
 
         try {
-            await loginUser(username, password);
+            // Login the user
+            const loginData = await loginUser(username, password);
 
-            // Login was successful
-            navigate("/");
+            // Get the logged-in user's profile
+            const profileResponse = await fetch(
+                `${API_URL}/auth/me/`,
+                {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${loginData.access}`,
+                    },
+                }
+            );
+
+            const profileData = await profileResponse.json();
+
+            if (!profileResponse.ok) {
+                throw new Error(
+                    profileData.detail ||
+                    "Could not load your profile."
+                );
+            }
+
+            // Check whether the user is a provider
+            if (profileData.account_type === "provider") {
+
+                try {
+                    // Check whether the provider already has an enrolment
+                    await getMyProviderEnrolment();
+
+                    // Enrolment exists
+                    navigate("/provider/dashboard");
+
+                } catch (enrolmentError) {
+
+                    // No enrolment yet
+                    navigate("/provider/enrolment");
+                }
+
+            } else {
+
+                // Customer
+                navigate("/");
+            }
+
         } catch (error) {
             setError(error.message);
         } finally {
@@ -34,89 +78,99 @@ function Login() {
 
             <div className="w-full max-w-md">
 
-                <div className="bg-white rounded-2xl shadow-xl p-8">
+                <div className="rounded-2xl bg-white p-8 shadow-xl">
 
-                    <div className="text-center mb-8">
+                    {/* Heading */}
+                    <div className="mb-8 text-center">
+
                         <h1 className="text-3xl font-bold text-slate-800">
-                            Welcome Back
+                            Welcome back
                         </h1>
 
-                        <p className="mt-2 text-slate-500">
-                            Login to your FixIt account
+                        <p className="mt-2 text-sm text-slate-500">
+                            Log in to your FixIt account
                         </p>
+
                     </div>
 
+
+                    {/* Error message */}
                     {error && (
-                        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        <div className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
                             {error}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit}>
 
-                        <div className="mb-5">
-                            <label
-                                htmlFor="username"
-                                className="mb-2 block text-sm font-medium text-slate-700"
-                            >
+                    {/* Login form */}
+                    <form
+                        onSubmit={handleSubmit}
+                        className="space-y-5"
+                    >
+
+                        {/* Username */}
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">
                                 Username
                             </label>
 
                             <input
-                                id="username"
                                 type="text"
                                 value={username}
                                 onChange={(event) =>
                                     setUsername(event.target.value)
                                 }
-                                placeholder="Enter your username"
                                 required
-                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                placeholder="Enter your username"
                             />
                         </div>
 
-                        <div className="mb-6">
-                            <label
-                                htmlFor="password"
-                                className="mb-2 block text-sm font-medium text-slate-700"
-                            >
+
+                        {/* Password */}
+                        <div>
+                            <label className="mb-2 block text-sm font-medium text-slate-700">
                                 Password
                             </label>
 
                             <input
-                                id="password"
                                 type="password"
                                 value={password}
                                 onChange={(event) =>
                                     setPassword(event.target.value)
                                 }
-                                placeholder="Enter your password"
                                 required
-                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                placeholder="Enter your password"
                             />
                         </div>
 
+
+                        {/* Login button */}
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+                            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                            {loading ? "Logging in..." : "Login"}
+                            {loading ? "Logging in..." : "Log In"}
                         </button>
 
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-slate-500">
-                            Don't have an account?{" "}
-                            <Link
-                                to="/register"
-                                className="font-semibold text-blue-600 hover:text-blue-700"
-                            >
-                                Create an account
-                            </Link>
-                        </p>
-                    </div>
+
+                    {/* Register */}
+                    <p className="mt-6 text-center text-sm text-slate-500">
+
+                        Don't have an account?{" "}
+
+                        <Link
+                            to="/register"
+                            className="font-semibold text-blue-600 hover:text-blue-700"
+                        >
+                            Sign up
+                        </Link>
+
+                    </p>
 
                 </div>
 
