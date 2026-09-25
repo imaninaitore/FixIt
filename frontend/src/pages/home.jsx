@@ -3,6 +3,7 @@ import Footer from "../components/Footer";
 import About from "../components/About";
 
 function Home() {
+    const username = localStorage.getItem("username");
     return (
         <main>
             <Navbar/>
@@ -20,6 +21,13 @@ function Home() {
                     <div className="mx-auto w-full max-w-7xl px-6 lg:px-10">
 
                         <div className="max-w-3xl pt-20">
+
+                            {username && (
+    <div className="mb-8">
+        <p className="text-blue-600 font-medium">
+            Welcome back, {username}
+        </p>
+    </div>)}
 
                             {/* Small heading */}
                             <p className="mb-5 text-sm font-medium uppercase tracking-[0.25em] text-blue-300">
