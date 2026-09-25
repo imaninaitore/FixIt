@@ -16,6 +16,7 @@ import AdminEnrolments from "./pages/administration/AdminEnrolments";
 import AdminEnrolmentDetails from "./pages/administration/AdminEnrolmentDetails";
 import AdminServiceRequests from "./pages/administration/AdminServiceRequests";
 import AdminPayments from "./pages/administration/AdminPayments";
+import AdminReports from "./pages/administration/AdminReports";
 
 function App() {
     return (
@@ -36,6 +37,7 @@ function App() {
                 <Route path="/admin/enrolments/:enrolmentId" element={<AdminEnrolmentDetails />}/>
                 <Route  path="/admin/requests" element={<AdminServiceRequests />}/>
                 <Route path="/admin/payments" element={<AdminPayments />}/>
+                <Route path="/admin/reports" element={<AdminReports />}/>
 
             </Routes>
         </BrowserRouter>
