@@ -44,27 +44,12 @@ function Login() {
                 );
             }
 
-            // Check whether the user is a provider
-            if (profileData.account_type === "provider") {
+// Save the account type so the homepage knows
+// whether to show provider-specific navigation.
+localStorage.setItem("account_type", profileData.account_type);
 
-                try {
-                    // Check whether the provider already has an enrolment
-                    await getMyProviderEnrolment();
-
-                    // Enrolment exists
-                    navigate("/provider/dashboard");
-
-                } catch (enrolmentError) {
-
-                    // No enrolment yet
-                    navigate("/provider/enrolment");
-                }
-
-            } else {
-
-                // Customer
-                navigate("/");
-            }
+// All users go to the homepage after login.
+navigate("/");
 
         } catch (error) {
             setError(error.message);
