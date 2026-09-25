@@ -40,53 +40,55 @@ function Navbar() {
                     </a>
                 </div>
 
-{username ? (
-    <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-            {username.charAt(0).toUpperCase()}
+          {/* Authentication buttons */}
+<div className="flex items-center gap-3">
+
+    {username ? (
+        // User is logged in
+        <div className="flex items-center gap-3">
+
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
+                {username.charAt(0).toUpperCase()}
+            </div>
+
+            <div className="hidden sm:block">
+                <p className="text-sm font-semibold text-white">
+                    {username}
+                </p>
+
+                <p className="text-xs text-blue-100">
+                    Logged in
+                </p>
+            </div>
+
         </div>
+    ) : (
+        // User is not logged in
+        <>
+            <a
+                href=""
+                className="text-sm font-medium text-white transition hover:underline"
+            >
+                Register as a provider
+            </a>
 
-        <div className="hidden sm:block">
-            <p className="text-sm font-semibold text-slate-800">
-                {username}
-            </p>
-            <p className="text-xs text-slate-500">
-                Logged in
-            </p>
-        </div>
-    </div>
-) : (
-    <Link
-        to="/login"
-        className="rounded-lg bg-blue-600 px-5 py-2 text-white font-medium hover:bg-blue-700"
-    >
-        Login
-    </Link>
-)}
+            <a
+                href="/login"
+                className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+                Log In
+            </a>
 
-                {/* Authentication buttons */}
-                <div className="flex items-center gap-3">
-                    <a
-                        href=""
-                        className="text-sm font-medium text-white transition hover:underline"
-                    >
-                        Register as a provider
-                    </a>
+            <a
+                href="/register"
+                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
+                Sign Up
+            </a>
+        </>
+    )}
 
-                    <a
-                        href="/login"
-                        className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-                    >
-                        Log In
-                    </a>
-
-                    <a
-                        href="/register"
-                        className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
-                    >
-                        Sign Up
-                    </a>
-                </div>
+</div>     
 
             </div>
         </nav>
