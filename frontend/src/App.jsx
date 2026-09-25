@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
+import CustomerDashboard from "./pages/CustomerDashboard";
 
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/customer-dashboard" element={<CustomerDashboard />}/>
 
                 <Route path="/provider/enrolment" element={<ProviderEnrolment />}/>
                 <Route path="/providers" element={<Providers />} />

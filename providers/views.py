@@ -47,34 +47,33 @@ def provider_profile(request):
 
     # GET: Return the provider's profile
     if request.method == "GET":
-        serializer = ProviderEnrolmentSerializer(profile)
+      serializer = ProviderProfileSerializer(profile)
+
+      return Response(
+        serializer.data,
+        status=status.HTTP_200_OK
+      )
+
+    # PATCH: Update the provider's profile
+    if request.method == "PATCH":
+      serializer = ProviderProfileSerializer(
+        profile,
+        data=request.data,
+        partial=True
+    )
+
+    if serializer.is_valid():
+        serializer.save()
 
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
         )
 
-    # PATCH: Update the provider's profile
-    if request.method == "PATCH":
-        serializer = ProviderEnrolmentSerializer(
-            profile,
-            data=request.data,
-            partial=True
-        )
-
-        if serializer.is_valid():
-            serializer.save()
-
-            return Response(
-                serializer.data,
-                status=status.HTTP_200_OK
-            )
-
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 # View the enrolment application belonging to the logged-in provider
 @api_view(["GET"])
@@ -276,10 +275,10 @@ def provider_directory(request):
             location__icontains=location_query
         )
 
-    serializer = ProviderEnrolmentSerializer(
-        profiles,
-        many=True
-    )
+    serializer = ProviderProfileSerializer(
+    profiles,
+    many=True
+)
 
     return Response(
         serializer.data,
