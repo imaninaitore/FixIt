@@ -220,11 +220,14 @@ function ProviderProfile() {
                                 request through FixIt.
                             </p>
 
-                            <button
-                                className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
-                            >
-                                Send Service Request
-                            </button>
+<button
+    onClick={() =>
+        navigate(`/service-requests/create?provider=${provider.user}`)
+    }
+    className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
+>
+    Send Service Request
+</button>
 
                         </section>
 
