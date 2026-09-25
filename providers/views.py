@@ -8,6 +8,7 @@ from .models import ProviderProfile, ProviderEnrolment
 from .serializers import (
     ProviderEnrolmentSerializer,
     ProviderEnrolmentSubmissionSerializer,
+    ProviderProfileSerializer,
 )
 
 from payments.models import Payment
@@ -286,7 +287,6 @@ def provider_directory(request):
     )
 
 
-# View one approved provider's public profile
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def public_provider_profile(request, provider_id):
@@ -328,7 +328,7 @@ def public_provider_profile(request, provider_id):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    serializer = ProviderEnrolmentSerializer(profile)
+    serializer = ProviderProfileSerializer(profile)
 
     return Response(
         serializer.data,
