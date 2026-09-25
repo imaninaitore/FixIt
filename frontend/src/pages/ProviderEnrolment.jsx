@@ -37,28 +37,36 @@ function ProviderEnrolment() {
         setError("");
         setSuccess("");
         setLoading(true);
+try {
+    const data = await submitProviderEnrolment({
+        ...formData,
+        years_of_experience: Number(formData.years_of_experience),
+        amount: Number(formData.amount),
+    });
 
-        try {
-            const data = await submitProviderEnrolment({
-                ...formData,
-                years_of_experience: Number(
-                    formData.years_of_experience
-                ),
-                amount: Number(formData.amount),
-            });
+    setSuccessMessage(
+        data.message || "Your provider enrolment was submitted successfully."
+    );
 
-            setSuccess(data.message);
+    // Clear the form
+    setFormData({
+        business_name: "",
+        service_category: "",
+        description: "",
+        location: "",
+        years_of_experience: "",
+        phone_number: "",
+        plan: "provider_subscription",
+        amount: "50.00",
+        transaction_code: "",
+        payment_date: "",
+    });
 
-            setTimeout(() => {
-                navigate("/");
-            }, 2000);
-
-        } catch (error) {
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    }
+} catch (error) {
+    setError(error.message);
+} finally {
+    setLoading(false);
+}
 
     return (
         <div className="min-h-screen bg-slate-100 px-4 py-10">
