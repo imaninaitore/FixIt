@@ -9,6 +9,7 @@ import ProviderProfile from "/pages/ProviderProfile";
 import ProviderDashboard from "/pages/ProviderDashboard";
 import AdminDashboard from "./pages/administration/AdminDashboard";
 import AdminUsers from "./pages/administration/AdminUsers";
+import AdminUserDetails from "./pages/administration/AdminUserDetails";
 
 function App() {
     return (
@@ -24,6 +25,7 @@ function App() {
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
                 <Route path="/admin/dashboard" element={<AdminDashboard />}/>
                 <Route path="/admin/users" element={<AdminUsers />}/>
+                <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
 
             </Routes>
         </BrowserRouter>
