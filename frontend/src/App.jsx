@@ -8,6 +8,7 @@ import Providers from "/pages/Providers";
 import ProviderProfile from "/pages/ProviderProfile";
 import ProviderDashboard from "/pages/ProviderDashboard";
 import AdminDashboard from "./pages/administration/AdminDashboard";
+import AdminUsers from "./pages/administration/AdminUsers";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                 <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
                 <Route path="/admin/dashboard" element={<AdminDashboard />}/>
+                <Route path="/admin/users" element={<AdminUsers />}/>
 
             </Routes>
         </BrowserRouter>
