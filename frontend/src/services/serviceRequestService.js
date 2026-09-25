@@ -1,195 +1,29 @@
-import { API_URL } from "./api";
+import api from "./api";
 
-async function getAuthHeaders() {
-    const token = localStorage.getItem("access_token");
+// Get all service requests for the logged-in user
+export const getServiceRequests = async () => {
+  const response = await api.get("/api/requests/");
+  return response.data;
+};
 
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-}
+// Create a new service request
+export const createServiceRequest = async (requestData) => {
+  const response = await api.post("/api/requests/", requestData);
+  return response.data;
+};
 
-async function handleResponse(response, defaultMessage) {
-    const data = await response.json();
+// Get one service request
+export const getServiceRequest = async (requestId) => {
+  const response = await api.get(`/api/requests/${requestId}/`);
+  return response.data;
+};
 
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            defaultMessage
-        );
-    }
+// Update a service request
+export const updateServiceRequest = async (requestId, requestData) => {
+  const response = await api.patch(
+    `/api/requests/${requestId}/`,
+    requestData
+  );
 
-    return data;
-}
-
-// Customer: get all of the logged-in customer's service requests
-export async function getServiceRequests() {
-    const response = await fetch(
-        `${API_URL}/requests/`,
-        {
-            method: "GET",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to fetch service requests."
-    );
-}
-
-// Customer: create a new service request
-export async function createServiceRequest(formData) {
-    const response = await fetch(
-        `${API_URL}/requests/`,
-        {
-            method: "POST",
-            headers: await getAuthHeaders(),
-            body: JSON.stringify(formData),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to create service request."
-    );
-}
-
-// Customer/provider: get one service request
-export async function getServiceRequest(requestId) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/`,
-        {
-            method: "GET",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to fetch service request."
-    );
-}
-
-// Customer: update a service request
-export async function updateServiceRequest(
-    requestId,
-    formData
-) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/`,
-        {
-            method: "PATCH",
-            headers: await getAuthHeaders(),
-            body: JSON.stringify(formData),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to update service request."
-    );
-}
-
-// Customer: cancel a service request
-export async function cancelServiceRequest(requestId) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/`,
-        {
-            method: "DELETE",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to cancel service request."
-    );
-}
-
-// Provider: get assigned service requests
-export async function getProviderServiceRequests() {
-    const response = await fetch(
-        `${API_URL}/requests/provider/`,
-        {
-            method: "GET",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to fetch assigned service requests."
-    );
-}
-
-// Provider: accept a request
-export async function acceptServiceRequest(requestId) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/accept/`,
-        {
-            method: "POST",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to accept service request."
-    );
-}
-
-// Provider: reject a request
-export async function rejectServiceRequest(requestId) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/reject/`,
-        {
-            method: "POST",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to reject service request."
-    );
-}
-
-// Provider: move request to in_progress or completed
-export async function updateServiceRequestStatus(
-    requestId,
-    status
-) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/status/`,
-        {
-            method: "PATCH",
-            headers: await getAuthHeaders(),
-            body: JSON.stringify({
-                status,
-            }),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to update service request status."
-    );
-}
-
-// Provider: mark request as completed
-export async function completeServiceRequest(requestId) {
-    const response = await fetch(
-        `${API_URL}/requests/${requestId}/complete/`,
-        {
-            method: "POST",
-            headers: await getAuthHeaders(),
-        }
-    );
-
-    return handleResponse(
-        response,
-        "Failed to complete service request."
-    );
-}
+  return response.data;
+};

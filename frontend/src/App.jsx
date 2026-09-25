@@ -19,6 +19,7 @@ import AdminPayments from "./pages/administration/AdminPayments";
 import AdminReports from "./pages/administration/AdminReports";
 
 import ServiceRequests from "./pages/ServiceRequests";
+import CreateServiceRequest from "./pages/CreateServiceRequest";
 
 function App() {
     return (
@@ -44,6 +45,7 @@ function App() {
                 <Route path="/admin/reports" element={<AdminReports />}/>
 
                 <Route path="/service-requests" element={<ServiceRequests />} />
+                <Route  path="/service-requests/create" element={<CreateServiceRequest />}/>
 
             </Routes>
         </BrowserRouter>
