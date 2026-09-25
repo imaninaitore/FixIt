@@ -18,6 +18,8 @@ import AdminServiceRequests from "./pages/administration/AdminServiceRequests";
 import AdminPayments from "./pages/administration/AdminPayments";
 import AdminReports from "./pages/administration/AdminReports";
 
+import ServiceRequests from "./pages/ServiceRequests";
+
 function App() {
     return (
         <BrowserRouter>
@@ -31,7 +33,7 @@ function App() {
                 <Route path="/providers" element={<Providers />} />
                 <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
-                
+
                 <Route path="/admin/dashboard" element={<AdminDashboard />}/>
                 <Route path="/admin/users" element={<AdminUsers />}/>
                 <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
@@ -40,6 +42,8 @@ function App() {
                 <Route  path="/admin/requests" element={<AdminServiceRequests />}/>
                 <Route path="/admin/payments" element={<AdminPayments />}/>
                 <Route path="/admin/reports" element={<AdminReports />}/>
+
+                <Route path="/service-requests" element={<ServiceRequests />} />
 
             </Routes>
         </BrowserRouter>
