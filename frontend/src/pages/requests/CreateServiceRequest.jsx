@@ -50,16 +50,13 @@ function CreateServiceRequest() {
 
             await createServiceRequest(requestData);
 
-            setSuccess(
-                "Service request submitted successfully."
-            );
+setSuccess(
+    "Service request submitted successfully. Redirecting to your dashboard..."
+);
 
-            setFormData({
-                service_title: "",
-                description: "",
-                location: "",
-                preferred_date: "",
-            });
+setTimeout(() => {
+    navigate("/customer-dashboard");
+}, 1500);
 
         } catch (err) {
             console.error(err);

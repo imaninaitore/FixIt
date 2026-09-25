@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getServiceRequests } from "../../services/serviceRequestService";
+import { getServiceRequests } from "../services/serviceRequestService";
 
 function CustomerDashboard() {
     const navigate = useNavigate();

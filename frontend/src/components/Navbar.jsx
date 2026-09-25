@@ -30,21 +30,21 @@ function Navbar() {
                     </a>
 
                     <a
-                        href="#providers"
+                        href="/providers"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         Find a Provider
                     </a>
 
                     <a
-                        href="#about"
+                        href="/about"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         About
                     </a>
 
                     <a
-                        href="#contact"
+                        href="/contact"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         Contacts
