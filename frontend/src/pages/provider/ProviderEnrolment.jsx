@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { submitProviderEnrolment } from "../services/providerEnrolmentService";
+import { submitProviderEnrolment } from "../../services/providerEnrolmentService";
 
 function ProviderEnrolment() {
     const navigate = useNavigate();

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { loginUser } from "../services/authService";
-import { API_URL } from "../services/api";
-import { getMyProviderEnrolment } from "../services/providerEnrolmentService";
+import { loginUser } from "../../services/authService";
+import { API_URL } from "../../services/api";
+import { getMyProviderEnrolment } from "../../services/providerEnrolmentService";
 
 function Login() {
     const navigate = useNavigate();

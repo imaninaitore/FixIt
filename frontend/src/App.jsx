@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ProviderEnrolment from "./pages/ProviderEnrolment";
+import Login from "./pages/account/Login";
+import Register from "./pages/account/Register";
+import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "/pages/Providers";
 import ProviderProfile from "/pages/ProviderProfile";
 import ProviderDashboard from "/pages/ProviderDashboard";

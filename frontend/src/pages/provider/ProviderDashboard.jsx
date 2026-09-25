@@ -5,7 +5,7 @@ import {
 } from "../services/providerService";
 import {
     getMyProviderEnrolment,
-} from "../services/providerEnrolmentService";
+} from "../../services/providerEnrolmentService";
 
 function ProviderDashboard() {
     const navigate = useNavigate();
