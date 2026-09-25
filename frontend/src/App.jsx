@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProviderEnrolment from "./pages/ProviderEnrolment";
+import Providers from "./pages/Providers";
 
 function App() {
     return (
@@ -15,6 +16,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/provider/enrolment" element={<ProviderEnrolment />}/>
                 <Route path="/provider/dashboard" element={<ProviderDashboard />}/>
+                <Route path="/providers" element={<Providers />} />
 
             </Routes>
         </BrowserRouter>
