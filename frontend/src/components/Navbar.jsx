@@ -1,5 +1,15 @@
+import { logoutUser } from "../services/authService";
+
 function Navbar() {
     const username = localStorage.getItem("username");
+    async function handleLogout() {
+    try {
+        await logoutUser();
+        window.location.href = "/";
+    } catch (error) {
+        console.error(error);
+    }
+}
     return (
         <nav className="absolute top-0 left-0 z-20 w-full">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
@@ -44,9 +54,9 @@ function Navbar() {
 <div className="flex items-center gap-3">
 
     {username ? (
-        // User is logged in
-        <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3">
 
+        <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
                 {username.charAt(0).toUpperCase()}
             </div>
@@ -60,8 +70,17 @@ function Navbar() {
                     Logged in
                 </p>
             </div>
-
         </div>
+
+        <button
+            onClick={handleLogout}
+            className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+        >
+            Log Out
+        </button>
+
+    </div>
+
     ) : (
         // User is not logged in
         <>
