@@ -5,22 +5,11 @@ import { loginUser } from "../services/authService";
 function Login() {
     const navigate = useNavigate();
 
-    const [formData, setFormData] = useState({
-        username: "",
-        password: "",
-    });
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-
-    function handleChange(event) {
-        const { name, value } = event.target;
-
-        setFormData({
-            ...formData,
-            [name]: value,
-        });
-    }
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -29,10 +18,7 @@ function Login() {
         setLoading(true);
 
         try {
-            await loginUser(
-                formData.username,
-                formData.password
-            );
+            await loginUser(username, password);
 
             // Login was successful
             navigate("/");
@@ -55,13 +41,13 @@ function Login() {
                             Welcome Back
                         </h1>
 
-                        <p className="text-slate-500 mt-2">
+                        <p className="mt-2 text-slate-500">
                             Login to your FixIt account
                         </p>
                     </div>
 
                     {error && (
-                        <div className="mb-5 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600">
+                        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                             {error}
                         </div>
                     )}
@@ -71,59 +57,61 @@ function Login() {
                         <div className="mb-5">
                             <label
                                 htmlFor="username"
-                                className="block text-sm font-medium text-slate-700 mb-2"
+                                className="mb-2 block text-sm font-medium text-slate-700"
                             >
                                 Username
                             </label>
 
                             <input
-                                type="text"
                                 id="username"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
+                                type="text"
+                                value={username}
+                                onChange={(event) =>
+                                    setUsername(event.target.value)
+                                }
                                 placeholder="Enter your username"
                                 required
-                                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             />
                         </div>
 
                         <div className="mb-6">
                             <label
                                 htmlFor="password"
-                                className="block text-sm font-medium text-slate-700 mb-2"
+                                className="mb-2 block text-sm font-medium text-slate-700"
                             >
                                 Password
                             </label>
 
                             <input
-                                type="password"
                                 id="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
+                                type="password"
+                                value={password}
+                                onChange={(event) =>
+                                    setPassword(event.target.value)
+                                }
                                 placeholder="Enter your password"
                                 required
-                                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 rounded-lg transition duration-200"
+                            className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
                         >
                             {loading ? "Logging in..." : "Login"}
                         </button>
 
                     </form>
 
-                    <div className="text-center mt-6">
-                        <p className="text-slate-500 text-sm">
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-slate-500">
                             Don't have an account?{" "}
                             <Link
                                 to="/register"
-                                className="text-blue-600 hover:text-blue-700 font-semibold"
+                                className="font-semibold text-blue-600 hover:text-blue-700"
                             >
                                 Create an account
                             </Link>
