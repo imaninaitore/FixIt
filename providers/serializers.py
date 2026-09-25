@@ -52,3 +52,33 @@ class ProviderEnrolmentSubmissionSerializer(serializers.Serializer):
     )
     transaction_code = serializers.CharField(max_length=100)
     payment_date = serializers.DateField()      
+
+from rest_framework import serializers
+from .models import ProviderEnrolment, ProviderProfile
+
+
+class ProviderProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProviderProfile
+
+        fields = [
+            "id",
+            "user",
+            "business_name",
+            "service_category",
+            "description",
+            "location",
+            "years_of_experience",
+            "phone_number",
+            "is_available",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "user",
+            "created_at",
+            "updated_at",
+        ]    
