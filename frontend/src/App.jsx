@@ -4,13 +4,16 @@ import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
+
 import Providers from "/pages/Providers";
 import ProviderProfile from "/pages/ProviderProfile";
 import ProviderDashboard from "/pages/ProviderDashboard";
+
 import AdminDashboard from "./pages/administration/AdminDashboard";
 import AdminUsers from "./pages/administration/AdminUsers";
 import AdminUserDetails from "./pages/administration/AdminUserDetails";
 import AdminEnrolments from "./pages/administration/AdminEnrolments";
+import AdminEnrolmentDetails from "./pages/administration/AdminEnrolmentDetails";
 
 function App() {
     return (
@@ -28,6 +31,7 @@ function App() {
                 <Route path="/admin/users" element={<AdminUsers />}/>
                 <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
                 <Route  path="/admin/enrolments"  element={<AdminEnrolments />}/>
+                <Route path="/admin/enrolments/:enrolmentId" element={<AdminEnrolmentDetails />}/>
 
             </Routes>
         </BrowserRouter>
