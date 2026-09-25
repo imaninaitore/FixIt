@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { getProviders } from "../services/providerService";
+import { useNavigate } from "react-router-dom";
 
 function Providers() {
     const [providers, setProviders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     useEffect(() => {
         loadProviders();
@@ -90,12 +92,11 @@ function Providers() {
                                     {provider.description}
                                 </p>
 
-                                <button
-                                    className="mt-5 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-                                >
-                                    View Profile
-                                </button>
-
+<button
+    onClick={() => navigate(`/providers/${provider.id}`)}
+    className="mt-5 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition">
+    View Profile
+</button>
                             </div>
 
                         ))}
