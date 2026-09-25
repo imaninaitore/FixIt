@@ -14,6 +14,7 @@ import AdminUsers from "./pages/administration/AdminUsers";
 import AdminUserDetails from "./pages/administration/AdminUserDetails";
 import AdminEnrolments from "./pages/administration/AdminEnrolments";
 import AdminEnrolmentDetails from "./pages/administration/AdminEnrolmentDetails";
+import AdminServiceRequests from "./pages/administration/AdminServiceRequests";
 
 function App() {
     return (
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
                 <Route  path="/admin/enrolments"  element={<AdminEnrolments />}/>
                 <Route path="/admin/enrolments/:enrolmentId" element={<AdminEnrolmentDetails />}/>
+                <Route  path="/admin/requests" element={<AdminServiceRequests />}/>
 
             </Routes>
         </BrowserRouter>
