@@ -21,6 +21,7 @@ function ProviderEnrolment() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
 
     function handleChange(event) {
         const { name, value } = event.target;
@@ -99,6 +100,31 @@ try {
                         {success}
                     </div>
                 )}
+
+                {successMessage && (
+    <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-5">
+
+        <div className="flex items-start gap-3">
+            
+            <div>
+                <h2 className="font-semibold text-green-800">
+                    Submitted Successfully
+                </h2>
+
+                <p className="mt-1 text-sm text-green-700">
+                    {successMessage}
+                </p>
+
+                <p className="mt-2 text-sm text-green-700">
+                    Your application has been submitted and is awaiting
+                    admin review.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+)}
 
                 <form
                     onSubmit={handleSubmit}
