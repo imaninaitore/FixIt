@@ -3,11 +3,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
-import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 
-import Providers from "/pages/Providers";
-import ProviderProfile from "/pages/ProviderProfile";
-import ProviderDashboard from "/pages/ProviderDashboard";
+import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
+import Providers from "./pages/provider/Providers";
+import ProviderProfile from "./pages/provider/ProviderProfile";
+import ProviderDashboard from "./pages/provider/ProviderDashboard";
+import ProviderServiceRequests from "./pages/provider/ProviderServiceRequests";
 
 import AdminDashboard from "./pages/administration/AdminDashboard";
 import AdminUsers from "./pages/administration/AdminUsers";
@@ -18,8 +19,8 @@ import AdminServiceRequests from "./pages/administration/AdminServiceRequests";
 import AdminPayments from "./pages/administration/AdminPayments";
 import AdminReports from "./pages/administration/AdminReports";
 
-import ServiceRequests from "./pages/ServiceRequests";
-import CreateServiceRequest from "./pages/CreateServiceRequest";
+import CreateServiceRequest from "./pages/requests/CreateServiceRequest";
+import ServiceRequests from "./pages/requests/ServiceRequests";
 
 function App() {
     return (
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/providers" element={<Providers />} />
                 <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
+                <Route path="/provider/service-requests" element={<ProviderServiceRequests />}/>
 
                 <Route path="/admin/dashboard" element={<AdminDashboard />}/>
                 <Route path="/admin/users" element={<AdminUsers />}/>
@@ -44,9 +46,9 @@ function App() {
                 <Route path="/admin/payments" element={<AdminPayments />}/>
                 <Route path="/admin/reports" element={<AdminReports />}/>
 
-                <Route path="/service-requests" element={<ServiceRequests />} />
-                <Route  path="/service-requests/create" element={<CreateServiceRequest />}/>
 
+                <Route  path="/service-requests/create" element={<CreateServiceRequest />}/>
+                <Route path="/service-requests" element={<ServiceRequests />} />
             </Routes>
         </BrowserRouter>
     );

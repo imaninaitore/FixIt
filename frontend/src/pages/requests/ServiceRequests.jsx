@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getServiceRequests,
-} from "../services/serviceRequestService";
+import { getServiceRequests } from "../../services/serviceRequestService";
 
 function ServiceRequests() {
   const [serviceRequests, setServiceRequests] = useState([]);

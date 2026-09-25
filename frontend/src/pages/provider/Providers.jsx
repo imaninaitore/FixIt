@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProviders } from "../services/providerService";
+import { getProviders } from "../../services/providerService";
 import { useNavigate } from "react-router-dom";
 
 function Providers() {

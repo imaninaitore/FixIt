@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { createServiceRequest } from "../services/serviceRequestService";
+import { createServiceRequest } from "../../services/serviceRequestService";
 
 function CreateServiceRequest() {
     const navigate = useNavigate();

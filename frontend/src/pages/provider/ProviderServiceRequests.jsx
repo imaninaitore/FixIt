@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
     getServiceRequests,
     updateServiceRequest,
-} from "../services/serviceRequestService";
+} from "../../services/serviceRequestService";
 
 function ProviderServiceRequests() {
     const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getProvider } from "../services/providerService";
+import { getProvider } from "../../services/providerService";
 
 function ProviderProfile() {
     const { providerId } = useParams();
