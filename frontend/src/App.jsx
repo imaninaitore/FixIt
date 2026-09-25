@@ -26,10 +26,12 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
                 <Route path="/provider/enrolment" element={<ProviderEnrolment />}/>
                 <Route path="/providers" element={<Providers />} />
                 <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
+                
                 <Route path="/admin/dashboard" element={<AdminDashboard />}/>
                 <Route path="/admin/users" element={<AdminUsers />}/>
                 <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
