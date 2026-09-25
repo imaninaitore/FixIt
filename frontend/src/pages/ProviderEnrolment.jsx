@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { submitProviderEnrolment } from "../services/providerService";
+import { submitProviderEnrolment } from "../services/providerEnrolmentService";
 
 function ProviderEnrolment() {
     const navigate = useNavigate();
@@ -105,7 +105,7 @@ try {
     <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-5">
 
         <div className="flex items-start gap-3">
-            
+
             <div>
                 <h2 className="font-semibold text-green-800">
                     Submitted Successfully
