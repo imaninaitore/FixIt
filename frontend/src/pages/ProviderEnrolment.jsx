@@ -346,5 +346,5 @@ try {
         </div>
     );
 }
-
+}
 export default ProviderEnrolment;
