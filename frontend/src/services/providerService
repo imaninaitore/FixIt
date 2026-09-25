@@ -80,3 +80,26 @@ export async function getProvider(providerId) {
 
     return data;
 }
+
+// Get the logged-in provider's profile
+export async function getMyProvider() {
+    const response = await fetch(
+        `${API_URL}/providers/me/`,
+        {
+            method: "GET",
+            headers: await getAuthHeaders(),
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            "Failed to fetch your provider profile."
+        );
+    }
+
+    return data;
+}

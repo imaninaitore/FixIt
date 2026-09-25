@@ -4,8 +4,9 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProviderEnrolment from "./pages/ProviderEnrolment";
-import Providers from "./pages/Providers";
-import ProviderProfile from "./pages/ProviderProfile";
+import Providers from "/pages/Providers";
+import ProviderProfile from "/pages/ProviderProfile";
+import ProviderDashboard from "/pages/ProviderDashboard";
 function App() {
     return (
         <BrowserRouter>
@@ -16,6 +17,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/provider/enrolment" element={<ProviderEnrolment />}/>
                 <Route path="/providers" element={<Providers />} />
+                <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
                 <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
 
             </Routes>
