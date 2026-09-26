@@ -29,7 +29,7 @@ urlpatterns = [
     path("api/payments/", include("payments.urls")),
     path("api/requests/", include("service_requests.urls")),
     path( "api/reviews/", include("reviews.urls")),
-    path( "api/messaging", include("messaging.urls")),
+    path( "api/messaging/", include("messaging.urls")),
      path( "api/admin/", include("administration.urls")),
 
      #pages

@@ -98,3 +98,26 @@ export async function updateServiceRequest(requestId, requestData) {
 
     return data;
 }
+
+// Get service requests sent to the logged-in provider
+export async function getProviderServiceRequests() {
+    const response = await fetch(
+        `${API_URL}/requests/provider/`,
+        {
+            method: "GET",
+            headers: await getAuthHeaders(),
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            "Failed to fetch provider service requests."
+        );
+    }
+
+    return data;
+}
