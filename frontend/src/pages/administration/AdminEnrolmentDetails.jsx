@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import {
     getAdminEnrolment,
+    approveEnrolment,
+    rejectEnrolment,
 } from "../../services/adminService";
 
 function AdminEnrolmentDetails() {
@@ -11,7 +13,10 @@ function AdminEnrolmentDetails() {
 
     const [enrolment, setEnrolment] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+
     const [error, setError] = useState("");
+    const [actionMessage, setActionMessage] = useState("");
 
     useEffect(() => {
         loadEnrolment();
@@ -32,38 +37,115 @@ function AdminEnrolmentDetails() {
         }
     }
 
+    async function handleApprove() {
+        const confirmed = window.confirm(
+            "Are you sure you want to approve this provider enrolment?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            setError("");
+            setActionMessage("");
+
+            const data = await approveEnrolment(enrolmentId);
+
+            setActionMessage(
+                data.message || "Provider enrolment approved successfully."
+            );
+
+            await loadEnrolment();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    async function handleReject() {
+        const confirmed = window.confirm(
+            "Are you sure you want to reject this provider enrolment?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setActionLoading(true);
+            setError("");
+            setActionMessage("");
+
+            const data = await rejectEnrolment(enrolmentId);
+
+            setActionMessage(
+                data.message || "Provider enrolment rejected successfully."
+            );
+
+            await loadEnrolment();
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setActionLoading(false);
+        }
+    }
+
+    function getStatusStyle(status) {
+        if (status === "approved") {
+            return "bg-green-100 text-green-700";
+        }
+
+        if (status === "rejected") {
+            return "bg-red-100 text-red-700";
+        }
+
+        if (status === "submitted") {
+            return "bg-yellow-100 text-yellow-700";
+        }
+
+        if (status === "draft") {
+            return "bg-gray-100 text-gray-700";
+        }
+
+        return "bg-gray-100 text-gray-700";
+    }
+
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-
-                    <p className="mt-4 text-gray-600">
-                        Loading enrolment details...
-                    </p>
-                </div>
+            <div className="flex min-h-screen items-center justify-center bg-gray-50">
+                <p className="text-gray-500">
+                    Loading enrolment...
+                </p>
             </div>
         );
     }
 
-    if (error) {
+    if (error && !enrolment) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 max-w-md text-center">
-                    <h1 className="text-xl font-semibold text-gray-900">
-                        Unable to load enrolment
-                    </h1>
+            <div className="min-h-screen bg-gray-50 px-6 py-10">
 
-                    <p className="mt-3 text-gray-600">
-                        {error}
-                    </p>
+                <div className="mx-auto max-w-3xl">
 
                     <button
                         onClick={() => navigate("/admin/enrolments")}
-                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition"
+                        className="mb-6 text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
-                        Back to Enrolments
+                        ← Back to Enrolments
                     </button>
+
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                        <h2 className="font-semibold text-red-800">
+                            Unable to load enrolment
+                        </h2>
+
+                        <p className="mt-2 text-sm text-red-700">
+                            {error}
+                        </p>
+                    </div>
+
                 </div>
             </div>
         );
@@ -77,113 +159,233 @@ function AdminEnrolmentDetails() {
         <div className="min-h-screen bg-gray-50">
 
             {/* Header */}
-            <div className="bg-blue-700">
-                <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="bg-slate-900 text-white">
+                <div className="mx-auto max-w-7xl px-6 py-6">
 
                     <button
                         onClick={() => navigate("/admin/enrolments")}
-                        className="text-blue-100 hover:text-white text-sm mb-6"
+                        className="mb-4 text-sm font-medium text-slate-300 transition hover:text-white"
                     >
-                        Back to enrolments
+                        ← Back to Enrolments
                     </button>
 
-                    <p className="text-blue-200 text-sm font-medium uppercase tracking-wide">
-                        Administration
-                    </p>
+                    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mt-2">
-                        Enrolment Details
-                    </h1>
+                        <div>
+                            <h1 className="text-2xl font-bold">
+                                Provider Enrolment #{enrolment.id}
+                            </h1>
 
-                    <p className="text-blue-100 mt-2">
-                        Provider profile #{enrolment.id}
-                    </p>
+                            <p className="mt-1 text-sm text-slate-300">
+                                Review this provider's enrolment application.
+                            </p>
+                        </div>
+
+                        <span
+                            className={`inline-flex w-fit rounded-full px-4 py-2 text-sm font-semibold capitalize ${getStatusStyle(
+                                enrolment.status
+                            )}`}
+                        >
+                            {enrolment.status || "Unknown"}
+                        </span>
+
+                    </div>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="max-w-6xl mx-auto px-6 py-10">
+            {/* Main */}
+            <main className="mx-auto max-w-7xl px-6 py-10">
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Success message */}
+                {actionMessage && (
+                    <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-700">
+                        {actionMessage}
+                    </div>
+                )}
+
+                {/* Error message */}
+                {error && (
+                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
 
                     {/* Main information */}
                     <div className="lg:col-span-2">
 
-                        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7">
+                        <section className="rounded-xl bg-white p-6 shadow-sm">
 
-                            <h2 className="text-xl font-semibold text-gray-900">
-                                Provider Profile
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Enrolment Information
                             </h2>
 
-                            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
 
                                 <div>
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                                        Profile ID
+                                    <p className="text-sm text-gray-500">
+                                        Enrolment ID
                                     </p>
 
-                                    <p className="mt-2 text-gray-900 font-medium">
+                                    <p className="mt-1 font-semibold text-gray-900">
                                         #{enrolment.id}
                                     </p>
                                 </div>
 
                                 <div>
-                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                                        Profile Type
+                                    <p className="text-sm text-gray-500">
+                                        Provider
                                     </p>
 
-                                    <p className="mt-2 text-gray-900 font-medium">
-                                        Service Provider
+                                    <p className="mt-1 font-semibold text-gray-900">
+                                        {enrolment.provider || "Unknown"}
                                     </p>
+                                </div>
+
+                                <div>
+                                    <p className="text-sm text-gray-500">
+                                        Status
+                                    </p>
+
+                                    <span
+                                        className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+                                            enrolment.status
+                                        )}`}
+                                    >
+                                        {enrolment.status || "Unknown"}
+                                    </span>
                                 </div>
 
                             </div>
 
                         </section>
 
-                        <section className="mt-6 bg-blue-50 border border-blue-100 rounded-2xl p-7">
+                        {/* Submitted information */}
+                        <section className="mt-8 rounded-xl bg-white p-6 shadow-sm">
 
                             <h2 className="text-lg font-semibold text-gray-900">
-                                More information required
+                                Application Review
                             </h2>
 
-                            <p className="mt-2 text-gray-600 leading-6">
-                                The current admin enrolment detail endpoint
-                                only returns the provider profile ID. Provider
-                                business information, enrolment status, payment
-                                information, and submitted documents are not
-                                currently returned by this endpoint.
+                            <p className="mt-2 text-sm leading-6 text-gray-600">
+                                Review the provider's submitted enrolment
+                                information before approving or rejecting
+                                the application.
                             </p>
+
+                            <div className="mt-6 rounded-lg bg-gray-50 p-5">
+
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                                    <div>
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Provider
+                                        </p>
+
+                                        <p className="mt-1 text-sm font-semibold text-gray-900">
+                                            {enrolment.provider || "Not available"}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                            Application Status
+                                        </p>
+
+                                        <p className="mt-1 text-sm font-semibold capitalize text-gray-900">
+                                            {enrolment.status || "Not available"}
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                            </div>
 
                         </section>
 
                     </div>
 
-                    {/* Status */}
+                    {/* Right sidebar */}
                     <div>
 
-                        <section className="bg-white border border-gray-200 rounded-2xl shadow-sm p-7">
+                        <section className="rounded-xl bg-white p-6 shadow-sm">
 
                             <h2 className="text-lg font-semibold text-gray-900">
-                                Enrolment Status
+                                Review Decision
                             </h2>
 
-                            <div className="mt-5 bg-gray-50 border border-gray-100 rounded-xl p-5">
+                            <p className="mt-2 text-sm leading-6 text-gray-500">
+                                Approving an enrolment allows the provider
+                                to become an approved service provider on
+                                the platform.
+                            </p>
 
-                                <p className="text-sm text-gray-500">
-                                    Current status
-                                </p>
+                            {enrolment.status === "submitted" ? (
+                                <div className="mt-6 space-y-3">
 
-                                <p className="mt-2 text-gray-900 font-semibold">
-                                    Information unavailable
-                                </p>
+                                    <button
+                                        onClick={handleApprove}
+                                        disabled={actionLoading}
+                                        className="w-full rounded-lg bg-green-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {actionLoading
+                                            ? "Processing..."
+                                            : "Approve Enrolment"}
+                                    </button>
 
-                                <p className="mt-2 text-sm text-gray-500 leading-5">
-                                    The current API response does not include
-                                    the enrolment status.
-                                </p>
+                                    <button
+                                        onClick={handleReject}
+                                        disabled={actionLoading}
+                                        className="w-full rounded-lg border border-red-300 bg-white px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        {actionLoading
+                                            ? "Processing..."
+                                            : "Reject Enrolment"}
+                                    </button>
 
-                            </div>
+                                </div>
+                            ) : (
+                                <div className="mt-6 rounded-lg bg-gray-50 p-4">
+
+                                    <p className="text-sm font-medium text-gray-700">
+                                        No action required
+                                    </p>
+
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        This enrolment has already been{" "}
+                                        {enrolment.status || "processed"}.
+                                    </p>
+
+                                </div>
+                            )}
+
+                        </section>
+
+                        {/* Navigation */}
+                        <section className="mt-6 rounded-xl bg-white p-6 shadow-sm">
+
+                            <h2 className="text-lg font-semibold text-gray-900">
+                                Navigation
+                            </h2>
+
+                            <button
+                                onClick={() =>
+                                    navigate("/admin/enrolments")
+                                }
+                                className="mt-4 w-full rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                            >
+                                Back to All Enrolments
+                            </button>
+
+                            <button
+                                onClick={() =>
+                                    navigate("/admin/dashboard")
+                                }
+                                className="mt-3 w-full rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                            >
+                                Admin Dashboard
+                            </button>
 
                         </section>
 
@@ -191,7 +393,7 @@ function AdminEnrolmentDetails() {
 
                 </div>
 
-            </div>
+            </main>
         </div>
     );
 }

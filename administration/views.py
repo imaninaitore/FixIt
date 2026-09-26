@@ -107,21 +107,23 @@ def admin_user_status(request, user_id):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_enrolments(request):
-    profiles = ProviderProfile.objects.all().order_by("-id")
+    enrolments = ProviderEnrolment.objects.all().order_by("-id")
 
-    profile_data = []
+    enrolment_data = []
 
-    for profile in profiles:
-        profile_data.append(
+    for enrolment in enrolments:
+        enrolment_data.append(
             {
-                "id": profile.id,
+                "id": enrolment.id,
+                "provider": enrolment.provider.username,
+                "status": enrolment.status,
             }
         )
 
     return Response(
         {
-            "count": len(profile_data),
-            "provider_profiles": profile_data,
+            "count": len(enrolment_data),
+            "enrolments": enrolment_data,
         },
         status=status.HTTP_200_OK
     )
@@ -129,14 +131,16 @@ def admin_enrolments(request):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_enrolment_detail(request, enrolment_id):
-    profile = get_object_or_404(
-        ProviderProfile,
+    enrolment = get_object_or_404(
+        ProviderEnrolment,
         id=enrolment_id
     )
 
     return Response(
         {
-            "id": profile.id,
+            "id": enrolment.id,
+            "provider": enrolment.provider.username,
+            "status": enrolment.status,
         },
         status=status.HTTP_200_OK
     )
