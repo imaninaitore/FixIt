@@ -104,3 +104,27 @@ export async function logoutUser() {
 
     return data;
 }
+
+export async function getMyProfile() {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(`${API_URL}/auth/me/`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            "Failed to fetch your profile."
+        );
+    }
+
+    return data;
+}
