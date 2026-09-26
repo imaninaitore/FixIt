@@ -28,7 +28,7 @@ import Conversation from "./pages/messaging/Conversation";
 
 import CreateReview from "./pages/reviews/CreateReview";
 
-import ProviderReviews from "./pages/reviews/ProviderReviews";
+import ProviderReviews from "./pages/provider/ProviderReviews";
 function App() {
     return (
         <BrowserRouter>

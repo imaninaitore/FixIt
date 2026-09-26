@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getServiceRequests } from "../../services/serviceRequestService";
 
 function ServiceRequests() {
   const [serviceRequests, setServiceRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadServiceRequests();
@@ -125,6 +128,18 @@ function ServiceRequests() {
                     >
                       {request.status}
                     </span>
+                    {request.status === "completed" && request.provider_user_id && (
+  <button
+    onClick={() =>
+      navigate(
+        `/providers/${request.provider_user_id}/reviews/create?request=${request.id}`
+      )
+    }
+    className="mt-4 rounded-lg bg-blue-600 px-5 py-2 font-medium text-white transition hover:bg-blue-700"
+  >
+    Leave Review
+  </button>
+)}
                   </div>
 
                 </div>
