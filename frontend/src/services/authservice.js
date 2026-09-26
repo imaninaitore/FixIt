@@ -31,7 +31,28 @@ export async function loginUser(username, password) {
     localStorage.setItem("refresh_token", data.refresh);
     localStorage.setItem("username", data.username);
 
-    return data;
+    // Get the logged-in user's Django account information
+    const profile = await getMyProfile();
+
+    localStorage.setItem(
+        "account_type",
+        profile.account_type || ""
+    );
+
+    localStorage.setItem(
+        "is_staff",
+        String(profile.is_staff)
+    );
+
+    localStorage.setItem(
+        "is_superuser",
+        String(profile.is_superuser)
+    );
+
+    return {
+        ...data,
+        profile,
+    };
 }
 
 
