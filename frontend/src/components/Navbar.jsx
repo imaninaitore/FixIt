@@ -1,16 +1,21 @@
+import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authService";
 
 function Navbar() {
+    const navigate = useNavigate();
+
     const username = localStorage.getItem("username");
     const accountType = localStorage.getItem("account_type");
+
     async function handleLogout() {
-    try {
-        await logoutUser();
-        window.location.href = "/";
-    } catch (error) {
-        console.error(error);
+        try {
+            await logoutUser();
+            window.location.href = "/";
+        } catch (error) {
+            console.error(error);
+        }
     }
-}
+
     return (
         <nav className="absolute top-0 left-0 z-20 w-full">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
@@ -22,6 +27,7 @@ function Navbar() {
 
                 {/* Navigation links */}
                 <div className="hidden items-center gap-8 md:flex">
+
                     <a
                         href="/"
                         className="text-sm font-medium text-white transition hover:text-blue-300"
@@ -49,73 +55,96 @@ function Navbar() {
                     >
                         Contacts
                     </a>
+
                 </div>
 
-          {/* Authentication buttons */}
-<div className="flex items-center gap-3">
+                {/* Authentication buttons */}
+                <div className="flex items-center gap-3">
 
-    {username ? (
-    <div className="flex items-center gap-3">
+                    {username ? (
+                        <div className="flex items-center gap-3">
 
-        <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
-                {username.charAt(0).toUpperCase()}
-            </div>
+                            <div className="flex items-center gap-3">
 
-            <div className="hidden sm:block">
-                <p className="text-sm font-semibold text-white">
-                    {username}
-                </p>
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
+                                    {username.charAt(0).toUpperCase()}
+                                </div>
 
-                <p className="text-xs text-blue-100">
-                    Logged in
-                </p>
-            </div>
-        </div>
+                                <div className="hidden sm:block">
+                                    <p className="text-sm font-semibold text-white">
+                                        {username}
+                                    </p>
 
-        <button
-            onClick={handleLogout}
-            className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-        >
-            Log Out
-        </button>
+                                    <p className="text-xs text-blue-100">
+                                        Logged in
+                                    </p>
+                                </div>
 
-    </div>
+                            </div>
 
-    ) : (
-        // User is not logged in
-        <>
-            <a
-                href=""
-                className="text-sm font-medium text-white transition hover:underline"
-            >
-                Register as a provider
-            </a>
+                            {/* Provider Dashboard */}
+                            {accountType === "provider" && (
+                                <button
+                                    onClick={() =>
+                                        navigate("/provider-dashboard")
+                                    }
+                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                >
+                                    Provider Dashboard
+                                </button>
+                            )}
 
-            <a
-                href="/login"
-                className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-            >
-                Log In
-            </a>
+                            {/* Admin Dashboard */}
+                            {accountType === "admin" && (
+                                <button
+                                    onClick={() =>
+                                        navigate("/admin/dashboard")
+                                    }
+                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                >
+                                    Admin Dashboard
+                                </button>
+                            )}
 
-            <a
-                href="/register"
-                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
-            >
-                Sign Up
-            </a>
-        </>
-    )}
+                            {/* Logout */}
+                            <button
+                                onClick={handleLogout}
+                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            >
+                                Log Out
+                            </button>
 
-</div>     
-{accountType === "provider" && (
-    <button
-        onClick={() => navigate("/provider/dashboard")}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition">
-        Provider Dashboard
-    </button>
-)}
+                        </div>
+
+                    ) : (
+
+                        <>
+                            <a
+                                href="/register"
+                                className="text-sm font-medium text-white transition hover:underline"
+                            >
+                                Register as a provider
+                            </a>
+
+                            <a
+                                href="/login"
+                                className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            >
+                                Log In
+                            </a>
+
+                            <a
+                                href="/register"
+                                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                            >
+                                Sign Up
+                            </a>
+                        </>
+
+                    )}
+
+                </div>
+
             </div>
         </nav>
     );

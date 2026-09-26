@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getMyProviderProfile } from "../../services/providerService";
+
+import { getMyProvider } from "../../services/providerService";
 import { getProviderServiceRequests } from "../../services/serviceRequestService";
 import { getConversations } from "../../services/messagingService";
 
@@ -25,7 +26,7 @@ function ProviderDashboard() {
 
             const [profileData, requestsData, conversationsData] =
                 await Promise.all([
-                    getMyProviderProfile(),
+                    getMyProvider(),
                     getProviderServiceRequests(),
                     getConversations(),
                 ]);
@@ -35,8 +36,10 @@ function ProviderDashboard() {
             setConversations(conversationsData);
         } catch (err) {
             console.error(err);
+
             setError(
-                err.message || "Failed to load your provider dashboard."
+                err.message ||
+                "Failed to load your provider dashboard."
             );
         } finally {
             setLoading(false);
@@ -54,7 +57,7 @@ function ProviderDashboard() {
     return (
         <div className="min-h-screen bg-gray-50">
 
-            {/* Navigation */}
+            {/* Navbar */}
             <nav className="border-b bg-white">
                 <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
@@ -66,6 +69,7 @@ function ProviderDashboard() {
                     </button>
 
                     <div className="flex items-center gap-6">
+
                         <button
                             onClick={() =>
                                 navigate("/provider/service-requests")
@@ -82,16 +86,11 @@ function ProviderDashboard() {
                             Messages
                         </button>
 
-                        <button
-                            onClick={() => navigate("/")}
-                            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-                        >
-                            Home
-                        </button>
                     </div>
 
                 </div>
             </nav>
+
 
             {/* Main content */}
             <main className="mx-auto max-w-7xl px-6 py-10">
@@ -105,6 +104,7 @@ function ProviderDashboard() {
                     </div>
                 )}
 
+
                 {/* Error */}
                 {!loading && error && (
                     <div className="rounded-xl bg-red-50 p-6 text-red-700">
@@ -112,10 +112,13 @@ function ProviderDashboard() {
                     </div>
                 )}
 
+
                 {!loading && !error && (
                     <>
+
                         {/* Welcome */}
                         <section>
+
                             <h1 className="text-3xl font-bold text-gray-900">
                                 Welcome back
                                 {profile?.business_name
@@ -124,16 +127,19 @@ function ProviderDashboard() {
                             </h1>
 
                             <p className="mt-2 text-gray-600">
-                                Manage your service requests, messages, and
-                                provider profile from here.
+                                Manage your service requests, messages,
+                                profile, and reviews from here.
                             </p>
+
                         </section>
+
 
                         {/* Statistics */}
                         <section className="mt-8 grid gap-6 md:grid-cols-3">
 
-                            {/* Pending requests */}
+                            {/* Pending */}
                             <div className="rounded-xl bg-white p-6 shadow">
+
                                 <p className="text-sm font-medium text-gray-500">
                                     Pending Requests
                                 </p>
@@ -152,10 +158,13 @@ function ProviderDashboard() {
                                 >
                                     View requests
                                 </button>
+
                             </div>
 
-                            {/* Accepted requests */}
+
+                            {/* Accepted */}
                             <div className="rounded-xl bg-white p-6 shadow">
+
                                 <p className="text-sm font-medium text-gray-500">
                                     Accepted Requests
                                 </p>
@@ -174,10 +183,13 @@ function ProviderDashboard() {
                                 >
                                     Manage requests
                                 </button>
+
                             </div>
+
 
                             {/* Conversations */}
                             <div className="rounded-xl bg-white p-6 shadow">
+
                                 <p className="text-sm font-medium text-gray-500">
                                     Conversations
                                 </p>
@@ -192,11 +204,13 @@ function ProviderDashboard() {
                                 >
                                     View messages
                                 </button>
+
                             </div>
 
                         </section>
 
-                        {/* Quick actions */}
+
+                        {/* Quick Actions */}
                         <section className="mt-10">
 
                             <h2 className="text-xl font-semibold text-gray-900">
@@ -222,6 +236,7 @@ function ProviderDashboard() {
                                     </p>
                                 </button>
 
+
                                 <button
                                     onClick={() => navigate("/messages")}
                                     className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
@@ -234,6 +249,7 @@ function ProviderDashboard() {
                                         Communicate with your customers.
                                     </p>
                                 </button>
+
 
                                 <button
                                     onClick={() =>
@@ -251,6 +267,7 @@ function ProviderDashboard() {
                                         View your public provider profile.
                                     </p>
                                 </button>
+
 
                                 <button
                                     onClick={() =>
@@ -273,10 +290,12 @@ function ProviderDashboard() {
 
                         </section>
 
-                        {/* Recent requests */}
+
+                        {/* Recent Requests */}
                         <section className="mt-10">
 
                             <div className="flex items-center justify-between">
+
                                 <h2 className="text-xl font-semibold text-gray-900">
                                     Recent Service Requests
                                 </h2>
@@ -291,26 +310,33 @@ function ProviderDashboard() {
                                 >
                                     View all
                                 </button>
+
                             </div>
+
 
                             <div className="mt-5 space-y-4">
 
                                 {requests.length === 0 ? (
                                     <div className="rounded-xl bg-white p-8 text-center shadow">
+
                                         <p className="text-gray-600">
                                             You do not have any service
                                             requests yet.
                                         </p>
+
                                     </div>
                                 ) : (
                                     requests.slice(0, 5).map((request) => (
+
                                         <div
                                             key={request.id}
                                             className="rounded-xl bg-white p-6 shadow"
                                         >
+
                                             <div className="flex flex-col justify-between gap-4 md:flex-row">
 
                                                 <div>
+
                                                     <h3 className="text-lg font-semibold text-gray-900">
                                                         {request.service_title}
                                                     </h3>
@@ -324,7 +350,9 @@ function ProviderDashboard() {
                                                         Location:{" "}
                                                         {request.location}
                                                     </p>
+
                                                 </div>
+
 
                                                 <span
                                                     className={`self-start rounded-full px-4 py-2 text-sm font-medium ${
@@ -344,17 +372,21 @@ function ProviderDashboard() {
                                                 </span>
 
                                             </div>
+
                                         </div>
+
                                     ))
                                 )}
 
                             </div>
 
                         </section>
+
                     </>
                 )}
 
             </main>
+
         </div>
     );
 }
