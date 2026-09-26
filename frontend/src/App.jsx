@@ -23,6 +23,8 @@ import AdminReports from "./pages/administration/AdminReports";
 import CreateServiceRequest from "./pages/requests/CreateServiceRequest";
 import ServiceRequests from "./pages/requests/ServiceRequests";
 
+import Conversations from "./pages/messaging/conversations";
+
 function App() {
     return (
         <BrowserRouter>
@@ -51,6 +53,8 @@ function App() {
 
                 <Route  path="/service-requests/create" element={<CreateServiceRequest />}/>
                 <Route path="/service-requests" element={<ServiceRequests />} />
+
+                <Route path="/messages" element={<Conversations />}/>
             </Routes>
         </BrowserRouter>
     );
