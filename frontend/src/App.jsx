@@ -23,7 +23,8 @@ import AdminReports from "./pages/administration/AdminReports";
 import CreateServiceRequest from "./pages/requests/CreateServiceRequest";
 import ServiceRequests from "./pages/requests/ServiceRequests";
 
-import Conversations from "./pages/messaging/conversations";
+import Conversations from "./pages/messaging/Conversations";
+import Conversation from "./pages/messaging/Conversation";
 
 function App() {
     return (
@@ -55,6 +56,7 @@ function App() {
                 <Route path="/service-requests" element={<ServiceRequests />} />
 
                 <Route path="/messages" element={<Conversations />}/>
+                <Route path="/messages/:conversationId" element={<Conversation />}/>
             </Routes>
         </BrowserRouter>
     );
