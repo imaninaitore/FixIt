@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProvider } from "../../services/providerService";
-import {
-    getMyProviderEnrolment,
-} from "../../services/providerEnrolmentService";
+import { getMyProviderProfile } from "../../services/providerService";
+import { getProviderServiceRequests } from "../../services/serviceRequestService";
+import { getConversations } from "../../services/messagingService";
 
 function ProviderDashboard() {
     const navigate = useNavigate();
 
-    const [provider, setProvider] = useState(null);
-    const [enrolment, setEnrolment] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [requests, setRequests] = useState([]);
+    const [conversations, setConversations] = useState([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -17,318 +18,343 @@ function ProviderDashboard() {
         loadDashboard();
     }, []);
 
-    async function loadDashboard() {
+    const loadDashboard = async () => {
         try {
             setLoading(true);
             setError("");
 
-            /*
-             * The provider endpoint uses the logged-in user's account.
-             * If your providerService currently only has getProvider(id),
-             * we will add getMyProvider() to it.
-             */
+            const [profileData, requestsData, conversationsData] =
+                await Promise.all([
+                    getMyProviderProfile(),
+                    getProviderServiceRequests(),
+                    getConversations(),
+                ]);
 
-            const [providerData, enrolmentData] = await Promise.all([
-                getMyProvider(),
-                getMyProviderEnrolment(),
-            ]);
-
-            setProvider(providerData);
-            setEnrolment(enrolmentData);
-
+            setProfile(profileData);
+            setRequests(requestsData);
+            setConversations(conversationsData);
         } catch (err) {
-            setError(err.message);
+            console.error(err);
+            setError(
+                err.message || "Failed to load your provider dashboard."
+            );
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
+    const pendingRequests = requests.filter(
+        (request) => request.status === "pending"
+    );
 
-                    <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
-
-                    <p className="mt-4 text-gray-600">
-                        Loading your dashboard...
-                    </p>
-
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-
-                <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 max-w-md text-center">
-
-                    <h1 className="text-xl font-semibold text-gray-900">
-                        Unable to load dashboard
-                    </h1>
-
-                    <p className="mt-3 text-gray-600">
-                        {error}
-                    </p>
-
-                    <button
-                        onClick={loadDashboard}
-                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
-                    >
-                        Try Again
-                    </button>
-
-                </div>
-
-            </div>
-        );
-    }
+    const acceptedRequests = requests.filter(
+        (request) => request.status === "accepted"
+    );
 
     return (
         <div className="min-h-screen bg-gray-50">
 
-            {/* Dashboard header */}
-            <header className="bg-blue-700">
+            {/* Navigation */}
+            <nav className="border-b bg-white">
+                <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
-                <div className="max-w-7xl mx-auto px-6 py-10">
+                    <button
+                        onClick={() => navigate("/")}
+                        className="text-2xl font-bold text-blue-600"
+                    >
+                        FixIt
+                    </button>
 
-                    <p className="text-blue-200 text-sm font-medium uppercase tracking-wide">
-                        Provider Dashboard
-                    </p>
-
-                    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5">
-
-                        <div>
-
-                            <h1 className="text-3xl md:text-4xl font-bold text-white mt-2">
-                                Welcome back
-                            </h1>
-
-                            <p className="text-blue-100 mt-2">
-                                Manage your FixIt provider account.
-                            </p>
-
-                        </div>
-
+                    <div className="flex items-center gap-6">
                         <button
-                            onClick={() => navigate("/providers")}
-                            className="border border-white/30 text-white px-5 py-2.5 rounded-lg hover:bg-white/10 transition"
+                            onClick={() =>
+                                navigate("/provider/service-requests")
+                            }
+                            className="text-gray-600 hover:text-blue-600"
                         >
-                            View Provider Directory
+                            Service Requests
                         </button>
 
+                        <button
+                            onClick={() => navigate("/messages")}
+                            className="text-gray-600 hover:text-blue-600"
+                        >
+                            Messages
+                        </button>
+
+                        <button
+                            onClick={() => navigate("/")}
+                            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                        >
+                            Home
+                        </button>
                     </div>
 
                 </div>
+            </nav>
 
-            </header>
+            {/* Main content */}
+            <main className="mx-auto max-w-7xl px-6 py-10">
 
+                {/* Loading */}
+                {loading && (
+                    <div className="rounded-xl bg-white p-8 shadow">
+                        <p className="text-gray-600">
+                            Loading your dashboard...
+                        </p>
+                    </div>
+                )}
 
-            {/* Dashboard content */}
-            <main className="max-w-7xl mx-auto px-6 py-10">
+                {/* Error */}
+                {!loading && error && (
+                    <div className="rounded-xl bg-red-50 p-6 text-red-700">
+                        {error}
+                    </div>
+                )}
 
-                {/* Provider overview */}
-                <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-7">
+                {!loading && !error && (
+                    <>
+                        {/* Welcome */}
+                        <section>
+                            <h1 className="text-3xl font-bold text-gray-900">
+                                Welcome back
+                                {profile?.business_name
+                                    ? `, ${profile.business_name}`
+                                    : ""}
+                            </h1>
 
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-
-                        <div>
-
-                            <p className="text-sm text-gray-500">
-                                Your business
+                            <p className="mt-2 text-gray-600">
+                                Manage your service requests, messages, and
+                                provider profile from here.
                             </p>
+                        </section>
 
-                            <h2 className="text-2xl font-bold text-gray-900 mt-1">
-                                {provider?.business_name || "Your Business"}
+                        {/* Statistics */}
+                        <section className="mt-8 grid gap-6 md:grid-cols-3">
+
+                            {/* Pending requests */}
+                            <div className="rounded-xl bg-white p-6 shadow">
+                                <p className="text-sm font-medium text-gray-500">
+                                    Pending Requests
+                                </p>
+
+                                <p className="mt-2 text-3xl font-bold text-gray-900">
+                                    {pendingRequests.length}
+                                </p>
+
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            "/provider/service-requests"
+                                        )
+                                    }
+                                    className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                    View requests
+                                </button>
+                            </div>
+
+                            {/* Accepted requests */}
+                            <div className="rounded-xl bg-white p-6 shadow">
+                                <p className="text-sm font-medium text-gray-500">
+                                    Accepted Requests
+                                </p>
+
+                                <p className="mt-2 text-3xl font-bold text-gray-900">
+                                    {acceptedRequests.length}
+                                </p>
+
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            "/provider/service-requests"
+                                        )
+                                    }
+                                    className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                    Manage requests
+                                </button>
+                            </div>
+
+                            {/* Conversations */}
+                            <div className="rounded-xl bg-white p-6 shadow">
+                                <p className="text-sm font-medium text-gray-500">
+                                    Conversations
+                                </p>
+
+                                <p className="mt-2 text-3xl font-bold text-gray-900">
+                                    {conversations.length}
+                                </p>
+
+                                <button
+                                    onClick={() => navigate("/messages")}
+                                    className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                    View messages
+                                </button>
+                            </div>
+
+                        </section>
+
+                        {/* Quick actions */}
+                        <section className="mt-10">
+
+                            <h2 className="text-xl font-semibold text-gray-900">
+                                Quick Actions
                             </h2>
 
-                            <p className="text-blue-600 font-medium mt-1">
-                                {provider?.service_category || "Service provider"}
-                            </p>
+                            <div className="mt-5 grid gap-5 md:grid-cols-4">
 
-                        </div>
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            "/provider/service-requests"
+                                        )
+                                    }
+                                    className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+                                >
+                                    <h3 className="font-semibold text-gray-900">
+                                        Service Requests
+                                    </h3>
 
-                        <div className="flex items-center gap-3">
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        View and respond to customer requests.
+                                    </p>
+                                </button>
 
-                            <span
-                                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                                    provider?.is_available
-                                        ? "bg-green-50 text-green-700"
-                                        : "bg-gray-100 text-gray-600"
-                                }`}
-                            >
-                                {provider?.is_available
-                                    ? "Available"
-                                    : "Unavailable"}
-                            </span>
+                                <button
+                                    onClick={() => navigate("/messages")}
+                                    className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+                                >
+                                    <h3 className="font-semibold text-gray-900">
+                                        Messages
+                                    </h3>
 
-                        </div>
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        Communicate with your customers.
+                                    </p>
+                                </button>
 
-                    </div>
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            `/providers/${profile?.id}`
+                                        )
+                                    }
+                                    className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+                                >
+                                    <h3 className="font-semibold text-gray-900">
+                                        My Profile
+                                    </h3>
 
-                </section>
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        View your public provider profile.
+                                    </p>
+                                </button>
 
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            `/providers/${profile?.id}/reviews`
+                                        )
+                                    }
+                                    className="rounded-xl bg-white p-6 text-left shadow transition hover:shadow-md"
+                                >
+                                    <h3 className="font-semibold text-gray-900">
+                                        My Reviews
+                                    </h3>
 
-                {/* Status cards */}
-                <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        See reviews from your customers.
+                                    </p>
+                                </button>
 
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-                        <p className="text-sm text-gray-500">
-                            Enrolment status
-                        </p>
-
-                        <p className="text-2xl font-bold text-gray-900 mt-3 capitalize">
-                            {enrolment?.status || "Pending"}
-                        </p>
-
-                    </div>
-
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-                        <p className="text-sm text-gray-500">
-                            Payment status
-                        </p>
-
-                        <p className="text-2xl font-bold text-gray-900 mt-3 capitalize">
-                            {enrolment?.payment_status || "Pending"}
-                        </p>
-
-                    </div>
-
-
-                    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-
-                        <p className="text-sm text-gray-500">
-                            Experience
-                        </p>
-
-                        <p className="text-2xl font-bold text-gray-900 mt-3">
-                            {provider?.years_of_experience || 0}
-                            <span className="text-sm font-normal text-gray-500 ml-2">
-                                years
-                            </span>
-                        </p>
-
-                    </div>
-
-                </section>
-
-
-                {/* Management */}
-                <section className="mt-10">
-
-                    <h2 className="text-xl font-bold text-gray-900">
-                        Manage your account
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-5">
-
-                        <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-sm">
-
-                            <div className="w-11 h-11 bg-blue-50 rounded-xl flex items-center justify-center">
-                                <span className="text-blue-600 text-lg">
-                                    P
-                                </span>
                             </div>
 
-                            <h3 className="text-lg font-semibold text-gray-900 mt-5">
-                                Provider Profile
-                            </h3>
+                        </section>
 
-                            <p className="text-gray-600 text-sm leading-6 mt-2">
-                                Update your business information, service
-                                category, location and availability.
-                            </p>
+                        {/* Recent requests */}
+                        <section className="mt-10">
 
-                            <button
-                                className="mt-5 border border-blue-600 text-blue-600 hover:bg-blue-50 px-5 py-2.5 rounded-lg font-medium transition"
-                            >
-                                Edit Profile
-                            </button>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-xl font-semibold text-gray-900">
+                                    Recent Service Requests
+                                </h2>
 
-                        </div>
-
-
-                        <div className="bg-white border border-gray-200 rounded-2xl p-7 shadow-sm">
-
-                            <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
-                                <span className="text-gray-700 text-lg">
-                                    E
-                                </span>
+                                <button
+                                    onClick={() =>
+                                        navigate(
+                                            "/provider/service-requests"
+                                        )
+                                    }
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                                >
+                                    View all
+                                </button>
                             </div>
 
-                            <h3 className="text-lg font-semibold text-gray-900 mt-5">
-                                Provider Enrolment
-                            </h3>
+                            <div className="mt-5 space-y-4">
 
-                            <p className="text-gray-600 text-sm leading-6 mt-2">
-                                View your submitted enrolment information and
-                                check your approval status.
-                            </p>
+                                {requests.length === 0 ? (
+                                    <div className="rounded-xl bg-white p-8 text-center shadow">
+                                        <p className="text-gray-600">
+                                            You do not have any service
+                                            requests yet.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    requests.slice(0, 5).map((request) => (
+                                        <div
+                                            key={request.id}
+                                            className="rounded-xl bg-white p-6 shadow"
+                                        >
+                                            <div className="flex flex-col justify-between gap-4 md:flex-row">
 
-                            <button
-                                onClick={() => navigate("/provider-enrolment")}
-                                className="mt-5 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium transition"
-                            >
-                                View Enrolment
-                            </button>
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-gray-900">
+                                                        {request.service_title}
+                                                    </h3>
 
-                        </div>
+                                                    <p className="mt-1 text-sm text-gray-600">
+                                                        Customer:{" "}
+                                                        {request.customer}
+                                                    </p>
 
-                    </div>
+                                                    <p className="mt-1 text-sm text-gray-600">
+                                                        Location:{" "}
+                                                        {request.location}
+                                                    </p>
+                                                </div>
 
-                </section>
+                                                <span
+                                                    className={`self-start rounded-full px-4 py-2 text-sm font-medium ${
+                                                        request.status ===
+                                                        "pending"
+                                                            ? "bg-yellow-100 text-yellow-800"
+                                                            : request.status ===
+                                                              "accepted"
+                                                            ? "bg-green-100 text-green-800"
+                                                            : request.status ===
+                                                              "rejected"
+                                                            ? "bg-red-100 text-red-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                    }`}
+                                                >
+                                                    {request.status}
+                                                </span>
 
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
 
-                {/* Contact / location */}
-                <section className="mt-8 bg-white border border-gray-200 rounded-2xl p-7 shadow-sm">
+                            </div>
 
-                    <h2 className="text-xl font-bold text-gray-900">
-                        Business information
-                    </h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-
-                        <div>
-                            <p className="text-xs uppercase tracking-wide text-gray-400">
-                                Location
-                            </p>
-
-                            <p className="text-gray-800 mt-2">
-                                {provider?.location || "Not provided"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs uppercase tracking-wide text-gray-400">
-                                Phone
-                            </p>
-
-                            <p className="text-gray-800 mt-2">
-                                {provider?.phone_number || "Not provided"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs uppercase tracking-wide text-gray-400">
-                                Service
-                            </p>
-
-                            <p className="text-gray-800 mt-2">
-                                {provider?.service_category || "Not provided"}
-                            </p>
-                        </div>
-
-                    </div>
-
-                </section>
+                        </section>
+                    </>
+                )}
 
             </main>
-
         </div>
     );
 }
