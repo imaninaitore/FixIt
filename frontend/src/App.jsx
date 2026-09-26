@@ -26,6 +26,9 @@ import ServiceRequests from "./pages/requests/ServiceRequests";
 import Conversations from "./pages/messaging/Conversations";
 import Conversation from "./pages/messaging/Conversation";
 
+import CreateReview from "./pages/reviews/CreateReview";
+
+import ProviderReviews from "./pages/reviews/ProviderReviews";
 function App() {
     return (
         <BrowserRouter>
@@ -57,6 +60,11 @@ function App() {
 
                 <Route path="/messages" element={<Conversations />}/>
                 <Route path="/messages/:conversationId" element={<Conversation />}/>
+
+                <Route path="/providers/:providerId/reviews" element={<ProviderReviews />}/>
+                <Route path="/providers/:providerId/reviews/create" element={<CreateReview />}/>
+
+                
             </Routes>
         </BrowserRouter>
     );
