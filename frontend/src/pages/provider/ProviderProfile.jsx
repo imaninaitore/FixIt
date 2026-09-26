@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProvider } from "../../services/providerService";
+import { createConversation } from "../../services/messagingService";
 
 function ProviderProfile() {
     const { providerId } = useParams();
@@ -68,6 +69,23 @@ function ProviderProfile() {
     if (!provider) {
         return null;
     }
+
+const handleMessageProvider = async () => {
+    try {
+        const data = await createConversation(provider.user);
+
+        const conversation = data.conversation || data;
+
+        navigate(`/messages/${conversation.id}`);
+    } catch (err) {
+        console.error(err);
+
+        alert(
+            err.message ||
+            "Failed to start conversation."
+        );
+    }
+};
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -220,14 +238,26 @@ function ProviderProfile() {
                                 request through FixIt.
                             </p>
 
-<button
-    onClick={() =>
-        navigate(`/service-requests/create?provider=${provider.user}`)
-    }
-    className="w-full mt-5 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition"
->
-    Send Service Request
-</button>
+
+<div className="mt-5 space-y-3">
+
+    <button
+        onClick={() =>
+            navigate(
+                `/service-requests/create?provider=${provider.user}`
+            )
+        }
+        className="w-full rounded-lg bg-blue-600 py-3 font-medium text-white transition hover:bg-blue-700">
+        Send Service Request
+    </button>
+
+    <button
+        onClick={handleMessageProvider}
+        className="w-full rounded-lg border border-blue-600 py-3 font-medium text-blue-600 transition hover:bg-blue-50">
+        Message Provider
+    </button>
+
+</div>
 
                         </section>
 
