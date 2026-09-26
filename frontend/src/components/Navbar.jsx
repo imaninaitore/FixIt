@@ -7,6 +7,10 @@ function Navbar() {
     const username = localStorage.getItem("username");
     const accountType = localStorage.getItem("account_type");
 
+    const isAdmin =
+    localStorage.getItem("is_staff") === "true" ||
+    localStorage.getItem("is_superuser") === "true";
+
     async function handleLogout() {
         try {
             await logoutUser();
@@ -95,15 +99,14 @@ function Navbar() {
                             )}
 
                             {/* Admin Dashboard */}
-                            {accountType === "admin" && (
-                                <button
-                                    onClick={() =>
-                                        navigate("/admin/dashboard")
-                                    }
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-                                >
-                                    Admin Dashboard
-                                </button>
+                            
+{isAdmin && (
+    <button
+        onClick={() => navigate("/admin/dashboard")}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+    >
+        Admin Dashboard
+    </button>
                             )}
 
                             {/* Logout */}

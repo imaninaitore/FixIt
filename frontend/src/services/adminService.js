@@ -161,9 +161,9 @@ export async function getAdminEnrolment(enrolmentId) {
 // Approve provider enrolment
 export async function approveEnrolment(enrolmentId) {
     const response = await fetch(
-        `${API_URL}/admin/enrolments/${enrolmentId}/approve/`,
+        `${API_URL}/providers/enrolment/${enrolmentId}/approve/`,
         {
-            method: "PATCH",
+            method: "POST",
             headers: await getAdminHeaders(),
         }
     );
@@ -174,13 +174,13 @@ export async function approveEnrolment(enrolmentId) {
         throw new Error(
             data.detail ||
             data.error ||
+            data.message ||
             "Failed to approve enrolment."
         );
     }
 
     return data;
 }
-
 
 // Reject provider enrolment
 export async function rejectEnrolment(enrolmentId) {
