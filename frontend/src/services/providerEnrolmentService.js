@@ -45,6 +45,11 @@ export async function getMyProviderEnrolment() {
         }
     );
 
+    // A 404 means the provider has not created an enrolment yet
+    if (response.status === 404) {
+        return null;
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
