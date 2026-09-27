@@ -10,6 +10,7 @@ function ProviderDashboard() {
     const navigate = useNavigate();
 
     const [profile, setProfile] = useState(null);
+    const [enrolment, setEnrolment] = useState(null);
     const [requests, setRequests] = useState([]);
     const [conversations, setConversations] = useState([]);
 
