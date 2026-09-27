@@ -21,32 +21,43 @@ function ProviderDashboard() {
         loadDashboard();
     }, []);
 
-    const loadDashboard = async () => {
-        try {
-            setLoading(true);
-            setError("");
+   const loadDashboard = async () => {
+    try {
+        setLoading(true);
+        setError("");
 
-            const [profileData, requestsData, conversationsData] =
-                await Promise.all([
-                    getMyProvider(),
-                    getProviderServiceRequests(),
-                    getConversations(),
-                ]);
+        // First check whether the provider has an enrolment
+        const enrolmentData = await getMyProviderEnrolment();
 
-            setProfile(profileData);
-            setRequests(requestsData);
-            setConversations(conversationsData);
-        } catch (err) {
-            console.error(err);
+        setEnrolment(enrolmentData);
 
-            setError(
-                err.message ||
-                "Failed to load your provider dashboard."
-            );
-        } finally {
-            setLoading(false);
+        // If there is no enrolment yet, stop here
+        if (!enrolmentData) {
+            return;
         }
-    };
+
+        // Provider has an enrolment, so load the dashboard
+        const [profileData, requestsData, conversationsData] =
+            await Promise.all([
+                getMyProvider(),
+                getProviderServiceRequests(),
+                getConversations(),
+            ]);
+
+        setProfile(profileData);
+        setRequests(requestsData);
+        setConversations(conversationsData);
+    } catch (err) {
+        console.error(err);
+
+        setError(
+            err.message ||
+            "Failed to load your provider dashboard."
+        );
+    } finally {
+        setLoading(false);
+    }
+};
 
     const pendingRequests = requests.filter(
         (request) => request.status === "pending"
@@ -115,9 +126,33 @@ function ProviderDashboard() {
                 )}
 
 
-                {!loading && !error && (
-                    <>
+                {!loading && !error && !enrolment && (
+    <div className="mx-auto max-w-2xl">
+        <div className="rounded-2xl bg-white p-10 text-center shadow">
 
+            <h1 className="text-3xl font-bold text-gray-900">
+                Provider Enrolment Required
+            </h1>
+
+            <p className="mt-4 text-gray-600">
+                Before you can start receiving and managing service
+                requests, you need to submit your provider enrolment
+                request.
+            </p>
+
+            <button
+                onClick={() => navigate("/provider/enrolment")}
+                className="mt-8 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition hover:bg-blue-700"
+            >
+                Create Enrolment Request
+            </button>
+
+        </div>
+    </div>
+)}
+
+{!loading && !error && enrolment && (
+    <>
                         {/* Welcome */}
                         <section>
 
