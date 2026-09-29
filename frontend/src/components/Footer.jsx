@@ -39,7 +39,6 @@ function Footer() {
                         </Link>
                     </div>
 
-
                     {/* Platform */}
                     <div>
                         <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
@@ -63,22 +62,21 @@ function Footer() {
                             </Link>
 
                             <Link
-                                to="/service-requests"
+                                to="/about"
                                 className="block text-sm text-slate-400 transition hover:text-white"
                             >
-                                Service Requests
+                                About
                             </Link>
 
                             <Link
-                                to="/messages"
+                                to="/contact"
                                 className="block text-sm text-slate-400 transition hover:text-white"
                             >
-                                Messages
+                                Contact Us
                             </Link>
 
                         </div>
                     </div>
-
 
                     {/* Legal & Information */}
                     <div>
@@ -124,7 +122,6 @@ function Footer() {
                     </div>
 
                 </div>
-
 
                 {/* Bottom bar */}
                 <div className="mt-12 flex flex-col gap-4 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-between">
