@@ -8,15 +8,22 @@ function Navbar() {
     const accountType = localStorage.getItem("account_type");
 
     const isAdmin =
-    localStorage.getItem("is_staff") === "true" ||
-    localStorage.getItem("is_superuser") === "true";
+        localStorage.getItem("is_staff") === "true" ||
+        localStorage.getItem("is_superuser") === "true";
+
+    const isCustomer = accountType === "customer";
+    const isProvider = accountType === "provider";
 
     async function handleLogout() {
         try {
             await logoutUser();
-            window.location.href = "/";
+            navigate("/");
         } catch (error) {
             console.error(error);
+
+            // Even if the backend logout request fails,
+            // return the user to the homepage.
+            navigate("/");
         }
     }
 
@@ -25,49 +32,101 @@ function Navbar() {
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6 lg:px-10">
 
                 {/* Logo */}
-                <a href="/" className="text-2xl font-bold text-white">
+                <button
+                    onClick={() => navigate("/")}
+                    className="text-2xl font-bold text-white"
+                >
                     Fix<span className="text-blue-400">It</span>
-                </a>
+                </button>
 
                 {/* Navigation links */}
                 <div className="hidden items-center gap-8 md:flex">
 
-                    <a
-                        href="/"
+                    <button
+                        onClick={() => navigate("/")}
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         Home
-                    </a>
+                    </button>
 
-                    <a
-                        href="/providers"
+                    <button
+                        onClick={() => navigate("/providers")}
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         Find a Provider
-                    </a>
+                    </button>
 
-                    <a
-                        href="/about"
-                        className="text-sm font-medium text-white transition hover:text-blue-300"
-                    >
-                        About
-                    </a>
+                    {/* Customer navigation */}
+                    {username && isCustomer && (
+                        <>
+                            <button
+                                onClick={() => navigate("/customer-dashboard")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Dashboard
+                            </button>
 
-                    <a
-                        href="/contact"
-                        className="text-sm font-medium text-white transition hover:text-blue-300"
-                    >
-                        Contacts
-                    </a>
+                            <button
+                                onClick={() => navigate("/service-requests")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Service Requests
+                            </button>
+
+                            <button
+                                onClick={() => navigate("/messages")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Messages
+                            </button>
+                        </>
+                    )}
+
+                    {/* Provider navigation */}
+                    {username && isProvider && (
+                        <>
+                            <button
+                                onClick={() => navigate("/provider-dashboard")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Dashboard
+                            </button>
+
+                            <button
+                                onClick={() => navigate("/provider/service-requests")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Service Requests
+                            </button>
+
+                            <button
+                                onClick={() => navigate("/messages")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Messages
+                            </button>
+                        </>
+                    )}
+
+                    {/* Admin navigation */}
+                    {username && isAdmin && (
+                        <button
+                            onClick={() => navigate("/admin/dashboard")}
+                            className="text-sm font-medium text-white transition hover:text-blue-300"
+                        >
+                            Administration
+                        </button>
+                    )}
 
                 </div>
 
-                {/* Authentication buttons */}
+                {/* User section */}
                 <div className="flex items-center gap-3">
 
                     {username ? (
                         <div className="flex items-center gap-3">
 
+                            {/* User information */}
                             <div className="flex items-center gap-3">
 
                                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
@@ -80,33 +139,48 @@ function Navbar() {
                                     </p>
 
                                     <p className="text-xs text-blue-100">
-                                        Logged in
+                                        {isAdmin
+                                            ? "Administrator"
+                                            : isProvider
+                                                ? "Service Provider"
+                                                : "Customer"}
                                     </p>
                                 </div>
 
                             </div>
 
-                            {/* Provider Dashboard */}
-                            {accountType === "provider" && (
+                            {/* Dashboard button */}
+                            {isCustomer && (
+                                <button
+                                    onClick={() =>
+                                        navigate("/customer-dashboard")
+                                    }
+                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                >
+                                    Dashboard
+                                </button>
+                            )}
+
+                            {isProvider && (
                                 <button
                                     onClick={() =>
                                         navigate("/provider-dashboard")
                                     }
                                     className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
                                 >
-                                    Provider Dashboard
+                                    Dashboard
                                 </button>
                             )}
 
-                            {/* Admin Dashboard */}
-                            
-{isAdmin && (
-    <button
-        onClick={() => navigate("/admin/dashboard")}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-    >
-        Admin Dashboard
-    </button>
+                            {isAdmin && (
+                                <button
+                                    onClick={() =>
+                                        navigate("/admin/dashboard")
+                                    }
+                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                >
+                                    Admin Dashboard
+                                </button>
                             )}
 
                             {/* Logout */}
@@ -118,32 +192,30 @@ function Navbar() {
                             </button>
 
                         </div>
-
                     ) : (
-
+                        /* Logged-out navigation */
                         <>
-                            <a
-                                href="/register"
+                            <button
+                                onClick={() => navigate("/register")}
                                 className="text-sm font-medium text-white transition hover:underline"
                             >
                                 Register as a provider
-                            </a>
+                            </button>
 
-                            <a
-                                href="/login"
+                            <button
+                                onClick={() => navigate("/login")}
                                 className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
                             >
                                 Log In
-                            </a>
+                            </button>
 
-                            <a
-                                href="/register"
+                            <button
+                                onClick={() => navigate("/register")}
                                 className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
                             >
                                 Sign Up
-                            </a>
+                            </button>
                         </>
-
                     )}
 
                 </div>
