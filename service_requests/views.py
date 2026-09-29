@@ -65,7 +65,6 @@ def service_requests_list(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
 def service_request_detail(request, request_id):
@@ -88,10 +87,8 @@ def service_request_detail(request, request_id):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Convert the request into JSON.
         serializer = ServiceRequestSerializer(service_request)
 
-        # Return the request details.
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
@@ -99,51 +96,108 @@ def service_request_detail(request, request_id):
 
     # PATCH: Update a service request.
     if request.method == "PATCH":
-        # Only the customer who created the request can update it.
-        if request.user != service_request.customer:
-            return Response(
-                {"error": "Only the customer can update this request."},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
-        # Prevent updates to finished or cancelled requests.
-        if service_request.status in [
-            "completed",
-            "rejected",
-            "cancelled"
-        ]:
-            return Response(
-                {"error": "This request can no longer be updated."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Provider update
+        if request.user == service_request.provider:
 
-        # Pass the new data to the serializer.
-        serializer = ServiceRequestSerializer(
-            service_request,
-            data=request.data,
-            partial=True,
-            context={"request": request}
-        )
+            # Providers are only allowed to change the status.
+            submitted_fields = set(request.data.keys())
 
-        # Check whether the submitted changes are valid.
-        if serializer.is_valid():
-            # Save the updated request.
-            updated_request = serializer.save()
+            if submitted_fields != {"status"}:
+                return Response(
+                    {
+                        "error": "Providers can only update the request status."
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            new_status = request.data.get("status")
+
+            # Providers can only accept or reject pending requests.
+            if new_status not in ["accepted", "rejected"]:
+                return Response(
+                    {
+                        "error": "Providers can only change a pending request to accepted or rejected."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Only pending requests can be accepted or rejected.
+            if service_request.status != "pending":
+                return Response(
+                    {
+                        "error": "Only pending requests can be accepted or rejected.",
+                        "current_status": service_request.status
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Update the status.
+            service_request.status = new_status
+            service_request.save()
 
             # Return the updated request.
+            serializer = ServiceRequestSerializer(
+                service_request,
+                context={"request": request}
+            )
+
             return Response(
-                ServiceRequestSerializer(updated_request).data,
+                serializer.data,
                 status=status.HTTP_200_OK
             )
 
-        # Return validation errors.
+        # Customer update
+        if request.user == service_request.customer:
+
+            # Prevent updates to finished or rejected requests.
+            if service_request.status in [
+                "completed",
+                "rejected",
+                "cancelled"
+            ]:
+                return Response(
+                    {
+                        "error": "This request can no longer be updated."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = ServiceRequestSerializer(
+                service_request,
+                data=request.data,
+                partial=True,
+                context={"request": request}
+            )
+
+            if serializer.is_valid():
+                updated_request = serializer.save()
+
+                return Response(
+                    ServiceRequestSerializer(
+                        updated_request,
+                        context={"request": request}
+                    ).data,
+                    status=status.HTTP_200_OK
+                )
+
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Someone who is neither the customer nor the assigned
+        # provider cannot update the request.
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            {
+                "error": "You do not have permission to update this request."
+            },
+            status=status.HTTP_403_FORBIDDEN
         )
 
     # DELETE: Cancel a service request.
     if request.method == "DELETE":
+
         # Only the customer who created the request can cancel it.
         if request.user != service_request.customer:
             return Response(
@@ -162,7 +216,6 @@ def service_request_detail(request, request_id):
         service_request.status = "cancelled"
         service_request.save()
 
-        # Return a confirmation message.
         return Response(
             {"message": "Service request cancelled successfully."},
             status=status.HTTP_200_OK
