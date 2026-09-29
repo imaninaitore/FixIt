@@ -27,44 +27,167 @@ import Conversations from "./pages/messaging/Conversations";
 import Conversation from "./pages/messaging/Conversation";
 
 import CreateReview from "./pages/reviews/CreateReview";
-
 import ProviderReviews from "./pages/provider/ProviderReviews";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
     return (
         <BrowserRouter>
             <Routes>
 
+                {/* Public pages */}
+
                 <Route path="/" element={<Home />} />
+
                 <Route path="/login" element={<Login />} />
+
                 <Route path="/register" element={<Register />} />
-                <Route path="/customer-dashboard" element={<CustomerDashboard />}/>
 
-                <Route path="/provider/enrolment" element={<ProviderEnrolment />}/>
-                <Route path="/providers" element={<Providers />} />
-                <Route  path="/provider-dashboard" element={<ProviderDashboard />}/>
-                <Route  path="/providers/:providerId" element={<ProviderProfile />}/>
-                <Route path="/provider/service-requests" element={<ProviderServiceRequests />}/>
+                <Route
+                    path="/providers"
+                    element={<Providers />}
+                />
 
-                <Route path="/admin/dashboard" element={<AdminDashboard />}/>
-                <Route path="/admin/users" element={<AdminUsers />}/>
-                <Route path="/admin/users/:userId" element={<AdminUserDetails />}/>
-                <Route  path="/admin/enrolments"  element={<AdminEnrolments />}/>
-                <Route path="/admin/enrolments/:enrolmentId" element={<AdminEnrolmentDetails />}/>
-                <Route  path="/admin/requests" element={<AdminServiceRequests />}/>
-                <Route path="/admin/payments" element={<AdminPayments />}/>
-                <Route path="/admin/reports" element={<AdminReports />}/>
+                <Route
+                    path="/providers/:providerId"
+                    element={<ProviderProfile />}
+                />
 
 
-                <Route  path="/service-requests/create" element={<CreateServiceRequest />}/>
-                <Route path="/service-requests" element={<ServiceRequests />} />
+                {/* Authenticated customer and provider pages */}
 
-                <Route path="/messages" element={<Conversations />}/>
-                <Route path="/messages/:conversationId" element={<Conversation />}/>
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["customer", "provider"]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/messages"
+                        element={<Conversations />}
+                    />
 
-                <Route path="/providers/:providerId/reviews" element={<ProviderReviews />}/>
-                <Route path="/providers/:providerId/reviews/create" element={<CreateReview />}/>
+                    <Route
+                        path="/messages/:conversationId"
+                        element={<Conversation />}
+                    />
+                </Route>
 
-                
+
+                {/* Customer pages */}
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["customer"]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/customer-dashboard"
+                        element={<CustomerDashboard />}
+                    />
+
+                    <Route
+                        path="/service-requests"
+                        element={<ServiceRequests />}
+                    />
+
+                    <Route
+                        path="/service-requests/create"
+                        element={<CreateServiceRequest />}
+                    />
+
+                    <Route
+                        path="/providers/:providerId/reviews/create"
+                        element={<CreateReview />}
+                    />
+                </Route>
+
+
+                {/* Provider pages */}
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["provider"]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/provider-dashboard"
+                        element={<ProviderDashboard />}
+                    />
+
+                    <Route
+                        path="/provider/enrolment"
+                        element={<ProviderEnrolment />}
+                    />
+
+                    <Route
+                        path="/provider/service-requests"
+                        element={<ProviderServiceRequests />}
+                    />
+
+                    <Route
+                        path="/providers/:providerId/reviews"
+                        element={<ProviderReviews />}
+                    />
+                </Route>
+
+
+                {/* Admin pages */}
+
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["admin"]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/admin/dashboard"
+                        element={<AdminDashboard />}
+                    />
+
+                    <Route
+                        path="/admin/users"
+                        element={<AdminUsers />}
+                    />
+
+                    <Route
+                        path="/admin/users/:userId"
+                        element={<AdminUserDetails />}
+                    />
+
+                    <Route
+                        path="/admin/enrolments"
+                        element={<AdminEnrolments />}
+                    />
+
+                    <Route
+                        path="/admin/enrolments/:enrolmentId"
+                        element={<AdminEnrolmentDetails />}
+                    />
+
+                    <Route
+                        path="/admin/requests"
+                        element={<AdminServiceRequests />}
+                    />
+
+                    <Route
+                        path="/admin/payments"
+                        element={<AdminPayments />}
+                    />
+
+                    <Route
+                        path="/admin/reports"
+                        element={<AdminReports />}
+                    />
+                </Route>
+
             </Routes>
         </BrowserRouter>
     );
