@@ -1,130 +1,153 @@
+import { Link } from "react-router-dom";
+import {
+    ArrowRight,
+    BriefcaseBusiness,
+    FileText,
+    ShieldCheck,
+} from "lucide-react";
+
 function Footer() {
     return (
-        <footer className="bg-slate-950 text-white">
+        <footer className="border-t border-slate-800 bg-[#081426] text-slate-300">
 
             <div className="mx-auto max-w-7xl px-6 py-14 lg:px-10">
 
-                <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
+                {/* Main footer */}
+                <div className="grid gap-10 md:grid-cols-3 md:gap-12">
 
                     {/* Brand */}
-                    <div className="lg:col-span-2">
-
-                        <a
-                            href="/"
-                            className="text-3xl font-bold"
+                    <div>
+                        <Link
+                            to="/"
+                            className="inline-block text-2xl font-bold tracking-tight text-white"
                         >
                             Fix<span className="text-blue-400">It</span>
-                        </a>
+                        </Link>
 
-                        <p className="mt-5 max-w-md text-sm leading-7 text-slate-400">
-                            Making it as easy to find a trusted professional
-                            as it is to order something online.
+                        <p className="mt-5 max-w-sm text-sm leading-6 text-slate-400">
+                            A local services marketplace that makes it
+                            easier to find and connect with trusted
+                            professionals for the work you need.
                         </p>
 
+                        <Link
+                            to="/providers"
+                            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-blue-400 transition hover:text-blue-300"
+                        >
+                            Find a Provider
+                            <ArrowRight className="h-4 w-4" />
+                        </Link>
                     </div>
 
-                    {/* Platform links */}
+
+                    {/* Platform */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
+                        <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
                             Platform
-                        </h3>
+                        </h2>
 
-                        <ul className="mt-5 space-y-3">
+                        <div className="mt-5 space-y-3">
 
-                            <li>
-                                <a
-                                    href="#providers"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    Find a Provider
-                                </a>
-                            </li>
+                            <Link
+                                to="/"
+                                className="block text-sm text-slate-400 transition hover:text-white"
+                            >
+                                Home
+                            </Link>
 
-                            <li>
-                                <a
-                                    href="#how-it-works"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    How It Works
-                                </a>
-                            </li>
+                            <Link
+                                to="/providers"
+                                className="block text-sm text-slate-400 transition hover:text-white"
+                            >
+                                Find a Provider
+                            </Link>
 
-                            <li>
-                                <a
-                                    href="/register"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    Become a Provider
-                                </a>
-                            </li>
+                            <Link
+                                to="/service-requests"
+                                className="block text-sm text-slate-400 transition hover:text-white"
+                            >
+                                Service Requests
+                            </Link>
 
-                        </ul>
+                            <Link
+                                to="/messages"
+                                className="block text-sm text-slate-400 transition hover:text-white"
+                            >
+                                Messages
+                            </Link>
+
+                        </div>
                     </div>
 
-                    {/* Company */}
+
+                    {/* Legal & Information */}
                     <div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
-                            Company
-                        </h3>
+                        <h2 className="text-sm font-semibold uppercase tracking-wider text-white">
+                            Legal & Information
+                        </h2>
 
-                        <ul className="mt-5 space-y-3">
+                        <div className="mt-5 space-y-3">
 
-                            <li>
-                                <a
-                                    href="#about"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    About Us
-                                </a>
-                            </li>
+                            <Link
+                                to="/terms"
+                                className="flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+                            >
+                                <FileText className="h-4 w-4 text-blue-400" />
+                                Terms & Conditions
+                            </Link>
 
-                            <li>
-                                <a
-                                    href="#contact"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    Contact
-                                </a>
-                            </li>
+                            <Link
+                                to="/privacy"
+                                className="flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"
+                            >
+                                <ShieldCheck className="h-4 w-4 text-blue-400" />
+                                Privacy Policy
+                            </Link>
 
-                            <li>
-                                <a
-                                    href="/login"
-                                    className="text-sm text-slate-400 transition hover:text-blue-400"
-                                >
-                                    Log In
-                                </a>
-                            </li>
+                        </div>
 
-                        </ul>
+                        <div className="mt-7 border-t border-slate-800 pt-5">
+
+                            <div className="flex items-start gap-3">
+
+                                <BriefcaseBusiness className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
+
+                                <p className="text-xs leading-5 text-slate-500">
+                                    FixIt connects customers with independent
+                                    service professionals through one simple
+                                    platform.
+                                </p>
+
+                            </div>
+
+                        </div>
                     </div>
 
                 </div>
 
-                {/* Bottom section */}
-                <div className="mt-12 border-t border-slate-800 pt-6">
 
-                    <div className="flex flex-col gap-4 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+                {/* Bottom bar */}
+                <div className="mt-12 flex flex-col gap-4 border-t border-slate-800 pt-6 sm:flex-row sm:items-center sm:justify-between">
 
-                        <p>
-                            © 2026 FixIt. All rights reserved.
-                        </p>
+                    <p className="text-xs text-slate-500">
+                        © {new Date().getFullYear()} FixIt. All rights reserved.
+                    </p>
 
-                        <div className="flex gap-6">
-                            <a
-                                href="#"
-                                className="transition hover:text-blue-400"
-                            >
-                                Privacy
-                            </a>
+                    <div className="flex items-center gap-5">
 
-                            <a
-                                href="#"
-                                className="transition hover:text-blue-400"
-                            >
-                                Terms
-                            </a>
-                        </div>
+                        <Link
+                            to="/terms"
+                            className="text-xs text-slate-500 transition hover:text-slate-300"
+                        >
+                            Terms
+                        </Link>
+
+                        <Link
+                            to="/privacy"
+                            className="text-xs text-slate-500 transition hover:text-slate-300"
+                        >
+                            Privacy
+                        </Link>
 
                     </div>
 
