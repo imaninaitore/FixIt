@@ -2,8 +2,6 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { loginUser } from "../../services/authService";
-import { API_URL } from "../../services/api";
-import { getMyProviderEnrolment } from "../../services/providerEnrolmentService";
 
 function Login() {
     const navigate = useNavigate();
@@ -21,38 +19,44 @@ function Login() {
         setLoading(true);
 
         try {
-            // Login the user
             const loginData = await loginUser(username, password);
 
-            // Get the logged-in user's profile
-            const profileResponse = await fetch(
-                `${API_URL}/auth/me/`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${loginData.access}`,
-                    },
-                }
-            );
+            const profile = loginData.profile;
 
-            const profileData = await profileResponse.json();
-
-            if (!profileResponse.ok) {
-                throw new Error(
-                    profileData.detail ||
-                    "Could not load your profile."
-                );
+            if (!profile) {
+                throw new Error("Could not load your account information.");
             }
 
-// Save the account type so the homepage knows
-// whether to show provider-specific navigation.
-localStorage.setItem("account_type", profileData.account_type);
+            // Store the account type for use throughout the frontend.
+            localStorage.setItem(
+                "account_type",
+                profile.account_type || ""
+            );
 
-// All users go to the homepage after login.
-navigate("/");
+            // Admin users go to the administration dashboard.
+            if (profile.is_staff || profile.is_superuser) {
+                navigate("/admin/dashboard");
+                return;
+            }
 
+            // Providers go to the provider dashboard.
+            if (profile.account_type === "provider") {
+                navigate("/provider-dashboard");
+                return;
+            }
+
+            // Customers go to the customer dashboard.
+            if (profile.account_type === "customer") {
+                navigate("/customer-dashboard");
+                return;
+            }
+
+            // Fallback if the account type is not recognized.
+            navigate("/");
         } catch (error) {
-            setError(error.message);
+            setError(
+                error.message || "Login failed. Please try again."
+            );
         } finally {
             setLoading(false);
         }
@@ -65,7 +69,6 @@ navigate("/");
 
                 <div className="rounded-2xl bg-white p-8 shadow-xl">
 
-                    {/* Heading */}
                     <div className="mb-8 text-center">
 
                         <h1 className="text-3xl font-bold text-slate-800">
@@ -78,22 +81,17 @@ navigate("/");
 
                     </div>
 
-
-                    {/* Error message */}
                     {error && (
                         <div className="mb-5 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
                             {error}
                         </div>
                     )}
 
-
-                    {/* Login form */}
                     <form
                         onSubmit={handleSubmit}
                         className="space-y-5"
                     >
 
-                        {/* Username */}
                         <div>
                             <label className="mb-2 block text-sm font-medium text-slate-700">
                                 Username
@@ -111,8 +109,6 @@ navigate("/");
                             />
                         </div>
 
-
-                        {/* Password */}
                         <div>
                             <label className="mb-2 block text-sm font-medium text-slate-700">
                                 Password
@@ -130,8 +126,6 @@ navigate("/");
                             />
                         </div>
 
-
-                        {/* Login button */}
                         <button
                             type="submit"
                             disabled={loading}
@@ -142,8 +136,6 @@ navigate("/");
 
                     </form>
 
-
-                    {/* Register */}
                     <p className="mt-6 text-center text-sm text-slate-500">
 
                         Don't have an account?{" "}
