@@ -1,14 +1,20 @@
-import { API_URL, authenticatedFetch } from "./api";
+import { API_URL } from "./api";
 
+async function getAuthHeaders() {
+    const token = localStorage.getItem("access_token");
+
+    return {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+    };
+}
 
 export async function getServiceRequests() {
-    const response = await authenticatedFetch(
+    const response = await fetch(
         `${API_URL}/requests/`,
         {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getAuthHeaders(),
         }
     );
 
@@ -25,15 +31,12 @@ export async function getServiceRequests() {
     return data;
 }
 
-
 export async function createServiceRequest(requestData) {
-    const response = await authenticatedFetch(
+    const response = await fetch(
         `${API_URL}/requests/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getAuthHeaders(),
             body: JSON.stringify(requestData),
         }
     );
@@ -51,15 +54,12 @@ export async function createServiceRequest(requestData) {
     return data;
 }
 
-
 export async function getServiceRequest(requestId) {
-    const response = await authenticatedFetch(
+    const response = await fetch(
         `${API_URL}/requests/${requestId}/`,
         {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getAuthHeaders(),
         }
     );
 
@@ -76,19 +76,48 @@ export async function getServiceRequest(requestId) {
     return data;
 }
 
-
 export async function updateServiceRequest(requestId, requestData) {
-    const response = await authenticatedFetch(
+    const response = await fetch(
         `${API_URL}/requests/${requestId}/`,
         {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getAuthHeaders(),
             body: JSON.stringify(requestData),
         }
     );
 
     const data = await response.json();
 
-    if (!r
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            "Failed to update service request."
+        );
+    }
+
+    return data;
+}
+
+// Get service requests sent to the logged-in provider
+export async function getProviderServiceRequests() {
+    const response = await fetch(
+        `${API_URL}/requests/provider/`,
+        {
+            method: "GET",
+            headers: await getAuthHeaders(),
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            "Failed to fetch provider service requests."
+        );
+    }
+
+    return data;
+}

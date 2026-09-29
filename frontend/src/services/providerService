@@ -1,22 +1,15 @@
-import { API_URL } from "./api";
-
-async function getAuthHeaders() {
-    const token = localStorage.getItem("access_token");
-
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-}
+import { API_URL, authenticatedFetch } from "./api";
 
 
 // Get all approved providers
 export async function getProviders() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/`,
         {
             method: "GET",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
@@ -36,11 +29,13 @@ export async function getProviders() {
 
 // Get provider categories
 export async function getProviderCategories() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/categories/`,
         {
             method: "GET",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
@@ -60,11 +55,13 @@ export async function getProviderCategories() {
 
 // Get one provider by ID
 export async function getProvider(providerId) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/${providerId}/`,
         {
             method: "GET",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
@@ -81,13 +78,16 @@ export async function getProvider(providerId) {
     return data;
 }
 
+
 // Get the logged-in provider's profile
 export async function getMyProvider() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/me/`,
         {
             method: "GET",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
