@@ -21,8 +21,6 @@ function Navbar() {
         } catch (error) {
             console.error(error);
 
-            // Even if the backend logout request fails,
-            // return the user to the homepage.
             navigate("/");
         }
     }
@@ -42,6 +40,7 @@ function Navbar() {
                 {/* Navigation links */}
                 <div className="hidden items-center gap-8 md:flex">
 
+                    {/* Home */}
                     <button
                         onClick={() => navigate("/")}
                         className="text-sm font-medium text-white transition hover:text-blue-300"
@@ -49,12 +48,32 @@ function Navbar() {
                         Home
                     </button>
 
+                    {/* Find a Provider */}
                     <button
                         onClick={() => navigate("/providers")}
                         className="text-sm font-medium text-white transition hover:text-blue-300"
                     >
                         Find a Provider
                     </button>
+
+                    {/* Public navigation */}
+                    {!username && (
+                        <>
+                            <button
+                                onClick={() => navigate("/about")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                About
+                            </button>
+
+                            <button
+                                onClick={() => navigate("/contact")}
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                            >
+                                Contact Us
+                            </button>
+                        </>
+                    )}
 
                     {/* Customer navigation */}
                     {username && isCustomer && (
@@ -93,7 +112,9 @@ function Navbar() {
                             </button>
 
                             <button
-                                onClick={() => navigate("/provider/service-requests")}
+                                onClick={() =>
+                                    navigate("/provider/service-requests")
+                                }
                                 className="text-sm font-medium text-white transition hover:text-blue-300"
                             >
                                 Service Requests
@@ -195,16 +216,17 @@ function Navbar() {
                     ) : (
                         /* Logged-out navigation */
                         <>
+
                             <button
                                 onClick={() => navigate("/register")}
-                                className="text-sm font-medium text-white transition hover:underline"
+                                className="text-sm font-medium text-white transition hover:text-blue-300"
                             >
-                                Register as a provider
+                                Register as a Provider
                             </button>
 
                             <button
                                 onClick={() => navigate("/login")}
-                                className="rounded-lg bg-blue-400 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
                             >
                                 Log In
                             </button>
@@ -215,6 +237,7 @@ function Navbar() {
                             >
                                 Sign Up
                             </button>
+
                         </>
                     )}
 
