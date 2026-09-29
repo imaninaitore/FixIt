@@ -1,6 +1,9 @@
-import { API_URL } from "./api";
+import { API_URL, authenticatedFetch } from "./api";
 
 
+/*
+ * Log in a user.
+ */
 export async function loginUser(username, password) {
     const response = await fetch(`${API_URL}/auth/login/`, {
         method: "POST",
@@ -27,11 +30,16 @@ export async function loginUser(username, password) {
         );
     }
 
+    /*
+     * Save the JWT tokens returned by Django.
+     */
     localStorage.setItem("access_token", data.access);
     localStorage.setItem("refresh_token", data.refresh);
     localStorage.setItem("username", data.username);
 
-    // Get the logged-in user's Django account information
+    /*
+     * Get the logged-in user's Django account information.
+     */
     const profile = await getMyProfile();
 
     localStorage.setItem(
@@ -56,6 +64,9 @@ export async function loginUser(username, password) {
 }
 
 
+/*
+ * Register a new user.
+ */
 export async function registerUser(
     username,
     email,
@@ -92,12 +103,14 @@ export async function registerUser(
 }
 
 
+/*
+ * Log out the current user.
+ */
 export async function logoutUser() {
     const refreshToken = localStorage.getItem("refresh_token");
 
     if (!refreshToken) {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("username");
+        clearAuthData();
         return;
     }
 
@@ -113,9 +126,7 @@ export async function logoutUser() {
 
     const data = await response.json();
 
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("username");
+    clearAuthData();
 
     if (!response.ok) {
         throw new Error(
@@ -126,16 +137,23 @@ export async function logoutUser() {
     return data;
 }
 
-export async function getMyProfile() {
-    const token = localStorage.getItem("access_token");
 
-    const response = await fetch(`${API_URL}/auth/me/`, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-        },
-    });
+/*
+ * Get the currently logged-in user's profile.
+ *
+ * authenticatedFetch() automatically refreshes the access
+ * token if the old one has expired.
+ */
+export async function getMyProfile() {
+    const response = await authenticatedFetch(
+        `${API_URL}/auth/me/`,
+        {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
 
     const data = await response.json();
 
@@ -148,4 +166,17 @@ export async function getMyProfile() {
     }
 
     return data;
+}
+
+
+/*
+ * Remove all authentication information from the browser.
+ */
+function clearAuthData() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("username");
+    localStorage.removeItem("account_type");
+    localStorage.removeItem("is_staff");
+    localStorage.removeItem("is_superuser");
 }

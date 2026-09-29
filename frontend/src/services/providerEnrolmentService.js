@@ -1,22 +1,15 @@
-import { API_URL } from "./api";
-
-async function getAuthHeaders() {
-    const token = localStorage.getItem("access_token");
-
-    return {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-    };
-}
+import { API_URL, authenticatedFetch } from "./api";
 
 
 // Submit provider enrolment and payment
 export async function submitProviderEnrolment(formData) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/submit/`,
         {
             method: "POST",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(formData),
         }
     );
@@ -37,11 +30,13 @@ export async function submitProviderEnrolment(formData) {
 
 // Get the logged-in provider's enrolment
 export async function getMyProviderEnrolment() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/`,
         {
             method: "GET",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
@@ -66,11 +61,13 @@ export async function getMyProviderEnrolment() {
 
 // Update the logged-in provider's enrolment
 export async function updateProviderEnrolment(formData) {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/update/`,
         {
             method: "PATCH",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify(formData),
         }
     );
@@ -91,11 +88,13 @@ export async function updateProviderEnrolment(formData) {
 
 // Withdraw provider enrolment
 export async function withdrawProviderEnrolment() {
-    const response = await fetch(
+    const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/withdraw/`,
         {
             method: "POST",
-            headers: await getAuthHeaders(),
+            headers: {
+                "Content-Type": "application/json",
+            },
         }
     );
 
