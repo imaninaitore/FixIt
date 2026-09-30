@@ -63,13 +63,6 @@ function Home() {
                                     Find a Provider
                                 </a>
 
-                                <a
-                                    href="#how-it-works"
-                                    className="rounded-lg border border-white/40 bg-white/5 px-7 py-3.5 text-center text-sm font-medium text-white backdrop-blur-sm transition duration-300 hover:bg-white/10"
-                                >
-                                    How It Works
-                                </a>
-
                             </div>
 
                         </div>

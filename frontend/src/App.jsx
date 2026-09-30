@@ -11,6 +11,8 @@ import ProviderProfile from "./pages/provider/ProviderProfile";
 import ProviderDashboard from "./pages/provider/ProviderDashboard";
 import ProviderServiceRequests from "./pages/provider/ProviderServiceRequests";
 
+import ProviderLayout from "./components/ProviderLayout";
+
 import AdminDashboard from "./pages/administration/AdminDashboard";
 import AdminUsers from "./pages/administration/AdminUsers";
 import AdminUserDetails from "./pages/administration/AdminUserDetails";
@@ -110,32 +112,63 @@ function App() {
                 {/* Provider pages */}
 
                 <Route
-                    element={
-                        <ProtectedRoute
-                            allowedRoles={["provider"]}
-                        />
-                    }
-                >
-                    <Route
-                        path="/provider-dashboard"
-                        element={<ProviderDashboard />}
-                    />
+    path="/provider-dashboard"
+    element={
+        <ProviderLayout>
+            <ProviderDashboard />
+        </ProviderLayout>
+    }
+/>
 
-                    <Route
-                        path="/provider/enrolment"
-                        element={<ProviderEnrolment />}
-                    />
 
-                    <Route
-                        path="/provider/service-requests"
-                        element={<ProviderServiceRequests />}
-                    />
+<Route
+    path="/provider/service-requests"
+    element={
+        <ProviderLayout>
+            <ProviderServiceRequests />
+        </ProviderLayout>
+    }
+/>
 
-                    <Route
-                        path="/providers/:providerId/reviews"
-                        element={<ProviderReviews />}
-                    />
-                </Route>
+
+<Route
+    path="/provider/enrolment"
+    element={
+        <ProviderLayout>
+            <ProviderEnrolment />
+        </ProviderLayout>
+    }
+/>
+
+
+<Route
+    path="/messages"
+    element={
+        <ProviderLayout>
+            <Conversations />
+        </ProviderLayout>
+    }
+/>
+
+
+<Route
+    path="/providers/:providerId"
+    element={
+        <ProviderLayout>
+            <ProviderProfile />
+        </ProviderLayout>
+    }
+/>
+
+
+<Route
+    path="/providers/:providerId/reviews"
+    element={
+        <ProviderLayout>
+            <ProviderReviews />
+        </ProviderLayout>
+    }
+/>
 
 
                 {/* Admin pages */}
