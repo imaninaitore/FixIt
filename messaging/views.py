@@ -33,9 +33,10 @@ def conversations_list(request):
         conversations = conversations.order_by("-updated_at")
 
         serializer = ConversationSerializer(
-            conversations,
-            many=True
-        )
+    conversations,
+    many=True,
+    context={"request": request}
+)
 
         return Response(
             serializer.data,
@@ -122,7 +123,10 @@ def conversation_detail(request, conversation_id):
             status=status.HTTP_403_FORBIDDEN
         )
 
-    serializer = ConversationSerializer(conversation)
+    serializer = ConversationSerializer(
+    conversation,
+    context={"request": request}
+)
 
     return Response(
         serializer.data,
@@ -323,7 +327,9 @@ def archive_conversation(request, conversation_id):
     conversation.is_archived = True
     conversation.save()
 
-    serializer = ConversationSerializer(conversation)
+    serializer = ConversationSerializer(
+    conversation,
+    context={"request": request})
 
     return Response(
         {

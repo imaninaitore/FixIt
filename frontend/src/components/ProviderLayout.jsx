@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { getMyProvider } from "../services/providerService";
 import { getProviderServiceRequests } from "../services/serviceRequestService";
 import { logoutUser } from "../services/authService";
-
+import { getConversations } from "../services/messagingService";
 
 function ProviderLayout({ children }) {
     const navigate = useNavigate();
@@ -14,7 +14,9 @@ function ProviderLayout({ children }) {
 
     const [profile, setProfile] = useState(null);
     const [pendingCount, setPendingCount] = useState(0);
+    const [messageCount, setMessageCount] = useState(0);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    
 
 
     useEffect(() => {
@@ -84,6 +86,26 @@ function ProviderLayout({ children }) {
     const reviewsPath = profile?.id
         ? `/providers/${profile.id}/reviews`
         : "/provider-dashboard";
+
+    
+    const loadMessageCount = async () => {
+    try {
+        const conversations = await getConversations();
+
+        const totalUnread = (conversations || []).reduce(
+            (total, conversation) =>
+                total + (conversation.unread_count || 0),
+            0
+        );
+
+        setMessageCount(totalUnread);
+    } catch (error) {
+        console.error(
+            "Failed to load message notification count:",
+            error
+        );
+    }
+};    
 
 
     return (

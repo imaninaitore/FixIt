@@ -1,25 +1,22 @@
-import { API_URL, authenticatedFetch } from "./api";
+import { API_URL } from "./api";
 
+function getAuthHeaders() {
+    const token = localStorage.getItem("access_token");
 
-// Get all conversations belonging to the logged-in user
-export async function getConversations() {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/`,
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    );
+    return {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+    };
+}
 
-    const data = await response.json();
+async function handleResponse(response) {
+    const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
         throw new Error(
-            data.detail ||
             data.error ||
-            "Failed to fetch conversations."
+            data.detail ||
+            "Something went wrong."
         );
     }
 
@@ -27,218 +24,140 @@ export async function getConversations() {
 }
 
 
-// Start a conversation with a provider
+export async function getConversations() {
+    const response = await fetch(
+        `${API_URL}/messages/conversations/`,
+        {
+            method: "GET",
+            headers: getAuthHeaders(),
+        }
+    );
+
+    return handleResponse(response);
+}
+
+
+export async function getConversation(conversationId) {
+    const response = await fetch(
+        `${API_URL}/messages/conversations/${conversationId}/`,
+        {
+            method: "GET",
+            headers: getAuthHeaders(),
+        }
+    );
+
+    return handleResponse(response);
+}
+
+
 export async function createConversation(providerId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/`,
+    const response = await fetch(
+        `${API_URL}/messages/conversations/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
-                provider_id: Number(providerId),
+                provider_id: providerId,
             }),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to create conversation."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }
 
 
-// Get one conversation
-export async function getConversation(conversationId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/${conversationId}/`,
+export async function getMessages(conversationId) {
+    const response = await fetch(
+        `${API_URL}/messages/conversations/${conversationId}/messages/`,
         {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to fetch conversation."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }
 
 
-// Get messages in a conversation
-export async function getConversationMessages(conversationId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/${conversationId}/messages/`,
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to fetch messages."
-        );
-    }
-
-    return data;
-}
-
-
-// Send a message
 export async function sendMessage(conversationId, content) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/${conversationId}/messages/`,
+    const response = await fetch(
+        `${API_URL}/messages/conversations/${conversationId}/messages/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 content,
             }),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to send message."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }
 
 
-// Edit a message
-export async function updateMessage(messageId, content) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/messages/${messageId}/`,
+export async function markConversationRead(conversationId) {
+    const response = await fetch(
+        `${API_URL}/messages/conversations/${conversationId}/read/`,
         {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
+        }
+    );
+
+    return handleResponse(response);
+}
+
+
+export async function markMessageRead(messageId) {
+    const response = await fetch(
+        `${API_URL}/messages/messages/${messageId}/read/`,
+        {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+        }
+    );
+
+    return handleResponse(response);
+}
+
+
+export async function editMessage(messageId, content) {
+    const response = await fetch(
+        `${API_URL}/messages/messages/${messageId}/`,
+        {
+            method: "PATCH",
+            headers: getAuthHeaders(),
             body: JSON.stringify({
                 content,
             }),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to update message."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }
 
 
-// Delete a message
 export async function deleteMessage(messageId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/messages/${messageId}/`,
+    const response = await fetch(
+        `${API_URL}/messages/messages/${messageId}/`,
         {
             method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to delete message."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }
 
 
-// Mark a message as read
-export async function markMessageRead(messageId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/messages/${messageId}/read/`,
-        {
-            method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-        }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to mark message as read."
-        );
-    }
-
-    return data;
-}
-
-
-// Archive a conversation
 export async function archiveConversation(conversationId) {
-    const response = await authenticatedFetch(
-        `${API_URL}/messaging/conversations/${conversationId}/archive/`,
+    const response = await fetch(
+        `${API_URL}/messages/conversations/${conversationId}/archive/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
         }
     );
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to archive conversation."
-        );
-    }
-
-    return data;
+    return handleResponse(response);
 }

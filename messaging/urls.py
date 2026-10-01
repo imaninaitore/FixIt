@@ -6,6 +6,7 @@ from .views import (
     conversation_messages,
     message_detail,
     mark_message_read,
+    mark_conversation_read,
     archive_conversation,
 )
 
@@ -31,4 +32,10 @@ urlpatterns = [
 
     # POST: Archive a conversation.
     path( "conversations/<int:conversation_id>/archive/", archive_conversation, name="archive_conversation" ),
+
+    path(
+    "conversations/<int:conversation_id>/read/",
+    mark_conversation_read,
+    name="mark_conversation_read"
+),
 ]
