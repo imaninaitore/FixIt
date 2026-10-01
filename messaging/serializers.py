@@ -4,23 +4,22 @@ from .models import Conversation, Message
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    # Display the customer's username.
     customer = serializers.CharField(
         source="customer.username",
         read_only=True
     )
 
-    # Display the provider's username.
     provider = serializers.CharField(
         source="provider.username",
         read_only=True
     )
 
-    # Used when starting a conversation.
     provider_id = serializers.IntegerField(
         write_only=True,
         required=False
     )
+
+    unread_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
@@ -31,6 +30,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "provider",
             "provider_id",
             "is_archived",
+            "unread_count",
             "created_at",
             "updated_at",
         ]
@@ -40,19 +40,30 @@ class ConversationSerializer(serializers.ModelSerializer):
             "customer",
             "provider",
             "is_archived",
+            "unread_count",
             "created_at",
             "updated_at",
         ]
 
+    def get_unread_count(self, conversation):
+        request = self.context.get("request")
+
+        if not request or not request.user.is_authenticated:
+            return 0
+
+        return conversation.messages.filter(
+            is_read=False
+        ).exclude(
+            sender=request.user
+        ).count()
+
 
 class MessageSerializer(serializers.ModelSerializer):
-    # Display the sender's username.
     sender = serializers.CharField(
         source="sender.username",
         read_only=True
     )
 
-    # The conversation is supplied through the URL.
     conversation = serializers.PrimaryKeyRelatedField(
         read_only=True
     )
