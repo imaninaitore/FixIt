@@ -20,8 +20,15 @@ function ProviderLayout({ children }) {
 
 
     useEffect(() => {
-        loadProviderData();
-    }, []);
+    loadProviderData();
+    loadMessageCount();
+
+    const interval = setInterval(() => {
+        loadMessageCount();
+    }, 10000);
+
+    return () => clearInterval(interval);
+}, []);
 
 
     const loadProviderData = async () => {
@@ -356,6 +363,30 @@ function ProviderLayout({ children }) {
                             </svg>
 
                             <span>Messages</span>
+
+{messageCount > 0 && (
+    <span
+        className={`
+            ml-auto
+            flex
+            h-5
+            min-w-5
+            items-center
+            justify-center
+            rounded-full
+            px-1.5
+            text-[10px]
+            font-bold
+            ${
+                isActive("/messages")
+                    ? "bg-white text-blue-600"
+                    : "bg-blue-600 text-white"
+            }
+        `}
+    >
+        {messageCount > 99 ? "99+" : messageCount}
+    </span>
+)}
 
                         </button>
 

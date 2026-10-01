@@ -24,9 +24,10 @@ async function handleResponse(response) {
 }
 
 
+// Get all conversations for the logged-in user
 export async function getConversations() {
     const response = await fetch(
-        `${API_URL}/messages/conversations/`,
+        `${API_URL}/messaging/conversations/`,
         {
             method: "GET",
             headers: getAuthHeaders(),
@@ -37,9 +38,10 @@ export async function getConversations() {
 }
 
 
+// Get one conversation
 export async function getConversation(conversationId) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/${conversationId}/`,
+        `${API_URL}/messaging/conversations/${conversationId}/`,
         {
             method: "GET",
             headers: getAuthHeaders(),
@@ -50,9 +52,10 @@ export async function getConversation(conversationId) {
 }
 
 
+// Create a new conversation
 export async function createConversation(providerId) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/`,
+        `${API_URL}/messaging/conversations/`,
         {
             method: "POST",
             headers: getAuthHeaders(),
@@ -66,9 +69,10 @@ export async function createConversation(providerId) {
 }
 
 
+// Get messages in a conversation
 export async function getMessages(conversationId) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/${conversationId}/messages/`,
+        `${API_URL}/messaging/conversations/${conversationId}/messages/`,
         {
             method: "GET",
             headers: getAuthHeaders(),
@@ -79,9 +83,16 @@ export async function getMessages(conversationId) {
 }
 
 
+// Alias used by Conversation.jsx
+export async function getConversationMessages(conversationId) {
+    return getMessages(conversationId);
+}
+
+
+// Send a message
 export async function sendMessage(conversationId, content) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/${conversationId}/messages/`,
+        `${API_URL}/messaging/conversations/${conversationId}/messages/`,
         {
             method: "POST",
             headers: getAuthHeaders(),
@@ -95,9 +106,10 @@ export async function sendMessage(conversationId, content) {
 }
 
 
+// Mark all messages in a conversation as read
 export async function markConversationRead(conversationId) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/${conversationId}/read/`,
+        `${API_URL}/messaging/conversations/${conversationId}/read/`,
         {
             method: "PATCH",
             headers: getAuthHeaders(),
@@ -108,9 +120,10 @@ export async function markConversationRead(conversationId) {
 }
 
 
+// Mark one message as read
 export async function markMessageRead(messageId) {
     const response = await fetch(
-        `${API_URL}/messages/messages/${messageId}/read/`,
+        `${API_URL}/messaging/messages/${messageId}/read/`,
         {
             method: "PATCH",
             headers: getAuthHeaders(),
@@ -121,9 +134,10 @@ export async function markMessageRead(messageId) {
 }
 
 
+// Edit a message
 export async function editMessage(messageId, content) {
     const response = await fetch(
-        `${API_URL}/messages/messages/${messageId}/`,
+        `${API_URL}/messaging/messages/${messageId}/`,
         {
             method: "PATCH",
             headers: getAuthHeaders(),
@@ -137,9 +151,10 @@ export async function editMessage(messageId, content) {
 }
 
 
+// Delete a message
 export async function deleteMessage(messageId) {
     const response = await fetch(
-        `${API_URL}/messages/messages/${messageId}/`,
+        `${API_URL}/messaging/messages/${messageId}/`,
         {
             method: "DELETE",
             headers: getAuthHeaders(),
@@ -150,9 +165,10 @@ export async function deleteMessage(messageId) {
 }
 
 
+// Archive a conversation
 export async function archiveConversation(conversationId) {
     const response = await fetch(
-        `${API_URL}/messages/conversations/${conversationId}/archive/`,
+        `${API_URL}/messaging/conversations/${conversationId}/archive/`,
         {
             method: "POST",
             headers: getAuthHeaders(),

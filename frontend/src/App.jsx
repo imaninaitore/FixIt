@@ -132,10 +132,19 @@ function App() {
 
 
 <Route
-    path="/provider/enrolment"
+    path="/messages"
     element={
         <ProviderLayout>
-            <ProviderEnrolment />
+            <Conversations />
+        </ProviderLayout>
+    }
+/>
+
+<Route
+    path="/messages/:conversationId"
+    element={
+        <ProviderLayout>
+            <Conversation />
         </ProviderLayout>
     }
 />
