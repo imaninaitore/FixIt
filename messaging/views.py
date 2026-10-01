@@ -332,3 +332,37 @@ def archive_conversation(request, conversation_id):
         },
         status=status.HTTP_200_OK
     )
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def mark_conversation_read(request, conversation_id):
+    conversation = get_object_or_404(
+        Conversation,
+        id=conversation_id
+    )
+
+    if not user_can_access_conversation(
+        request.user,
+        conversation
+    ):
+        return Response(
+            {
+                "error": "You do not have permission to access this conversation."
+            },
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    conversation.messages.filter(
+        is_read=False
+    ).exclude(
+        sender=request.user
+    ).update(
+        is_read=True
+    )
+
+    return Response(
+        {
+            "message": "Conversation messages marked as read."
+        },
+        status=status.HTTP_200_OK
+    )
