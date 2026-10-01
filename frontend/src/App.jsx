@@ -51,32 +51,6 @@ function App() {
                     element={<Providers />}
                 />
 
-                <Route
-                    path="/providers/:providerId"
-                    element={<ProviderProfile />}
-                />
-
-
-                {/* Authenticated customer and provider pages */}
-
-                <Route
-                    element={
-                        <ProtectedRoute
-                            allowedRoles={["customer", "provider"]}
-                        />
-                    }
-                >
-                    <Route
-                        path="/messages"
-                        element={<Conversations />}
-                    />
-
-                    <Route
-                        path="/messages/:conversationId"
-                        element={<Conversation />}
-                    />
-                </Route>
-
 
                 {/* Customer pages */}
 
@@ -109,9 +83,9 @@ function App() {
                 </Route>
 
 
-                {/* Provider pages */}
+{/* Provider pages */}
 
-                <Route
+<Route
     path="/provider-dashboard"
     element={
         <ProviderLayout>
@@ -119,7 +93,6 @@ function App() {
         </ProviderLayout>
     }
 />
-
 
 <Route
     path="/provider/service-requests"
@@ -129,7 +102,6 @@ function App() {
         </ProviderLayout>
     }
 />
-
 
 <Route
     path="/messages"
@@ -149,17 +121,6 @@ function App() {
     }
 />
 
-
-<Route
-    path="/messages"
-    element={
-        <ProviderLayout>
-            <Conversations />
-        </ProviderLayout>
-    }
-/>
-
-
 <Route
     path="/providers/:providerId"
     element={
@@ -169,7 +130,6 @@ function App() {
     }
 />
 
-
 <Route
     path="/providers/:providerId/reviews"
     element={
@@ -178,6 +138,16 @@ function App() {
         </ProviderLayout>
     }
 />
+
+<Route
+    path="/provider/enrolment"
+    element={
+        <ProviderLayout>
+            <ProviderEnrolment />
+        </ProviderLayout>
+    }
+/>
+
 
 
                 {/* Admin pages */}
