@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import Contact from "./pages/Contact";
 
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
@@ -45,6 +46,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 <Route path="/register" element={<Register />} />
+                
+                <Route path="/contact" element={<Contact/>}/>
 
                 <Route
                     path="/providers"
