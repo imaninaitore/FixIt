@@ -1,10 +1,17 @@
 function About() {
     return (
         <section
-            id="about"
-            className="bg-white py-20 sm:py-24"
-        >
-            <div className="mx-auto max-w-7xl px-6 lg:px-10">
+    id="about"
+    className="
+        bg-gradient-to-br
+        from-slate-400
+        via-[#f4f7fb]
+        to-white
+        py-15
+        sm:py-24
+    "
+>
+            <div className="mx-auto max-w-5xl px-6 lg:px-10">
 
                 <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
 
@@ -39,9 +46,9 @@ function About() {
 
                         <div className="overflow-hidden rounded-2xl bg-slate-900 shadow-xl">
                             <img
-                                src="/images/bg.png"
+                                src="/images/about.jpg"
                                 alt="FixIt local service professionals"
-                                className="h-[420px] w-full object-cover opacity-80"
+                                className="h-[420px] w-full object-cover "
                             />
 
                             <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
