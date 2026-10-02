@@ -5,6 +5,8 @@ import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import Contact from "./pages/Contact";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsAndConditions from "./pages/TermsAndConditions";
 
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
@@ -46,8 +48,12 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 <Route path="/register" element={<Register />} />
-                
+
                 <Route path="/contact" element={<Contact/>}/>
+
+                <Route path="/terms" element={<TermsAndConditions/>}/>
+
+                <Route path="/privacy" element={<PrivacyPolicy/>}/>
 
                 <Route
                     path="/providers"
