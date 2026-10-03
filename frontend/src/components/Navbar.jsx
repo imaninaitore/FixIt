@@ -219,21 +219,21 @@ function Navbar() {
 
                             <button
                                 onClick={() => navigate("/register")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-blue-300  sm:text-xs lg:text-sm"
                             >
                                 Register as a Provider
                             </button>
 
                             <button
                                 onClick={() => navigate("/login")}
-                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 hover:bg-white/10 sm:px-3  sm:py-1.5 sm:text-xs lg:px-4 lg:py-2 lg:text-sm"
                             >
                                 Log In
                             </button>
 
                             <button
                                 onClick={() => navigate("/register")}
-                                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600"
+                                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 sm:px-4 sm:py-2 sm:text-xs lg:px-5 lg:py-2.5  lg:text-sm"
                             >
                                 Sign Up
                             </button>

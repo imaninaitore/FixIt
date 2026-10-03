@@ -13,6 +13,7 @@ import {
     Bug,
     Search,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const services = [
     {
@@ -58,6 +59,9 @@ const services = [
 ];
 
 function Home() {
+
+    const navigate = useNavigate();
+
     return (
         <main className="min-h-screen bg-white">
             {/* Hero */}
@@ -147,7 +151,8 @@ function Home() {
                         />
 
                         {/* Find a Provider button */}
-                        <button
+                        <button 
+                           onClick={() => navigate("/providers")}
                             type="button"
                             className="
                                 group
