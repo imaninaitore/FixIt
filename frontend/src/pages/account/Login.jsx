@@ -17,6 +17,15 @@ function Login() {
         event.preventDefault();
 
         setError("");
+
+        // Require Terms & Conditions agreement
+        if (!agreedTerms) {
+            setError(
+                "You must agree to the Terms & Conditions before logging in."
+            );
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -220,6 +229,7 @@ function Login() {
 
                         {/* Back Button */}
                         <button
+                            type="button"
                             onClick={() => navigate(-1)}
                             className="
                                 mb-3
@@ -301,6 +311,7 @@ function Login() {
                             {/* Username */}
                             <div>
                                 <label
+                                    htmlFor="username"
                                     className="
                                         mb-1
                                         block
@@ -313,6 +324,7 @@ function Login() {
                                 </label>
 
                                 <input
+                                    id="username"
                                     type="text"
                                     value={username}
                                     onChange={(e) =>
@@ -341,6 +353,7 @@ function Login() {
                             {/* Password */}
                             <div>
                                 <label
+                                    htmlFor="password"
                                     className="
                                         mb-1
                                         block
@@ -354,6 +367,7 @@ function Login() {
 
                                 <div className="relative">
                                     <input
+                                        id="password"
                                         type={
                                             showPassword
                                                 ? "text"
@@ -383,6 +397,7 @@ function Login() {
                                         "
                                     />
 
+                                    {/* Show / Hide Password */}
                                     <button
                                         type="button"
                                         onClick={() =>
@@ -396,6 +411,11 @@ function Login() {
                                             text-gray-400
                                             hover:text-gray-600
                                         "
+                                        aria-label={
+                                            showPassword
+                                                ? "Hide password"
+                                                : "Show password"
+                                        }
                                     >
                                         {showPassword ? (
                                             <svg
@@ -436,6 +456,7 @@ function Login() {
                                     </button>
                                 </div>
 
+                                {/* Forgot Password */}
                                 <div className="mt-1 text-right">
                                     <a
                                         href="#forgot"
@@ -451,10 +472,55 @@ function Login() {
                                 </div>
                             </div>
 
+                            {/* Terms & Conditions */}
+                            <div className="flex items-start gap-2 pt-0.5">
+                                <input
+                                    type="checkbox"
+                                    id="terms"
+                                    checked={agreedTerms}
+                                    onChange={(e) =>
+                                        setAgreedTerms(e.target.checked)
+                                    }
+                                    required
+                                    className="
+                                        mt-0.5
+                                        h-3.5
+                                        w-3.5
+                                        flex-shrink-0
+                                        rounded
+                                        border-gray-300
+                                        accent-black
+                                        focus:ring-black
+                                    "
+                                />
+
+                                <label
+                                    htmlFor="terms"
+                                    className="
+                                        text-[11px]
+                                        leading-4
+                                        text-gray-600
+                                    "
+                                >
+                                    I agree to the{" "}
+                                    <a
+                                        href="/terms"
+                                        className="
+                                            font-bold
+                                            text-black
+                                            underline
+                                            underline-offset-2
+                                        "
+                                    >
+                                        Terms & Conditions
+                                    </a>
+                                </label>
+                            </div>
+
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                disabled={loading}
+                                disabled={loading || !agreedTerms}
                                 className="
                                     w-full
                                     rounded-full
@@ -465,48 +531,14 @@ function Login() {
                                     text-white
                                     transition
                                     hover:bg-gray-800
+                                    disabled:cursor-not-allowed
                                     disabled:opacity-50
                                 "
                             >
-                                {loading ? "Logging in..." : "Log in"}
+                                {loading
+                                    ? "Logging in..."
+                                    : "Log in"}
                             </button>
-
-                            {/* Terms */}
-                            <div className="flex items-center gap-2 pt-0.5">
-                                <input
-                                    type="checkbox"
-                                    id="terms"
-                                    checked={agreedTerms}
-                                    onChange={(e) =>
-                                        setAgreedTerms(e.target.checked)
-                                    }
-                                    className="
-                                        h-3.5
-                                        w-3.5
-                                        rounded
-                                        border-gray-300
-                                        accent-black
-                                        focus:ring-black
-                                    "
-                                />
-
-                                <label
-                                    htmlFor="terms"
-                                    className="text-[11px] text-gray-600"
-                                >
-                                    I agree to the{" "}
-                                    <a
-                                        href="/terms"
-                                        className="
-                                            font-bold
-                                            text-black
-                                            underline
-                                        "
-                                    >
-                                        Terms & Conditions
-                                    </a>
-                                </label>
-                            </div>
                         </form>
                     </div>
                 </div>

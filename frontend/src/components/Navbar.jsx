@@ -218,7 +218,7 @@ function Navbar() {
                         <>
 
                             <button
-                                onClick={() => navigate("/register")}
+                                onClick={() => navigate("/registerProvider")}
                                 className="text-sm font-medium text-white transition hover:text-blue-300  sm:text-xs lg:text-sm"
                             >
                                 Register as a Provider

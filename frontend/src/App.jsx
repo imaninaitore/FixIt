@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
+import RegisterProvider from "./pages/account/RegisterProvider";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import About from "./components/About";
 import Contact from "./pages/Contact";
@@ -49,6 +50,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
 
                 <Route path="/register" element={<Register />} />
+
+                <Route path="/registerProvider" element={<RegisterProvider />} />
 
                 <Route path="/about" element={<About/>}/>
 
