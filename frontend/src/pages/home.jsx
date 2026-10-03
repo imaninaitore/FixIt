@@ -94,10 +94,11 @@ function Home() {
                         items-start
                         justify-center
                         px-6
-                        pt-10
+                        pt-30
                         text-center
                         sm:min-h-[400px]
                         sm:px-8
+                        
                         lg:min-h-[480px]
                         lg:pt-30 "
                 >
@@ -113,6 +114,7 @@ function Home() {
                                 tracking-[0.2em]
                                 text-white/80
                                 sm:text-sm
+                                sm:mt-10
                             "
                         >
                             Trusted Local Professionals
@@ -126,7 +128,7 @@ function Home() {
                                 leading-tight
                                 tracking-tight
                                 text-white
-                                sm:text-3xl
+                                sm:text-xl
                                 lg:text-6xl
                             "
                         >
@@ -215,94 +217,114 @@ function Home() {
             lg:py-5
         "
     >
+        {/* Scrollable only on smaller screens */}
         <div
             className="
-                grid
-                grid-cols-3
-                gap-x-2
-                gap-y-5
-                sm:grid-cols-2
-                sm:gap-y-4
-                md:grid-cols-4
-                lg:grid-cols-8
+                overflow-x-auto
+                overflow-y-hidden
+                scrollbar-thin
+                scrollbar-thumb-slate-300
+                scrollbar-track-transparent
+                sm:overflow-x-visible
             "
         >
-            {services.map((service) => {
-                const Icon = service.icon;
+            <div
+                className="
+                    flex
+                    w-max
+                    min-w-full
+                    items-center
+                    gap-3
+                    sm:grid
+                    sm:w-full
+                    sm:grid-cols-2
+                    sm:gap-x-2
+                    sm:gap-y-4
+                    md:grid-cols-4
+                    lg:grid-cols-8
+                "
+            >
+                {services.map((service) => {
+                    const Icon = service.icon;
 
-                return (
-                    <a
-                        key={service.name}
-                        href={service.link}
-                        className="
-                            group
-                            flex
-                            min-w-0
-                            flex-col
-                            items-center
-                            justify-center
-                            rounded-xl
-                            px-1
-                            py-1
-                            text-center
-                            transition-all
-                            duration-200
-                            hover:bg-[#eef3f8]
-                        "
-                    >
-                        <div
+                    return (
+                        <a
+                            key={service.name}
+                            href={service.link}
                             className="
+                                group
                                 flex
-                                h-10
-                                w-10
+                                w-[90px]
+                                shrink-0
+                                flex-col
                                 items-center
                                 justify-center
                                 rounded-xl
-                                text-[#53627c]
+                                px-1
+                                py-1
+                                text-center
                                 transition-all
                                 duration-200
-                                group-hover:bg-blue-50
-                                group-hover:text-blue-600
-                                sm:h-11
-                                sm:w-11
-                                lg:h-12
-                                lg:w-12
+                                hover:bg-[#eef3f8]
+                                sm:w-auto
+                                sm:min-w-0
                             "
                         >
-                            <Icon
-                                size={24}
-                                strokeWidth={1.5}
+                            <div
                                 className="
+                                    flex
+                                    h-10
+                                    w-10
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    text-[#53627c]
                                     transition-all
                                     duration-200
-                                    group-hover:scale-110
+                                    group-hover:bg-blue-50
+                                    group-hover:text-blue-600
+                                    sm:h-11
+                                    sm:w-11
+                                    lg:h-12
+                                    lg:w-12
                                 "
-                            />
-                        </div>
+                            >
+                                <Icon
+                                    size={24}
+                                    strokeWidth={1.5}
+                                    className="
+                                        transition-all
+                                        duration-200
+                                        group-hover:scale-110
+                                    "
+                                />
+                            </div>
 
-                        <span
-                            className="
-                                mt-2
-                                max-w-[105px]
-                                text-[9px]
-                                font-medium
-                                leading-4
-                                text-[#53627c]
-                                transition-colors
-                                duration-200
-                                group-hover:text-blue-600
-                                sm:text-[10px]
-                                lg:text-xs
-                            "
-                        >
-                            {service.name}
-                        </span>
-                    </a>
-                );
-            })}
+                            <span
+                                className="
+                                    mt-2
+                                    max-w-[105px]
+                                    text-[9px]
+                                    font-medium
+                                    leading-4
+                                    text-[#53627c]
+                                    transition-colors
+                                    duration-200
+                                    group-hover:text-blue-600
+                                    sm:text-[10px]
+                                    lg:text-xs
+                                "
+                            >
+                                {service.name}
+                            </span>
+                        </a>
+                    );
+                })}
+            </div>
         </div>
     </div>
 </div>
+
             </section>
 
             {/* About section */}

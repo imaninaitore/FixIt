@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import About from "./components/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -49,46 +50,30 @@ function App() {
 
                 <Route path="/register" element={<Register />} />
 
+                <Route path="/about" element={<About/>}/>
+
                 <Route path="/contact" element={<Contact/>}/>
 
                 <Route path="/terms" element={<TermsAndConditions/>}/>
 
                 <Route path="/privacy" element={<PrivacyPolicy/>}/>
 
-                <Route
-                    path="/providers"
-                    element={<Providers />}
-                />
+                <Route path="/providers" element={<Providers />}/>
 
 
                 {/* Customer pages */}
 
                 <Route
                     element={
-                        <ProtectedRoute
-                            allowedRoles={["customer"]}
-                        />
-                    }
-                >
-                    <Route
-                        path="/customer-dashboard"
-                        element={<CustomerDashboard />}
-                    />
+                        <ProtectedRoute allowedRoles={["customer"]}/>
+                    }>
+                    <Route path="/customer-dashboard" element={<CustomerDashboard />}/>
 
-                    <Route
-                        path="/service-requests"
-                        element={<ServiceRequests />}
-                    />
+                    <Route path="/service-requests" element={<ServiceRequests />}/>
 
-                    <Route
-                        path="/service-requests/create"
-                        element={<CreateServiceRequest />}
-                    />
+                    <Route path="/service-requests/create" element={<CreateServiceRequest />} />
 
-                    <Route
-                        path="/providers/:providerId/reviews/create"
-                        element={<CreateReview />}
-                    />
+                    <Route path="/providers/:providerId/reviews/create" element={<CreateReview />}/>
                 </Route>
 
 
