@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
     Briefcase,
     MapPin,
@@ -13,14 +13,16 @@ import {
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
-import { getProviders } from "../../services/providerService";
+import {
+    getProviders,
+    getProviderCategories,
+} from "../../services/providerService";
 
 function Providers() {
     const [providers, setProviders] = useState([]);
-    const [filteredProviders, setFilteredProviders] = useState([]);
+    const [categories, setCategories] = useState([]);
 
     const [search, setSearch] = useState("");
-    const [category, setCategory] = useState("all");
 
     const [currentPage, setCurrentPage] = useState(1);
 
@@ -28,85 +30,190 @@ function Providers() {
     const [error, setError] = useState("");
 
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const providersPerPage = 8;
 
+    // Read the active category directly from the URL
+    const category = searchParams.get("category") || "all";
+
     useEffect(() => {
-        loadProviders();
+        const searchFromUrl = searchParams.get("search") || "";
+
+        setSearch(searchFromUrl);
+        setCurrentPage(1);
+    }, [searchParams]);
+
+    useEffect(() => {
+        loadCategories();
     }, []);
 
     useEffect(() => {
-        const searchTerm = search.trim().toLowerCase();
+        loadProviders();
+    }, [searchParams, search]);
 
-        const filtered = providers.filter((provider) => {
-            const businessName =
-                provider.business_name?.toLowerCase() || "";
+    async function loadCategories() {
+        try {
+            const data = await getProviderCategories();
 
-            const providerCategory =
-                provider.service_category?.toLowerCase() || "";
-
-            const location =
-                provider.location?.toLowerCase() || "";
-
-            const description =
-                provider.description?.toLowerCase() || "";
-
-            const matchesSearch =
-                !searchTerm ||
-                businessName.includes(searchTerm) ||
-                providerCategory.includes(searchTerm) ||
-                location.includes(searchTerm) ||
-                description.includes(searchTerm);
-
-            const matchesCategory =
-                category === "all" ||
-                providerCategory === category.toLowerCase();
-
-            return matchesSearch && matchesCategory;
-        });
-
-        setFilteredProviders(filtered);
-        setCurrentPage(1);
-    }, [search, category, providers]);
+            if (Array.isArray(data)) {
+                setCategories(
+                    [...new Set(data.filter(Boolean))]
+                );
+            }
+        } catch (err) {
+            console.error(
+                "Failed to load provider categories:",
+                err
+            );
+        }
+    }
 
     async function loadProviders() {
         try {
             setLoading(true);
             setError("");
 
-            const data = await getProviders();
+            // Get the category directly from the current URL
+            const categoryFromUrl =
+                searchParams.get("category") || "";
+
+            const searchFromUrl =
+                searchParams.get("search") || "";
+
+            console.log(
+                "Loading providers with:",
+                {
+                    search: searchFromUrl,
+                    category: categoryFromUrl,
+                }
+            );
+
+            const data = await getProviders({
+                search: searchFromUrl.trim(),
+                category: categoryFromUrl,
+            });
+
+            if (!Array.isArray(data)) {
+                setProviders([]);
+                return;
+            }
+
+            console.log(
+                "Providers returned:",
+                data
+            );
 
             setProviders(data);
-            setFilteredProviders(data);
+            setCurrentPage(1);
         } catch (err) {
-            setError(
-                err.message || "Failed to load service providers."
+            console.error(
+                "Failed to load service providers:",
+                err
             );
+
+            setError(
+                err.message ||
+                    "Failed to load service providers."
+            );
+
+            setProviders([]);
         } finally {
             setLoading(false);
         }
     }
 
     function clearSearch() {
-        setSearch("");
+        const params = new URLSearchParams(
+            searchParams
+        );
+
+        params.delete("search");
+
+        navigate(
+            params.toString()
+                ? `/providers?${params.toString()}`
+                : "/providers",
+            {
+                replace: true,
+            }
+        );
+
+        setCurrentPage(1);
     }
 
     function clearFilters() {
         setSearch("");
-        setCategory("all");
         setCurrentPage(1);
+
+        navigate("/providers", {
+            replace: true,
+        });
     }
 
-    const categories = [
-        ...new Set(
-            providers
-                .map((provider) => provider.service_category)
-                .filter(Boolean)
-        ),
-    ];
+    function handleSearchChange(event) {
+        const value = event.target.value;
+
+        setSearch(value);
+
+        const params = new URLSearchParams(
+            searchParams
+        );
+
+        if (value.trim()) {
+            params.set("search", value);
+        } else {
+            params.delete("search");
+        }
+
+        navigate(
+            params.toString()
+                ? `/providers?${params.toString()}`
+                : "/providers",
+            {
+                replace: true,
+            }
+        );
+    }
+
+    function handleCategoryChange(event) {
+        const selectedCategory =
+            event.target.value;
+
+        setCurrentPage(1);
+
+        if (selectedCategory === "all") {
+            navigate("/providers", {
+                replace: true,
+            });
+
+            return;
+        }
+
+        navigate(
+            `/providers?category=${encodeURIComponent(
+                selectedCategory
+            )}`,
+            {
+                replace: true,
+            }
+        );
+    }
+
+    function getCategoryDisplayName(categoryName) {
+        if (categoryName === "Electrical.") {
+            return "Electrical";
+        }
+
+        if (categoryName === "Carpentry") {
+            return "Carpenters";
+        }
+
+        return categoryName;
+    }
 
     const totalPages = Math.ceil(
-        filteredProviders.length / providersPerPage
+        providers.length / providersPerPage
     );
 
     const startIndex =
@@ -116,7 +223,7 @@ function Providers() {
         startIndex + providersPerPage;
 
     const currentProviders =
-        filteredProviders.slice(
+        providers.slice(
             startIndex,
             endIndex
         );
@@ -136,14 +243,14 @@ function Providers() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#e2eaf2] via-[#edf2f7] to-[#d5e0eb]">
-
             <Navbar />
 
             {/* Hero / Search */}
             <section
                 className="relative bg-cover bg-center"
                 style={{
-                    backgroundImage: "url('/images/bg.png')",
+                    backgroundImage:
+                        "url('/images/bg.png')",
                 }}
             >
                 <div className="absolute inset-0 bg-slate-950/70" />
@@ -157,11 +264,9 @@ function Providers() {
                         pb-20
                         pt-32
                         text-center
-
                         sm:px-8
                         sm:pb-24
                         sm:pt-36
-
                         lg:px-10
                     "
                 >
@@ -172,7 +277,6 @@ function Providers() {
                             uppercase
                             tracking-[0.2em]
                             text-blue-300
-
                             sm:text-sm
                         "
                     >
@@ -186,9 +290,7 @@ function Providers() {
                             font-bold
                             tracking-tight
                             text-white
-
                             sm:text-4xl
-
                             lg:text-5xl
                         "
                     >
@@ -203,12 +305,11 @@ function Providers() {
                             text-sm
                             leading-7
                             text-slate-200
-
                             sm:text-base
                         "
                     >
-                        Find trusted professionals for the services
-                        you need in your area.
+                        Find trusted professionals for the
+                        services you need in your area.
                     </p>
 
                     {/* Search Container */}
@@ -232,7 +333,6 @@ function Providers() {
                                 p-3
                                 shadow-2xl
                                 backdrop-blur-md
-
                                 md:flex-row
                             "
                         >
@@ -253,8 +353,8 @@ function Providers() {
                                 <input
                                     type="text"
                                     value={search}
-                                    onChange={(event) =>
-                                        setSearch(event.target.value)
+                                    onChange={
+                                        handleSearchChange
                                     }
                                     placeholder="Search provider, service or location..."
                                     className="
@@ -301,7 +401,6 @@ function Providers() {
                                 className="
                                     relative
                                     w-full
-
                                     md:w-60
                                 "
                             >
@@ -321,8 +420,8 @@ function Providers() {
 
                                 <select
                                     value={category}
-                                    onChange={(event) =>
-                                        setCategory(event.target.value)
+                                    onChange={
+                                        handleCategoryChange
                                     }
                                     className="
                                         h-12
@@ -347,14 +446,18 @@ function Providers() {
                                         All Categories
                                     </option>
 
-                                    {categories.map((item) => (
-                                        <option
-                                            key={item}
-                                            value={item}
-                                        >
-                                            {item}
-                                        </option>
-                                    ))}
+                                    {categories.map(
+                                        (item) => (
+                                            <option
+                                                key={item}
+                                                value={item}
+                                            >
+                                                {getCategoryDisplayName(
+                                                    item
+                                                )}
+                                            </option>
+                                        )
+                                    )}
                                 </select>
 
                                 <ChevronDown
@@ -383,10 +486,8 @@ function Providers() {
                     max-w-7xl
                     px-5
                     py-10
-
                     sm:px-8
                     sm:py-12
-
                     lg:px-10
                 "
             >
@@ -397,7 +498,6 @@ function Providers() {
                         flex
                         flex-col
                         gap-3
-
                         sm:flex-row
                         sm:items-end
                         sm:justify-between
@@ -410,7 +510,6 @@ function Providers() {
                                 font-bold
                                 tracking-tight
                                 text-slate-900
-
                                 sm:text-2xl
                             "
                         >
@@ -418,22 +517,27 @@ function Providers() {
                         </h2>
 
                         <p className="mt-1.5 text-sm text-slate-500">
-                            {search || category !== "all"
-                                ? `${filteredProviders.length} provider${
-                                      filteredProviders.length === 1
+                            {search ||
+                            category !== "all"
+                                ? `${providers.length} provider${
+                                      providers.length ===
+                                      1
                                           ? ""
                                           : "s"
                                   } found`
                                 : `${providers.length} provider${
-                                      providers.length === 1
+                                      providers.length ===
+                                      1
                                           ? ""
                                           : "s"
                                   } available`}
                         </p>
                     </div>
 
-                    {(search || category !== "all") && (
+                    {(search ||
+                        category !== "all") && (
                         <button
+                            type="button"
                             onClick={clearFilters}
                             className="
                                 flex
@@ -506,6 +610,7 @@ function Providers() {
                         </p>
 
                         <button
+                            type="button"
                             onClick={loadProviders}
                             className="
                                 mt-5
@@ -541,56 +646,38 @@ function Providers() {
                             "
                         >
                             <h2 className="font-semibold text-slate-900">
-                                No providers available
+                                {search ||
+                                category !== "all"
+                                    ? "No providers found"
+                                    : "No providers available"}
                             </h2>
 
                             <p className="mt-2 text-sm text-slate-500">
-                                There are currently no approved service
-                                providers available.
-                            </p>
-                        </div>
-                    )}
-
-                {/* No Search Results */}
-                {!loading &&
-                    !error &&
-                    providers.length > 0 &&
-                    filteredProviders.length === 0 && (
-                        <div
-                            className="
-                                rounded-2xl
-                                border
-                                border-slate-200
-                                bg-white
-                                p-10
-                                text-center
-                                shadow-sm
-                            "
-                        >
-                            <Search className="mx-auto h-8 w-8 text-slate-400" />
-
-                            <h2 className="mt-4 font-semibold text-slate-900">
-                                No providers found
-                            </h2>
-
-                            <p className="mx-auto mt-2 max-w-md text-sm text-slate-500">
-                                Try searching for a different provider,
-                                service, location, or category.
+                                {search ||
+                                category !== "all"
+                                    ? "Try searching for a different provider, service, location, or category."
+                                    : "There are currently no approved service providers available."}
                             </p>
 
-                            <button
-                                onClick={clearFilters}
-                                className="
-                                    mt-5
-                                    text-sm
-                                    font-medium
-                                    text-blue-600
-                                    transition
-                                    hover:text-blue-700
-                                "
-                            >
-                                Clear filters
-                            </button>
+                            {(search ||
+                                category !== "all") && (
+                                <button
+                                    type="button"
+                                    onClick={
+                                        clearFilters
+                                    }
+                                    className="
+                                        mt-5
+                                        text-sm
+                                        font-medium
+                                        text-blue-600
+                                        transition
+                                        hover:text-blue-700
+                                    "
+                                >
+                                    Clear filters
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -603,144 +690,150 @@ function Providers() {
                                 grid
                                 grid-cols-1
                                 gap-4
-
                                 sm:grid-cols-2
-
                                 lg:grid-cols-3
-
                                 xl:grid-cols-4
                             "
                         >
-                            {currentProviders.map((provider) => (
-                                <div
-                                    key={provider.id}
-                                    className="
-                                        flex
-                                        min-h-[190px]
-                                        flex-col
-                                        justify-between
-                                        rounded-xl
-                                        border
-                                        border-slate-200
-                                        bg-white
-                                        p-5
-                                        shadow-sm
-                                        transition
-                                        duration-200
-                                        hover:-translate-y-0.5
-                                        hover:border-blue-200
-                                        hover:shadow-md
-                                    "
-                                >
-                                    {/* Provider Info */}
-                                    <div>
-                                        {/* Initial + Name */}
-                                        <div className="flex items-center gap-3">
-                                            <div
-                                                className="
-                                                    flex
-                                                    h-10
-                                                    w-10
-                                                    shrink-0
-                                                    items-center
-                                                    justify-center
-                                                    rounded-lg
-                                                    bg-blue-50
-                                                    text-base
-                                                    font-bold
-                                                    text-blue-600
-                                                "
-                                            >
-                                                {provider.business_name
-                                                    ?.charAt(0)
-                                                    .toUpperCase() || "P"}
-                                            </div>
-
-                                            <h3
-                                                className="
-                                                    min-w-0
-                                                    truncate
-                                                    text-sm
-                                                    font-semibold
-                                                    text-slate-900
-                                                "
-                                            >
-                                                {provider.business_name ||
-                                                    "Unnamed Provider"}
-                                            </h3>
-                                        </div>
-
-                                        {/* Service */}
-                                        <div
-                                            className="
-                                                mt-5
-                                                flex
-                                                items-center
-                                                gap-2
-                                                text-sm
-                                                text-slate-600
-                                            "
-                                        >
-                                            <Briefcase className="h-4 w-4 shrink-0 text-blue-600" />
-
-                                            <span className="truncate">
-                                                {provider.service_category ||
-                                                    "Service not specified"}
-                                            </span>
-                                        </div>
-
-                                        {/* Location */}
-                                        <div
-                                            className="
-                                                mt-3
-                                                flex
-                                                items-center
-                                                gap-2
-                                                text-sm
-                                                text-slate-500
-                                            "
-                                        >
-                                            <MapPin className="h-4 w-4 shrink-0 text-blue-600" />
-
-                                            <span className="truncate">
-                                                {provider.location ||
-                                                    "Location not provided"}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    {/* View Details */}
-                                    <button
-                                        onClick={() =>
-                                            navigate(
-                                                `/providers/${provider.id}`
-                                            )
-                                        }
+                            {currentProviders.map(
+                                (provider) => (
+                                    <div
+                                        key={provider.id}
                                         className="
-                                            mt-5
-                                            w-full
-                                            rounded-lg
-                                            bg-blue-600
-                                            px-4
-                                            py-2.5
-                                            text-sm
-                                            font-medium
-                                            text-white
+                                            flex
+                                            min-h-[190px]
+                                            flex-col
+                                            justify-between
+                                            rounded-xl
+                                            border
+                                            border-slate-200
+                                            bg-white
+                                            p-5
+                                            shadow-sm
                                             transition
-                                            hover:bg-blue-700
+                                            duration-200
+                                            hover:-translate-y-0.5
+                                            hover:border-blue-200
+                                            hover:shadow-md
                                         "
                                     >
-                                        View Details
-                                    </button>
-                                </div>
-                            ))}
+                                        <div>
+                                            {/* Initial + Name */}
+                                            <div className="flex items-center gap-3">
+                                                <div
+                                                    className="
+                                                        flex
+                                                        h-10
+                                                        w-10
+                                                        shrink-0
+                                                        items-center
+                                                        justify-center
+                                                        rounded-lg
+                                                        bg-blue-50
+                                                        text-base
+                                                        font-bold
+                                                        text-blue-600
+                                                    "
+                                                >
+                                                    {provider
+                                                        .business_name
+                                                        ?.charAt(
+                                                            0
+                                                        )
+                                                        .toUpperCase() ||
+                                                        "P"}
+                                                </div>
+
+                                                <h3
+                                                    className="
+                                                        min-w-0
+                                                        truncate
+                                                        text-sm
+                                                        font-semibold
+                                                        text-slate-900
+                                                    "
+                                                >
+                                                    {provider.business_name ||
+                                                        "Unnamed Provider"}
+                                                </h3>
+                                            </div>
+
+                                            {/* Service */}
+                                            <div
+                                                className="
+                                                    mt-5
+                                                    flex
+                                                    items-center
+                                                    gap-2
+                                                    text-sm
+                                                    text-slate-600
+                                                "
+                                            >
+                                                <Briefcase className="h-4 w-4 shrink-0 text-blue-600" />
+
+                                                <span className="truncate">
+                                                    {getCategoryDisplayName(
+                                                        provider.service_category
+                                                    ) ||
+                                                        "Service not specified"}
+                                                </span>
+                                            </div>
+
+                                            {/* Location */}
+                                            <div
+                                                className="
+                                                    mt-3
+                                                    flex
+                                                    items-center
+                                                    gap-2
+                                                    text-sm
+                                                    text-slate-500
+                                                "
+                                            >
+                                                <MapPin className="h-4 w-4 shrink-0 text-blue-600" />
+
+                                                <span className="truncate">
+                                                    {provider.location ||
+                                                        "Location not provided"}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* View Details */}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/providers/${provider.id}`
+                                                )
+                                            }
+                                            className="
+                                                mt-5
+                                                w-full
+                                                rounded-lg
+                                                bg-blue-600
+                                                px-4
+                                                py-2.5
+                                                text-sm
+                                                font-medium
+                                                text-white
+                                                transition
+                                                hover:bg-blue-700
+                                            "
+                                        >
+                                            View Details
+                                        </button>
+                                    </div>
+                                )
+                            )}
                         </div>
                     )}
 
                 {/* Pagination */}
                 {!loading &&
                     !error &&
-                    filteredProviders.length > providersPerPage && (
+                    providers.length >
+                        providersPerPage && (
                         <div
                             className="
                                 mt-9
@@ -748,12 +841,10 @@ function Providers() {
                                 flex-col
                                 items-center
                                 gap-4
-
                                 sm:flex-row
                                 sm:justify-between
                             "
                         >
-                            {/* Results */}
                             <p className="text-xs text-slate-500 sm:text-sm">
                                 Showing{" "}
                                 <span className="font-medium text-slate-700">
@@ -763,25 +854,27 @@ function Providers() {
                                 <span className="font-medium text-slate-700">
                                     {Math.min(
                                         endIndex,
-                                        filteredProviders.length
+                                        providers.length
                                     )}
                                 </span>{" "}
                                 of{" "}
                                 <span className="font-medium text-slate-700">
-                                    {filteredProviders.length}
+                                    {providers.length}
                                 </span>{" "}
                                 providers
                             </p>
 
-                            {/* Pagination Controls */}
                             <div className="flex items-center gap-1.5">
-
-                                {/* Previous */}
                                 <button
+                                    type="button"
                                     onClick={() =>
-                                        goToPage(currentPage - 1)
+                                        goToPage(
+                                            currentPage - 1
+                                        )
                                     }
-                                    disabled={currentPage === 1}
+                                    disabled={
+                                        currentPage === 1
+                                    }
                                     className="
                                         flex
                                         h-9
@@ -803,14 +896,15 @@ function Providers() {
                                     <ChevronLeft className="h-4 w-4" />
                                 </button>
 
-                                {/* Pages */}
                                 {Array.from(
                                     {
                                         length: totalPages,
                                     },
-                                    (_, index) => index + 1
+                                    (_, index) =>
+                                        index + 1
                                 ).map((page) => (
                                     <button
+                                        type="button"
                                         key={page}
                                         onClick={() =>
                                             goToPage(page)
@@ -826,9 +920,9 @@ function Providers() {
                                             text-xs
                                             font-medium
                                             transition
-
                                             ${
-                                                currentPage === page
+                                                currentPage ===
+                                                page
                                                     ? "bg-blue-600 text-white"
                                                     : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600"
                                             }
@@ -838,13 +932,16 @@ function Providers() {
                                     </button>
                                 ))}
 
-                                {/* Next */}
                                 <button
+                                    type="button"
                                     onClick={() =>
-                                        goToPage(currentPage + 1)
+                                        goToPage(
+                                            currentPage + 1
+                                        )
                                     }
                                     disabled={
-                                        currentPage === totalPages
+                                        currentPage ===
+                                        totalPages
                                     }
                                     className="
                                         flex
