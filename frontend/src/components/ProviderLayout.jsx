@@ -391,51 +391,44 @@ function ProviderLayout({ children }) {
                         </button>
 
 
-                        {/* My Profile */}
+                       {/* My Profile */}
 
-                        <button
-                            onClick={() => goTo(profilePath)}
-                            className={`
-                                flex
-                                w-full
-                                items-center
-                                gap-3
-                                rounded-lg
-                                px-3
-                                py-3
-                                text-sm
-                                font-medium
-                                transition
-                                ${
-                                    location.pathname.startsWith(
-                                        "/providers/"
-                                    ) &&
-                                    !location.pathname.includes(
-                                        "/reviews"
-                                    )
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                }
-                            `}
-                        >
+<button
+    onClick={() => goTo("/provider/profile")}
+    className={`
+        flex
+        w-full
+        items-center
+        gap-3
+        rounded-lg
+        px-3
+        py-3
+        text-sm
+        font-medium
+        transition
+        ${
+            location.pathname === "/provider/profile"
+                ? "bg-blue-600 text-white"
+                : "text-slate-400 hover:bg-white/5 hover:text-white"
+        }
+    `}
+>
+    <svg
+        className="h-5 w-5 shrink-0"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+    >
+        <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="1.8"
+            d="M20 21a8 8 0 00-16 0M12 13a4 4 0 100-8 4 4 0 000 8z"
+        />
+    </svg>
 
-                            <svg
-                                className="h-5 w-5 shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth="1.8"
-                                    d="M20 21a8 8 0 00-16 0M12 13a4 4 0 100-8 4 4 0 000 8z"
-                                />
-                            </svg>
-
-                            <span>My Profile</span>
-
-                        </button>
+    <span>My Profile</span>
+</button>
 
 
                         {/* Reviews */}

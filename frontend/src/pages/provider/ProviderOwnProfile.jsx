@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
     Briefcase,
@@ -16,12 +15,16 @@ import {
     updateMyProvider,
 } from "../../services/providerService";
 
+import { API_URL } from "../../services/api";
+
 function ProviderOwnProfile() {
     const [provider, setProvider] = useState(null);
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const [showEditModal, setShowEditModal] =
         useState(false);
@@ -77,6 +80,39 @@ function ProviderOwnProfile() {
         }
     }
 
+    function getProfileImageUrl(image) {
+        if (!image) {
+            return null;
+        }
+
+        // If Django already returns a complete URL,
+        // use it directly.
+        if (
+            image.startsWith("http://") ||
+            image.startsWith("https://")
+        ) {
+            return image;
+        }
+
+        // API_URL should normally be:
+        // http://127.0.0.1:8000/api
+        //
+        // We remove /api to get:
+        // http://127.0.0.1:8000
+        const backendUrl = API_URL.replace(
+            /\/api\/?$/,
+            ""
+        );
+
+        // Django normally returns:
+        // /media/provider_profiles/image.jpg
+        if (image.startsWith("/")) {
+            return `${backendUrl}${image}`;
+        }
+
+        return `${backendUrl}/${image}`;
+    }
+
     function handleChange(event) {
         const {
             name,
@@ -85,6 +121,9 @@ function ProviderOwnProfile() {
             checked,
             files,
         } = event.target;
+
+        setError("");
+        setSuccess("");
 
         setEditForm((previous) => ({
             ...previous,
@@ -102,6 +141,8 @@ function ProviderOwnProfile() {
 
         try {
             setSaving(true);
+            setError("");
+            setSuccess("");
 
             const formData = new FormData();
 
@@ -156,14 +197,25 @@ function ProviderOwnProfile() {
 
             setShowEditModal(false);
 
+            setSuccess(
+                "Your profile has been updated successfully."
+            );
+
+            // Reload the profile so the newly uploaded
+            // image is retrieved from Django.
             await loadProfile();
+
+            // Keep success message visible.
+            setTimeout(() => {
+                setSuccess("");
+            }, 4000);
         } catch (err) {
             console.error(
                 "Provider profile update failed:",
                 err
             );
 
-            alert(
+            setError(
                 err.message ||
                     "Failed to save profile changes."
             );
@@ -182,7 +234,7 @@ function ProviderOwnProfile() {
         );
     }
 
-    if (error) {
+    if (error && !provider) {
         return (
             <div className="p-4 sm:p-6">
                 <div className="border border-red-200 bg-red-50 p-5 text-sm text-red-700">
@@ -196,12 +248,14 @@ function ProviderOwnProfile() {
         return null;
     }
 
-    const profileImage =
-        provider.profile_image || null;
+    const profileImage = getProfileImageUrl(
+        provider.profile_image
+    );
 
     return (
         <div className="min-h-full bg-slate-50">
             <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+
                 <div className="mb-6">
                     <h1 className="text-2xl font-semibold text-slate-900">
                         My Profile
@@ -213,10 +267,34 @@ function ProviderOwnProfile() {
                     </p>
                 </div>
 
+                {/* Success message */}
+                {success && (
+                    <div className="mb-5 flex items-center gap-3 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                        <CheckCircle
+                            size={18}
+                            className="shrink-0"
+                        />
+
+                        <span>{success}</span>
+                    </div>
+                )}
+
+                {/* Error message */}
+                {error && provider && (
+                    <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        {error}
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+
+                    {/* Main profile card */}
                     <div className="overflow-hidden border border-slate-200 bg-white">
+
                         <div className="border-b border-slate-200 p-5 sm:p-6">
                             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+
+                                {/* Profile image */}
                                 <div className="shrink-0">
                                     {profileImage ? (
                                         <img
@@ -226,21 +304,48 @@ function ProviderOwnProfile() {
                                                 "Provider"
                                             }
                                             className="h-24 w-24 rounded-full object-cover"
+                                            onError={(event) => {
+                                                console.error(
+                                                    "Failed to load profile image:",
+                                                    profileImage
+                                                );
+
+                                                event.currentTarget.style.display =
+                                                    "none";
+
+                                                const fallback =
+                                                    event.currentTarget
+                                                        .nextElementSibling;
+
+                                                if (fallback) {
+                                                    fallback.classList.remove(
+                                                        "hidden"
+                                                    );
+                                                }
+                                            }}
                                         />
-                                    ) : (
-                                        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold text-white">
-                                            {(
-                                                provider.business_name ||
-                                                "P"
-                                            )
-                                                .charAt(0)
-                                                .toUpperCase()}
-                                        </div>
-                                    )}
+                                    ) : null}
+
+                                    {/* Fallback avatar */}
+                                    <div
+                                        className={`flex h-24 w-24 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold text-white ${
+                                            profileImage
+                                                ? "hidden"
+                                                : ""
+                                        }`}
+                                    >
+                                        {(
+                                            provider.business_name ||
+                                            "P"
+                                        )
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </div>
                                 </div>
 
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
+
                                         <h2 className="break-words text-xl font-semibold text-slate-900">
                                             {provider.business_name ||
                                                 "Your Business"}
@@ -272,11 +377,12 @@ function ProviderOwnProfile() {
                                 </div>
 
                                 <button
-                                    onClick={() =>
-                                        setShowEditModal(
-                                            true
-                                        )
-                                    }
+                                    type="button"
+                                    onClick={() => {
+                                        setError("");
+                                        setSuccess("");
+                                        setShowEditModal(true);
+                                    }}
                                     className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
                                 >
                                     <Save size={17} />
@@ -285,12 +391,15 @@ function ProviderOwnProfile() {
                             </div>
                         </div>
 
+                        {/* Profile information */}
                         <div className="p-5 sm:p-6">
+
                             <h2 className="text-base font-semibold text-slate-900">
                                 Profile Information
                             </h2>
 
                             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+
                                 <InfoCard
                                     label="Business Name"
                                     value={
@@ -379,12 +488,15 @@ function ProviderOwnProfile() {
                         </div>
                     </div>
 
+                    {/* Profile status */}
                     <div className="h-fit border border-slate-200 bg-white p-5">
+
                         <h2 className="text-base font-semibold text-slate-900">
                             Profile Status
                         </h2>
 
                         <div className="mt-4 space-y-3">
+
                             <StatusRow
                                 label="Availability"
                                 value={
@@ -422,10 +534,14 @@ function ProviderOwnProfile() {
                 </div>
             </div>
 
+            {/* Edit modal */}
             {showEditModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-5">
+
                     <div className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+
                         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
+
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900">
                                     Edit Profile
@@ -439,11 +555,10 @@ function ProviderOwnProfile() {
                             <button
                                 type="button"
                                 onClick={() =>
-                                    setShowEditModal(
-                                        false
-                                    )
+                                    setShowEditModal(false)
                                 }
-                                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                                disabled={saving}
+                                className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
                             >
                                 <X size={20} />
                             </button>
@@ -454,16 +569,17 @@ function ProviderOwnProfile() {
                             className="overflow-y-auto"
                         >
                             <div className="space-y-5 p-5 sm:p-6">
+
+                                {/* Profile image upload */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-slate-700">
                                         Profile Image
                                     </label>
 
                                     <label className="flex cursor-pointer items-center gap-3 border border-dashed border-slate-300 p-4 transition hover:border-blue-400 hover:bg-blue-50/30">
+
                                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                                            <Camera
-                                                size={20}
-                                            />
+                                            <Camera size={20} />
                                         </div>
 
                                         <div className="min-w-0">
@@ -492,7 +608,9 @@ function ProviderOwnProfile() {
                                     </label>
                                 </div>
 
+                                {/* Business and category */}
                                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
                                     <FormField
                                         label="Business Name"
                                         name="business_name"
@@ -518,6 +636,7 @@ function ProviderOwnProfile() {
                                     />
                                 </div>
 
+                                {/* Description */}
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-slate-700">
                                         Description
@@ -536,7 +655,9 @@ function ProviderOwnProfile() {
                                     />
                                 </div>
 
+                                {/* Location and experience */}
                                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
                                     <FormField
                                         label="Location"
                                         name="location"
@@ -562,6 +683,7 @@ function ProviderOwnProfile() {
                                     />
                                 </div>
 
+                                {/* Phone */}
                                 <FormField
                                     label="Phone Number"
                                     name="phone_number"
@@ -574,7 +696,9 @@ function ProviderOwnProfile() {
                                     }
                                 />
 
+                                {/* Availability */}
                                 <label className="flex cursor-pointer items-start gap-3 border border-slate-200 bg-slate-50 p-4">
+
                                     <input
                                         type="checkbox"
                                         name="is_available"
@@ -601,7 +725,9 @@ function ProviderOwnProfile() {
                                 </label>
                             </div>
 
+                            {/* Modal buttons */}
                             <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white p-5 sm:flex-row sm:justify-end sm:px-6">
+
                                 <button
                                     type="button"
                                     onClick={() =>

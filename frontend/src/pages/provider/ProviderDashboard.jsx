@@ -134,30 +134,37 @@ function ProviderDashboard() {
     const getStatusClasses = (status) => {
         switch (status) {
             case "pending":
-                return "border-amber-200 bg-amber-50 text-amber-700";
+                return "border-amber-300/30 bg-amber-400/15 text-amber-100";
 
             case "accepted":
-                return "border-emerald-200 bg-emerald-50 text-emerald-700";
+                return "border-emerald-300/30 bg-emerald-400/15 text-emerald-100";
 
             case "completed":
-                return "border-blue-200 bg-blue-50 text-blue-700";
+                return "border-blue-300/30 bg-blue-300/20 text-blue-100";
 
             case "rejected":
-                return "border-red-200 bg-red-50 text-red-700";
+                return "border-red-300/30 bg-red-400/15 text-red-100";
 
             default:
-                return "border-slate-200 bg-slate-100 text-slate-600";
+                return "border-white/20 bg-white/10 text-white/70";
         }
     };
 
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-700 via-slate-300 to-blue-900 p-6">
-                <div className="rounded-2xl border border-white/60 bg-white/80 px-8 py-7 text-center shadow-2xl backdrop-blur-xl">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
+            <div
+                className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cover bg-center p-6"
+                style={{
+                    backgroundImage: "url('/images/dashboard.jpg')",
+                }}
+            >
+                <div className="absolute inset-0 bg-blue-950/70 backdrop-blur-[2px]" />
 
-                    <p className="mt-4 text-sm font-medium text-slate-600">
+                <div className="relative rounded-2xl border border-white/20 bg-white/10 px-8 py-7 text-center shadow-2xl backdrop-blur-2xl">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white" />
+
+                    <p className="mt-4 text-sm font-medium text-white/80">
                         Loading your dashboard...
                     </p>
                 </div>
@@ -168,19 +175,26 @@ function ProviderDashboard() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-700 via-slate-300 to-blue-900 p-4 sm:p-6 lg:p-8">
-                <div className="rounded-2xl border border-white/60 bg-white/85 p-6 shadow-2xl backdrop-blur-xl">
-                    <h2 className="font-semibold text-red-800">
+            <div
+                className="relative min-h-screen overflow-hidden bg-cover bg-center p-4 sm:p-6 lg:p-8"
+                style={{
+                    backgroundImage: "url('/images/dashboard.jpg')",
+                }}
+            >
+                <div className="absolute inset-0 bg-blue-950/70" />
+
+                <div className="relative rounded-2xl border border-white/20 bg-white/10 p-6 shadow-2xl">
+                    <h2 className="font-semibold text-red-200">
                         Something went wrong
                     </h2>
 
-                    <p className="mt-2 text-sm text-red-700">
+                    <p className="mt-2 text-sm text-white/70">
                         {error}
                     </p>
 
                     <button
                         onClick={loadDashboard}
-                        className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+                        className="mt-4 rounded-lg border border-white/20 bg-red-500/80 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
                     >
                         Try Again
                     </button>
@@ -192,9 +206,17 @@ function ProviderDashboard() {
 
     if (!enrolment) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-700 via-slate-300 to-blue-900 p-4 sm:p-6 lg:p-8">
-                <div className="mx-auto max-w-2xl rounded-2xl border border-white/70 bg-white/85 p-8 text-center shadow-2xl backdrop-blur-xl sm:p-12">
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <div
+                className="relative min-h-screen overflow-hidden bg-cover bg-center p-4 sm:p-6 lg:p-8"
+                style={{
+                    backgroundImage: "url('/images/dashboard.jpg')",
+                }}
+            >
+                <div className="absolute inset-0 bg-blue-950/65" />
+
+                <div className="relative mx-auto max-w-2xl rounded-2xl border border-white/20 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-2xl sm:p-12">
+
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-blue-500/20 text-blue-100">
                         <svg
                             className="h-8 w-8"
                             fill="none"
@@ -210,15 +232,15 @@ function ProviderDashboard() {
                         </svg>
                     </div>
 
-                    <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-blue-600">
+                    <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-blue-200">
                         Provider Registration
                     </p>
 
-                    <h1 className="mt-2 text-3xl font-bold text-slate-900">
+                    <h1 className="mt-2 text-3xl font-bold text-white">
                         Complete Your Enrolment
                     </h1>
 
-                    <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-slate-500">
+                    <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-white/65">
                         Before you can receive and manage service
                         requests, you need to complete your provider
                         enrolment.
@@ -228,7 +250,7 @@ function ProviderDashboard() {
                         onClick={() =>
                             navigate("/provider/enrolment")
                         }
-                        className="mt-7 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                        className="mt-7 rounded-lg border border-blue-300/30 bg-blue-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500"
                     >
                         Complete Enrolment
                     </button>
@@ -239,27 +261,38 @@ function ProviderDashboard() {
 
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-700 via-slate-300 to-blue-900 p-3 sm:p-4 md:p-5 lg:p-6">
+        <div
+            className="relative min-h-screen overflow-hidden bg-cover bg-center bg-fixed p-3 sm:p-4 md:p-5 lg:p-6"
+            style={{
+                backgroundImage: "url('/images/dashboard.jpg')",
+            }}
+        >
+            {/* Background overlay */}
+            <div className="fixed inset-0 -z-0 bg-blue-950/65" />
 
-            <div className="mx-auto w-full max-w-[1700px]">
+            {/* Soft blue glow */}
+            <div className="fixed -left-32 top-20 -z-0 h-80 w-80 rounded-full " />
+            <div className="fixed -right-32 bottom-10 -z-0 h-96 w-96 rounded-full" />
+
+            <div className="relative z-10 mx-auto w-full max-w-[1700px]">
 
                 {/* Header */}
                 <section className="mb-5">
-                    <div className="rounded-2xl border border-white/50 bg-white/20 p-4 shadow-lg backdrop-blur-xl sm:p-5">
+                    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                             <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-wider text-blue-900">
+                                <p className="text-xs font-bold uppercase tracking-wider text-blue-200">
                                     Welcome back
                                 </p>
 
-                                <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                                <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-white sm:text-3xl">
                                     {profile?.business_name ||
                                         username ||
                                         "Provider"}
                                 </h1>
 
-                                <p className="mt-1 max-w-2xl text-xs text-slate-700 sm:text-sm">
+                                <p className="mt-1 max-w-2xl text-xs text-white/65 sm:text-sm">
                                     Here is an overview of your FixIt
                                     business and customer activity.
                                 </p>
@@ -271,7 +304,7 @@ function ProviderDashboard() {
                                         "/provider/service-requests"
                                     )
                                 }
-                                className="w-full rounded-xl bg-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-900/20 transition hover:bg-blue-800 sm:w-auto"
+                                className="w-full rounded-xl border border-blue-300/20 bg-blue-500/70 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 sm:w-auto"
                             >
                                 View Service Requests
                             </button>
@@ -291,39 +324,17 @@ function ProviderDashboard() {
                                 "/provider/service-requests"
                             )
                         }
-                        className="
-                            group
-                            relative
-                            overflow-hidden
-                            rounded-2xl
-                            border
-                            border-white/70
-                            bg-gradient-to-br
-                            from-slate-200
-                            via-white
-                            to-blue-400
-                            p-[1px]
-                            text-left
-                            shadow-lg
-                            transition
-                            duration-300
-                            hover:-translate-y-1
-                            hover:shadow-xl
-                        "
+                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
                     >
-                        <div className="relative overflow-hidden rounded-[15px] bg-gradient-to-br from-white/95 via-slate-100/90 to-blue-100/80 px-4 py-3.5">
-                            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/80 blur-2xl" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                            Total Requests
+                        </p>
 
-                            <p className="relative text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                Total Requests
-                            </p>
+                        <p className="mt-1 text-3xl font-black text-white">
+                            {requests.length}
+                        </p>
 
-                            <p className="relative mt-1 text-2xl font-black text-slate-900">
-                                {requests.length}
-                            </p>
-
-                            <div className="mt-2 h-1 w-12 rounded-full bg-blue-600" />
-                        </div>
+                        <div className="mt-2 h-1 w-12 rounded-full bg-blue-400" />
                     </button>
 
 
@@ -334,39 +345,17 @@ function ProviderDashboard() {
                                 "/provider/service-requests"
                             )
                         }
-                        className="
-                            group
-                            relative
-                            overflow-hidden
-                            rounded-2xl
-                            border
-                            border-white/70
-                            bg-gradient-to-br
-                            from-slate-200
-                            via-white
-                            to-blue-400
-                            p-[1px]
-                            text-left
-                            shadow-lg
-                            transition
-                            duration-300
-                            hover:-translate-y-1
-                            hover:shadow-xl
-                        "
+                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
                     >
-                        <div className="relative overflow-hidden rounded-[15px] bg-gradient-to-br from-white/95 via-slate-100/90 to-blue-100/80 px-4 py-3.5">
-                            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/80 blur-2xl" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                            Pending
+                        </p>
 
-                            <p className="relative text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                Pending
-                            </p>
+                        <p className="mt-1 text-3xl font-black text-white">
+                            {pendingRequests.length}
+                        </p>
 
-                            <p className="relative mt-1 text-2xl font-black text-slate-900">
-                                {pendingRequests.length}
-                            </p>
-
-                            <div className="mt-2 h-1 w-12 rounded-full bg-blue-500" />
-                        </div>
+                        <div className="mt-2 h-1 w-12 rounded-full bg-amber-300" />
                     </button>
 
 
@@ -377,39 +366,17 @@ function ProviderDashboard() {
                                 "/provider/service-requests"
                             )
                         }
-                        className="
-                            group
-                            relative
-                            overflow-hidden
-                            rounded-2xl
-                            border
-                            border-white/70
-                            bg-gradient-to-br
-                            from-slate-200
-                            via-white
-                            to-blue-400
-                            p-[1px]
-                            text-left
-                            shadow-lg
-                            transition
-                            duration-300
-                            hover:-translate-y-1
-                            hover:shadow-xl
-                        "
+                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
                     >
-                        <div className="relative overflow-hidden rounded-[15px] bg-gradient-to-br from-white/95 via-slate-100/90 to-blue-100/80 px-4 py-3.5">
-                            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/80 blur-2xl" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                            Accepted
+                        </p>
 
-                            <p className="relative text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                Accepted
-                            </p>
+                        <p className="mt-1 text-3xl font-black text-white">
+                            {acceptedRequests.length}
+                        </p>
 
-                            <p className="relative mt-1 text-2xl font-black text-slate-900">
-                                {acceptedRequests.length}
-                            </p>
-
-                            <div className="mt-2 h-1 w-12 rounded-full bg-blue-600" />
-                        </div>
+                        <div className="mt-2 h-1 w-12 rounded-full bg-emerald-300" />
                     </button>
 
 
@@ -418,39 +385,17 @@ function ProviderDashboard() {
                         onClick={() =>
                             navigate("/messages")
                         }
-                        className="
-                            group
-                            relative
-                            overflow-hidden
-                            rounded-2xl
-                            border
-                            border-white/70
-                            bg-gradient-to-br
-                            from-slate-200
-                            via-white
-                            to-blue-400
-                            p-[1px]
-                            text-left
-                            shadow-lg
-                            transition
-                            duration-300
-                            hover:-translate-y-1
-                            hover:shadow-xl
-                        "
+                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
                     >
-                        <div className="relative overflow-hidden rounded-[15px] bg-gradient-to-br from-white/95 via-slate-100/90 to-blue-100/80 px-4 py-3.5">
-                            <div className="absolute -right-8 -top-8 h-20 w-20 rounded-full bg-white/80 blur-2xl" />
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                            Conversations
+                        </p>
 
-                            <p className="relative text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                                Conversations
-                            </p>
+                        <p className="mt-1 text-3xl font-black text-white">
+                            {conversations.length}
+                        </p>
 
-                            <p className="relative mt-1 text-2xl font-black text-slate-900">
-                                {conversations.length}
-                            </p>
-
-                            <div className="mt-2 h-1 w-12 rounded-full bg-blue-500" />
-                        </div>
+                        <div className="mt-2 h-1 w-12 rounded-full bg-cyan-300" />
                     </button>
 
                 </section>
@@ -460,22 +405,22 @@ function ProviderDashboard() {
                 <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
 
                     {/* Request Activity */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/95 via-slate-200/90 to-blue-100/90 p-4 shadow-xl backdrop-blur-xl lg:col-span-2">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl lg:col-span-2">
 
-                        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-blue-300/30 blur-3xl" />
+                        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-blue-400/20 blur-3xl" />
 
                         <div className="relative flex items-start justify-between">
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900 sm:text-base">
+                                <h2 className="text-sm font-bold text-white sm:text-base">
                                     Request Activity
                                 </h2>
 
-                                <p className="mt-1 text-[10px] text-slate-500 sm:text-xs">
+                                <p className="mt-1 text-[10px] text-white/55 sm:text-xs">
                                     Current service request breakdown
                                 </p>
                             </div>
 
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-700 text-white shadow-md shadow-blue-300/40">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-blue-500/30 text-blue-100">
                                 <svg
                                     className="h-4 w-4"
                                     fill="none"
@@ -512,17 +457,17 @@ function ProviderDashboard() {
                                             >
                                                 <stop
                                                     offset="0%"
-                                                    stopColor="#94a3b8"
+                                                    stopColor="#60a5fa"
                                                 />
 
                                                 <stop
                                                     offset="50%"
-                                                    stopColor="#3b82f6"
+                                                    stopColor="#38bdf8"
                                                 />
 
                                                 <stop
                                                     offset="100%"
-                                                    stopColor="#1d4ed8"
+                                                    stopColor="#2563eb"
                                                 />
                                             </linearGradient>
                                         </defs>
@@ -530,7 +475,7 @@ function ProviderDashboard() {
                                         <path
                                             d="M 20 110 A 90 90 0 0 1 200 110"
                                             fill="none"
-                                            stroke="#cbd5e1"
+                                            stroke="rgba(255,255,255,0.15)"
                                             strokeWidth="18"
                                             strokeLinecap="round"
                                         />
@@ -547,17 +492,17 @@ function ProviderDashboard() {
                                     </svg>
 
                                     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                                        <p className="text-2xl font-black text-slate-900">
+                                        <p className="text-2xl font-black text-white">
                                             {activityPercentage}%
                                         </p>
 
-                                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                                        <p className="text-[9px] font-bold uppercase tracking-wider text-blue-200">
                                             Active
                                         </p>
                                     </div>
                                 </div>
 
-                                <p className="mt-0.5 text-[10px] text-slate-500">
+                                <p className="mt-0.5 text-[10px] text-white/55">
                                     {activeRequests} of{" "}
                                     {requests.length} requests
                                 </p>
@@ -567,16 +512,16 @@ function ProviderDashboard() {
                             {/* Breakdown */}
                             <div className="space-y-2">
 
-                                <div className="flex items-center justify-between rounded-lg border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
                                     <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-amber-400" />
+                                        <span className="h-2 w-2 rounded-full bg-amber-300" />
 
-                                        <span className="text-[10px] font-medium text-slate-600">
+                                        <span className="text-[10px] font-medium text-white/70">
                                             Pending
                                         </span>
                                     </div>
 
-                                    <span className="text-[10px] font-bold text-slate-900">
+                                    <span className="text-[10px] font-bold text-white">
                                         {requestPercentage(
                                             pendingRequests.length
                                         )}
@@ -585,16 +530,16 @@ function ProviderDashboard() {
                                 </div>
 
 
-                                <div className="flex items-center justify-between rounded-lg border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
                                     <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
 
-                                        <span className="text-[10px] font-medium text-slate-600">
+                                        <span className="text-[10px] font-medium text-white/70">
                                             Accepted
                                         </span>
                                     </div>
 
-                                    <span className="text-[10px] font-bold text-slate-900">
+                                    <span className="text-[10px] font-bold text-white">
                                         {requestPercentage(
                                             acceptedRequests.length
                                         )}
@@ -603,16 +548,16 @@ function ProviderDashboard() {
                                 </div>
 
 
-                                <div className="flex items-center justify-between rounded-lg border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
                                     <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-blue-500" />
+                                        <span className="h-2 w-2 rounded-full bg-blue-300" />
 
-                                        <span className="text-[10px] font-medium text-slate-600">
+                                        <span className="text-[10px] font-medium text-white/70">
                                             Completed
                                         </span>
                                     </div>
 
-                                    <span className="text-[10px] font-bold text-slate-900">
+                                    <span className="text-[10px] font-bold text-white">
                                         {requestPercentage(
                                             completedRequests.length
                                         )}
@@ -621,16 +566,16 @@ function ProviderDashboard() {
                                 </div>
 
 
-                                <div className="flex items-center justify-between rounded-lg border border-white/70 bg-white/70 px-3 py-2 shadow-sm">
+                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
                                     <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-red-400" />
+                                        <span className="h-2 w-2 rounded-full bg-red-300" />
 
-                                        <span className="text-[10px] font-medium text-slate-600">
+                                        <span className="text-[10px] font-medium text-white/70">
                                             Rejected
                                         </span>
                                     </div>
 
-                                    <span className="text-[10px] font-bold text-slate-900">
+                                    <span className="text-[10px] font-bold text-white">
                                         {requestPercentage(
                                             rejectedRequests.length
                                         )}
@@ -645,18 +590,18 @@ function ProviderDashboard() {
 
 
                     {/* Recent Service Requests */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/95 via-slate-200/90 to-blue-100/90 shadow-xl backdrop-blur-xl">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
 
-                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-300/30 blur-3xl" />
+                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-400/20 blur-3xl" />
 
-                        <div className="relative flex items-center justify-between border-b border-white/70 px-3.5 py-3">
+                        <div className="relative flex items-center justify-between border-b border-white/15 px-3.5 py-3">
 
                             <div>
-                                <h2 className="text-xs font-bold text-slate-900 sm:text-sm">
+                                <h2 className="text-xs font-bold text-white sm:text-sm">
                                     Recent Requests
                                 </h2>
 
-                                <p className="mt-0.5 text-[9px] text-slate-500">
+                                <p className="mt-0.5 text-[9px] text-white/50">
                                     Latest customer activity
                                 </p>
                             </div>
@@ -667,7 +612,7 @@ function ProviderDashboard() {
                                         "/provider/service-requests"
                                     )
                                 }
-                                className="text-[10px] font-bold text-blue-700 hover:text-blue-900"
+                                className="text-[10px] font-bold text-blue-200 transition hover:text-white"
                             >
                                 View all
                             </button>
@@ -676,16 +621,16 @@ function ProviderDashboard() {
 
                         {requests.length === 0 ? (
                             <div className="px-3 py-8 text-center">
-                                <p className="text-xs font-semibold text-slate-900">
+                                <p className="text-xs font-semibold text-white">
                                     No requests yet
                                 </p>
 
-                                <p className="mt-1 text-[10px] text-slate-500">
+                                <p className="mt-1 text-[10px] text-white/50">
                                     New requests will appear here.
                                 </p>
                             </div>
                         ) : (
-                            <div className="relative divide-y divide-white/70">
+                            <div className="relative divide-y divide-white/10">
                                 {requests
                                     .slice(0, 3)
                                     .map((request) => (
@@ -696,20 +641,20 @@ function ProviderDashboard() {
                                                     "/provider/service-requests"
                                                 )
                                             }
-                                            className="w-full px-3.5 py-2.5 text-left transition hover:bg-white/70"
+                                            className="w-full px-3.5 py-2.5 text-left transition hover:bg-white/10"
                                         >
                                             <div className="flex items-start justify-between gap-2">
 
                                                 <div className="min-w-0">
-                                                    <h3 className="truncate text-[11px] font-bold text-slate-900">
+                                                    <h3 className="truncate text-[11px] font-bold text-white">
                                                         {request.service_title}
                                                     </h3>
 
-                                                    <p className="mt-0.5 truncate text-[9px] text-slate-500">
+                                                    <p className="mt-0.5 truncate text-[9px] text-white/55">
                                                         {request.customer}
                                                     </p>
 
-                                                    <p className="mt-0.5 truncate text-[9px] text-slate-400">
+                                                    <p className="mt-0.5 truncate text-[9px] text-white/40">
                                                         {request.location}
                                                     </p>
                                                 </div>
@@ -724,7 +669,7 @@ function ProviderDashboard() {
 
                                             </div>
 
-                                            <p className="mt-1 text-[8px] text-slate-400">
+                                            <p className="mt-1 text-[8px] text-white/35">
                                                 {formatDate(
                                                     request.created_at
                                                 )}
@@ -737,18 +682,18 @@ function ProviderDashboard() {
 
 
                     {/* Recent Profile */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/95 via-slate-200/90 to-blue-100/90 shadow-xl backdrop-blur-xl">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
 
-                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-300/30 blur-3xl" />
+                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-400/20 blur-3xl" />
 
-                        <div className="relative flex items-center justify-between border-b border-white/70 px-3.5 py-3">
+                        <div className="relative flex items-center justify-between border-b border-white/15 px-3.5 py-3">
 
                             <div>
-                                <h2 className="text-xs font-bold text-slate-900 sm:text-sm">
+                                <h2 className="text-xs font-bold text-white sm:text-sm">
                                     Recent Profile
                                 </h2>
 
-                                <p className="mt-0.5 text-[9px] text-slate-500">
+                                <p className="mt-0.5 text-[9px] text-white/50">
                                     Provider information
                                 </p>
                             </div>
@@ -760,7 +705,7 @@ function ProviderDashboard() {
                                         `/providers/${profile.id}`
                                     )
                                 }
-                                className="text-[10px] font-bold text-blue-700 hover:text-blue-900"
+                                className="text-[10px] font-bold text-blue-200 transition hover:text-white"
                             >
                                 View
                             </button>
@@ -769,48 +714,48 @@ function ProviderDashboard() {
 
                         <div className="relative space-y-2.5 p-3.5">
 
-                            <div className="rounded-lg border border-white/70 bg-white/60 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Business
                                 </p>
 
-                                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-900">
+                                <p className="mt-0.5 truncate text-[11px] font-bold text-white">
                                     {profile?.business_name ||
                                         "Not available"}
                                 </p>
                             </div>
 
 
-                            <div className="rounded-lg border border-white/70 bg-white/60 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Category
                                 </p>
 
-                                <p className="mt-0.5 truncate text-[11px] text-slate-700">
+                                <p className="mt-0.5 truncate text-[11px] text-white/70">
                                     {profile?.service_category ||
                                         "Not available"}
                                 </p>
                             </div>
 
 
-                            <div className="rounded-lg border border-white/70 bg-white/60 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Location
                                 </p>
 
-                                <p className="mt-0.5 truncate text-[11px] text-slate-700">
+                                <p className="mt-0.5 truncate text-[11px] text-white/70">
                                     {profile?.location ||
                                         "Not available"}
                                 </p>
                             </div>
 
 
-                            <div className="rounded-lg border border-white/70 bg-white/60 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Experience
                                 </p>
 
-                                <p className="mt-0.5 text-[11px] text-slate-700">
+                                <p className="mt-0.5 text-[11px] text-white/70">
                                     {profile?.years_of_experience !==
                                     undefined
                                         ? `${profile.years_of_experience} years`
@@ -826,7 +771,7 @@ function ProviderDashboard() {
                                         `/providers/${profile.id}`
                                     )
                                 }
-                                className="w-full rounded-lg bg-blue-700 py-2 text-[10px] font-bold text-white shadow-md transition hover:bg-blue-800"
+                                className="w-full rounded-lg border border-blue-300/20 bg-blue-500/70 py-2 text-[10px] font-bold text-white shadow-lg transition hover:bg-blue-500"
                             >
                                 Manage Profile
                             </button>
@@ -841,23 +786,23 @@ function ProviderDashboard() {
                 <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
 
                     {/* Provider Enrolment */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/95 via-slate-200/90 to-blue-100/90 p-4 shadow-xl backdrop-blur-xl">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
 
-                        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-blue-300/30 blur-3xl" />
+                        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl" />
 
                         <div className="relative flex items-center justify-between">
 
                             <div>
-                                <h2 className="text-sm font-bold text-slate-900">
+                                <h2 className="text-sm font-bold text-white">
                                     Provider Enrolment
                                 </h2>
 
-                                <p className="mt-1 text-[10px] text-slate-500">
+                                <p className="mt-1 text-[10px] text-white/50">
                                     Your FixIt provider account
                                 </p>
                             </div>
 
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-700 text-white shadow-md">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-blue-500/30 text-blue-100">
                                 <svg
                                     className="h-4 w-4"
                                     fill="none"
@@ -878,29 +823,29 @@ function ProviderDashboard() {
 
                         <div className="relative mt-3 grid gap-2 sm:grid-cols-2">
 
-                            <div className="rounded-xl border border-white/70 bg-white/60 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Enrolment
                                 </p>
 
-                                <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-1 text-[9px] font-bold capitalize text-emerald-700">
+                                <span className="mt-1 inline-flex rounded-full border border-emerald-300/20 bg-emerald-400/15 px-2 py-1 text-[9px] font-bold capitalize text-emerald-100">
                                     {enrolment?.status ||
                                         "Unknown"}
                                 </span>
                             </div>
 
 
-                            <div className="rounded-xl border border-white/70 bg-white/60 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Payment
                                 </p>
 
                                 <span
-                                    className={`mt-1 inline-flex rounded-full px-2 py-1 text-[9px] font-bold capitalize ${
+                                    className={`mt-1 inline-flex rounded-full border px-2 py-1 text-[9px] font-bold capitalize ${
                                         enrolment?.payment_status ===
                                         "paid"
-                                            ? "bg-emerald-50 text-emerald-700"
-                                            : "bg-amber-50 text-amber-700"
+                                            ? "border-emerald-300/20 bg-emerald-400/15 text-emerald-100"
+                                            : "border-amber-300/20 bg-amber-400/15 text-amber-100"
                                     }`}
                                 >
                                     {enrolment?.payment_status ||
@@ -912,12 +857,12 @@ function ProviderDashboard() {
 
 
                         {enrolment?.business_name && (
-                            <div className="relative mt-2 rounded-xl border border-white/70 bg-white/60 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-slate-400">
+                            <div className="relative mt-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
                                     Registered Business
                                 </p>
 
-                                <p className="mt-0.5 truncate text-[11px] font-bold text-slate-900">
+                                <p className="mt-0.5 truncate text-[11px] font-bold text-white">
                                     {enrolment.business_name}
                                 </p>
                             </div>
@@ -930,7 +875,7 @@ function ProviderDashboard() {
                                     "/provider/enrolment"
                                 )
                             }
-                            className="relative mt-3 w-full rounded-xl bg-slate-900 py-2 text-[10px] font-bold text-white transition hover:bg-blue-700"
+                            className="relative mt-3 w-full rounded-xl border border-white/10 bg-blue-500/70 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500"
                         >
                             View Enrolment
                         </button>
@@ -939,16 +884,16 @@ function ProviderDashboard() {
 
 
                     {/* Quick Actions */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/70 bg-gradient-to-br from-white/95 via-slate-200/90 to-blue-100/90 p-4 shadow-xl backdrop-blur-xl">
+                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
 
-                        <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-blue-300/30 blur-3xl" />
+                        <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl" />
 
                         <div className="relative">
-                            <h2 className="text-sm font-bold text-slate-900">
+                            <h2 className="text-sm font-bold text-white">
                                 Quick Actions
                             </h2>
 
-                            <p className="mt-1 text-[10px] text-slate-500">
+                            <p className="mt-1 text-[10px] text-white/50">
                                 Quickly access the areas you use most.
                             </p>
                         </div>
@@ -963,11 +908,11 @@ function ProviderDashboard() {
                                         "/provider/service-requests"
                                     )
                                 }
-                                className="rounded-xl border border-white/70 bg-white/60 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
                             >
                                 <div className="flex items-center gap-2">
 
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
                                         <svg
                                             className="h-3.5 w-3.5"
                                             fill="none"
@@ -984,11 +929,11 @@ function ProviderDashboard() {
                                     </div>
 
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-slate-900">
+                                        <h3 className="truncate text-[10px] font-bold text-white">
                                             Requests
                                         </h3>
 
-                                        <p className="truncate text-[8px] text-slate-500">
+                                        <p className="truncate text-[8px] text-white/50">
                                             Manage requests
                                         </p>
                                     </div>
@@ -1002,11 +947,11 @@ function ProviderDashboard() {
                                 onClick={() =>
                                     navigate("/messages")
                                 }
-                                className="rounded-xl border border-white/70 bg-white/60 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
                             >
                                 <div className="flex items-center gap-2">
 
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
                                         <svg
                                             className="h-3.5 w-3.5"
                                             fill="none"
@@ -1023,11 +968,11 @@ function ProviderDashboard() {
                                     </div>
 
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-slate-900">
+                                        <h3 className="truncate text-[10px] font-bold text-white">
                                             Messages
                                         </h3>
 
-                                        <p className="truncate text-[8px] text-slate-500">
+                                        <p className="truncate text-[8px] text-white/50">
                                             Customer messages
                                         </p>
                                     </div>
@@ -1044,11 +989,11 @@ function ProviderDashboard() {
                                         `/providers/${profile.id}`
                                     )
                                 }
-                                className="rounded-xl border border-white/70 bg-white/60 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
                             >
                                 <div className="flex items-center gap-2">
 
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
                                         <svg
                                             className="h-3.5 w-3.5"
                                             fill="none"
@@ -1065,11 +1010,11 @@ function ProviderDashboard() {
                                     </div>
 
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-slate-900">
+                                        <h3 className="truncate text-[10px] font-bold text-white">
                                             Profile
                                         </h3>
 
-                                        <p className="truncate text-[8px] text-slate-500">
+                                        <p className="truncate text-[8px] text-white/50">
                                             View your profile
                                         </p>
                                     </div>
@@ -1086,11 +1031,11 @@ function ProviderDashboard() {
                                         `/providers/${profile.id}/reviews`
                                     )
                                 }
-                                className="rounded-xl border border-white/70 bg-white/60 p-2.5 text-left transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md"
+                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
                             >
                                 <div className="flex items-center gap-2">
 
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
                                         <svg
                                             className="h-3.5 w-3.5"
                                             fill="none"
@@ -1107,11 +1052,11 @@ function ProviderDashboard() {
                                     </div>
 
                                     <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-slate-900">
+                                        <h3 className="truncate text-[10px] font-bold text-white">
                                             Reviews
                                         </h3>
 
-                                        <p className="truncate text-[8px] text-slate-500">
+                                        <p className="truncate text-[8px] text-white/50">
                                             Customer feedback
                                         </p>
                                     </div>

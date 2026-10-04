@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     ArrowLeft,
     Briefcase,
@@ -31,39 +31,51 @@ function ProviderProfile() {
             setError("");
 
             const data = await getProvider(providerId);
-
             setProvider(data);
         } catch (err) {
-            setError(err.message || "Failed to load provider profile.");
+            setError(
+                err.message ||
+                    "Failed to load provider profile."
+            );
         } finally {
             setLoading(false);
         }
     }
 
     async function handleMessageProvider() {
-        try {
-            const data = await createConversation(provider.user);
+    try {
+        const data = await createConversation(provider.user);
 
-            const conversation = data.conversation || data;
+        const conversation =
+            data.conversation || data;
 
-            navigate(`/messages/${conversation.id}`);
-        } catch (err) {
-            console.error(err);
+        navigate(`/messages/${conversation.id}`);
+    } catch (err) {
+        console.error(err);
 
-            alert(
-                err.message ||
-                "Failed to start conversation."
-            );
+        const message = err.message?.toLowerCase() || "";
+
+        if (
+            message.includes("authentication") ||
+            message.includes("credentials") ||
+            message.includes("token") ||
+            message.includes("unauthorized")
+        ) {
+            navigate("/login");
+            return;
         }
-    }
 
+        alert(
+            err.message ||
+            "Failed to start conversation."
+        );
+    }
+}
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="mx-auto h-12 w-12 rounded-full border-4 border-slate-200 border-t-blue-600 animate-spin"></div>
-
-                    <p className="mt-5 text-sm font-medium text-slate-600">
+            <div className="min-h-screen bg-slate-50">
+                <div className="mx-auto flex min-h-[70vh] max-w-6xl items-center justify-center px-4">
+                    <p className="text-sm text-slate-500">
                         Loading provider profile...
                     </p>
                 </div>
@@ -73,29 +85,19 @@ function ProviderProfile() {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center px-6">
-                <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-                        <span className="text-xl font-bold text-red-500">
-                            !
-                        </span>
-                    </div>
-
-                    <h1 className="mt-5 text-xl font-bold text-slate-900">
-                        Unable to load profile
-                    </h1>
-
-                    <p className="mt-3 text-sm leading-6 text-slate-500">
-                        {error}
-                    </p>
-
+            <div className="min-h-screen bg-slate-50">
+                <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
                     <button
-                        onClick={() => navigate("/providers")}
-                        className="mt-6 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+                        onClick={() => navigate(-1)}
+                        className="mb-6 flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-blue-600"
                     >
-                        Back to Providers
+                        <ArrowLeft size={18} />
+                        Back
                     </button>
+
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+                        {error}
+                    </div>
                 </div>
             </div>
         );
@@ -105,402 +107,188 @@ function ProviderProfile() {
         return null;
     }
 
+    const profileImage =
+        provider.profile_image || null;
+
     return (
         <div className="min-h-screen bg-slate-50">
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="mb-6 flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-blue-600"
+                >
+                    <ArrowLeft size={18} />
+                    Back
+                </button>
 
-            {/* Header */}
-            <section
-                className="relative overflow-hidden bg-slate-950 bg-cover bg-center"
-                style={{
-                    backgroundImage: "url('/images/mountain.jpg')",
-                }}
-            >
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                        <div className="bg-slate-900 px-5 py-7 sm:px-7 lg:px-8">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                                {profileImage ? (
+                                    <img
+                                        src={profileImage}
+                                        alt={
+                                            provider.business_name ||
+                                            "Provider"
+                                        }
+                                        className="h-24 w-24 shrink-0 rounded-full object-cover ring-4 ring-white/10"
+                                    />
+                                ) : (
+                                    <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold text-white ring-4 ring-white/10">
+                                        {(
+                                            provider.business_name ||
+                                            "P"
+                                        )
+                                            .charAt(0)
+                                            .toUpperCase()}
+                                    </div>
+                                )}
 
-                {/* Dark overlay */}
-                <div className="absolute inset-0 bg-slate-950/75"></div>
+                                <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <h1 className="break-words text-2xl font-semibold text-white sm:text-3xl">
+                                            {provider.business_name ||
+                                                "Provider"}
+                                        </h1>
 
-                {/* Blue overlay */}
-                <div className="absolute inset-0 bg-blue-950/20"></div>
+                                        {provider.is_verified && (
+                                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2.5 py-1 text-xs font-medium text-blue-200">
+                                                <ShieldCheck
+                                                    size={14}
+                                                />
+                                                Verified
+                                            </span>
+                                        )}
+                                    </div>
 
-                <div className="relative mx-auto max-w-7xl px-6 pb-16 pt-28 lg:px-10">
+                                    <p className="mt-2 flex items-center gap-2 text-sm text-slate-300">
+                                        <Briefcase size={16} />
+                                        {provider.service_category ||
+                                            "Service Provider"}
+                                    </p>
 
-                    {/* Back button */}
-                    <button
-                        onClick={() => navigate("/providers")}
-                        className="mb-10 flex items-center gap-2 text-sm font-medium text-slate-200 transition hover:text-white"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-
-                        Back to providers
-                    </button>
-
-                    <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-
-                        {/* Provider identity */}
-                        <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-
-                            {/* Provider initial */}
-                            <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-4xl font-bold text-white shadow-xl shadow-black/30">
-                                {provider.business_name
-                                    ?.charAt(0)
-                                    .toUpperCase()}
-                            </div>
-
-                            <div>
-
-                                <div className="mb-3 flex flex-wrap items-center gap-3">
-
-                                    <span className="rounded-full border border-blue-400/30 bg-blue-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-blue-200 backdrop-blur-sm">
-                                        Service Provider
-                                    </span>
-
-                                    <span
-                                        className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
-                                            provider.is_available
-                                                ? "border border-green-400/20 bg-green-500/15 text-green-300"
-                                                : "border border-slate-500/20 bg-slate-700/60 text-slate-300"
-                                        }`}
-                                    >
-                                        <span className="h-1.5 w-1.5 rounded-full bg-current"></span>
-
-                                        {provider.is_available
-                                            ? "Available"
-                                            : "Currently unavailable"}
-                                    </span>
-
+                                    {provider.location && (
+                                        <p className="mt-1 flex items-center gap-2 text-sm text-slate-300">
+                                            <MapPin size={16} />
+                                            {provider.location}
+                                        </p>
+                                    )}
                                 </div>
-
-                                <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                                    {provider.business_name}
-                                </h1>
-
-                                <p className="mt-3 text-lg text-slate-200">
-                                    {provider.service_category}
-                                </p>
-
                             </div>
                         </div>
 
-                        {/* Experience / location summary */}
-                        <div className="flex items-center gap-8 rounded-2xl border border-white/15 bg-white/10 px-6 py-5 backdrop-blur-md">
-
+                        <div className="p-5 sm:p-7 lg:p-8">
                             <div>
-                                <p className="text-3xl font-bold text-white">
-                                    {provider.years_of_experience || 0}
-                                </p>
+                                <h2 className="text-lg font-semibold text-slate-900">
+                                    About this provider
+                                </h2>
 
-                                <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-300">
-                                    Years experience
-                                </p>
-                            </div>
-
-                            <div className="h-12 w-px bg-white/20"></div>
-
-                            <div>
-                                <div className="flex items-center gap-2">
-
-                                    <MapPin className="h-4 w-4 text-blue-300" />
-
-                                    <p className="text-sm font-semibold text-white">
-                                        {provider.location ||
-                                            "Location not provided"}
-                                    </p>
-
-                                </div>
-
-                                <p className="mt-1 text-xs font-medium uppercase tracking-wider text-slate-400">
-                                    Service area
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-                </div>
-            </section>
-
-            {/* Main content */}
-            <main className="mx-auto max-w-7xl px-6 py-10 lg:px-10">
-
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-
-                    {/* Main information */}
-                    <div className="space-y-8 lg:col-span-2">
-
-                        {/* About */}
-                        <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-8">
-
-                            <div className="flex items-center gap-4">
-
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-                                    <Briefcase className="h-5 w-5 text-blue-600" />
-                                </div>
-
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900">
-                                        About this provider
-                                    </h2>
-
-                                    <p className="text-sm text-slate-500">
-                                        Learn more about their services
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <div className="mt-6 border-t border-slate-100 pt-6">
-
-                                <p className="text-[15px] leading-8 text-slate-600">
+                                <p className="mt-3 text-sm leading-6 text-slate-600">
                                     {provider.description ||
                                         "This provider has not added a description yet."}
                                 </p>
-
-                            </div>
-
-                        </section>
-
-                        {/* Experience */}
-                        <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-8">
-
-                            <div className="flex items-center gap-4">
-
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-                                    <ShieldCheck className="h-5 w-5 text-blue-600" />
-                                </div>
-
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900">
-                                        Experience
-                                    </h2>
-
-                                    <p className="text-sm text-slate-500">
-                                        Professional background
-                                    </p>
-                                </div>
-
                             </div>
 
                             <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
-
-                                <div className="rounded-2xl bg-slate-50 p-6">
-
-                                    <p className="text-4xl font-bold text-blue-600">
-                                        {provider.years_of_experience || 0}
-                                    </p>
-
-                                    <p className="mt-2 text-sm font-medium text-slate-600">
-                                        Years of experience
-                                    </p>
-
-                                </div>
-
-                                <div className="rounded-2xl bg-slate-50 p-6">
-
-                                    <p className="text-lg font-bold text-slate-900">
-                                        {provider.service_category}
-                                    </p>
-
-                                    <p className="mt-2 text-sm font-medium text-slate-600">
-                                        Primary service
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-                        {/* Service area */}
-                        <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-8">
-
-                            <div className="flex items-center gap-4">
-
-                                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50">
-                                    <MapPin className="h-5 w-5 text-blue-600" />
-                                </div>
-
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900">
-                                        Service area
-                                    </h2>
-
-                                    <p className="text-sm text-slate-500">
-                                        Where this provider operates
-                                    </p>
-                                </div>
-
-                            </div>
-
-                            <div className="mt-6 rounded-xl bg-slate-50 p-5">
-
-                                <p className="font-medium text-slate-800">
-                                    {provider.location ||
-                                        "Location not provided"}
-                                </p>
-
-                            </div>
-
-                        </section>
-
-                    </div>
-
-                    {/* Right column */}
-                    <aside className="lg:col-span-1">
-
-                        <div className="space-y-6 lg:sticky lg:top-6">
-
-                            {/* Provider details */}
-                            <section className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-
-                                <h2 className="text-xl font-bold text-slate-900">
-                                    Provider details
-                                </h2>
-
-                                <div className="mt-6 space-y-6">
-
-                                    {/* Location */}
-                                    <div className="flex gap-4">
-
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
-                                            <MapPin className="h-5 w-5 text-blue-600" />
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                                Location
-                                            </p>
-
-                                            <p className="mt-1 text-sm font-medium text-slate-800">
-                                                {provider.location ||
-                                                    "Not provided"}
-                                            </p>
-                                        </div>
-
+                                <div className="border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                        <Briefcase
+                                            size={17}
+                                            className="text-blue-600"
+                                        />
+                                        Experience
                                     </div>
 
-                                    {/* Phone */}
-                                    <div className="flex gap-4">
-
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
-                                            <Phone className="h-5 w-5 text-blue-600" />
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                                Phone
-                                            </p>
-
-                                            <p className="mt-1 text-sm font-medium text-slate-800">
-                                                {provider.phone_number ||
-                                                    "Not provided"}
-                                            </p>
-                                        </div>
-
-                                    </div>
-
-                                    {/* Availability */}
-                                    <div className="flex gap-4">
-
-                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50">
-                                            <CheckCircle className="h-5 w-5 text-blue-600" />
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                                Availability
-                                            </p>
-
-                                            <p
-                                                className={`mt-1 text-sm font-semibold ${
-                                                    provider.is_available
-                                                        ? "text-green-600"
-                                                        : "text-slate-500"
-                                                }`}
-                                            >
-                                                {provider.is_available
-                                                    ? "Available for work"
-                                                    : "Currently unavailable"}
-                                            </p>
-                                        </div>
-
-                                    </div>
-
+                                    <p className="mt-2 text-sm text-slate-600">
+                                        {provider.years_of_experience ??
+                                            0}{" "}
+                                        years
+                                    </p>
                                 </div>
-                            </section>
 
-                            {/* Action card */}
-                            <section className="overflow-hidden rounded-2xl bg-blue-600 shadow-lg shadow-blue-600/20">
+                                <div className="border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                        <MapPin
+                                            size={17}
+                                            className="text-blue-600"
+                                        />
+                                        Location
+                                    </div>
 
-                                <div className="p-7">
-
-                                    <p className="text-sm font-semibold uppercase tracking-wider text-blue-200">
-                                        Ready to get started?
+                                    <p className="mt-2 text-sm text-slate-600">
+                                        {provider.location ||
+                                            "Not provided"}
                                     </p>
+                                </div>
 
-                                    <h2 className="mt-2 text-2xl font-bold text-white">
-                                        Need this service?
-                                    </h2>
+                                <div className="border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                        <Phone
+                                            size={17}
+                                            className="text-blue-600"
+                                        />
+                                        Phone
+                                    </div>
 
-                                    <p className="mt-3 text-sm leading-6 text-blue-100">
-                                        Send a service request or contact the
-                                        provider directly through FixIt.
+                                    <p className="mt-2 break-words text-sm text-slate-600">
+                                        {provider.phone_number ||
+                                            "Not provided"}
                                     </p>
+                                </div>
 
-                                    <div className="mt-6 space-y-3">
-
-                                        <button
-                                            onClick={() =>
-                                                navigate(
-                                                    `/service-requests/create?provider=${provider.user}`
-                                                )
+                                <div className="border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                        <CheckCircle
+                                            size={17}
+                                            className={
+                                                provider.is_available
+                                                    ? "text-green-600"
+                                                    : "text-slate-400"
                                             }
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm font-bold text-blue-700 transition hover:bg-blue-50"
-                                        >
-                                            <Briefcase className="h-4 w-4" />
-
-                                            Send Service Request
-                                        </button>
-
-                                        <button
-                                            onClick={handleMessageProvider}
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/30 bg-blue-700/30 py-3.5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                                        >
-                                            <MessageCircle className="h-4 w-4" />
-
-                                            Message Provider
-                                        </button>
-
+                                        />
+                                        Availability
                                     </div>
+
+                                    <p className="mt-2 text-sm text-slate-600">
+                                        {provider.is_available
+                                            ? "Available"
+                                            : "Currently unavailable"}
+                                    </p>
                                 </div>
-                            </section>
-
-                            {/* Trust information */}
-                            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-
-                                <div className="flex gap-4">
-
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-50">
-                                        <ShieldCheck className="h-5 w-5 text-green-600" />
-                                    </div>
-
-                                    <div>
-
-                                        <h3 className="text-sm font-semibold text-slate-900">
-                                            Find services with confidence
-                                        </h3>
-
-                                        <p className="mt-1 text-xs leading-5 text-slate-500">
-                                            Use FixIt to communicate with
-                                            providers and manage your service
-                                            requests in one place.
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
                             </div>
+                        </div>
+                    </section>
 
+                    <aside className="h-fit">
+                        <div className="rounded-xl border border-slate-200 bg-white p-5">
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Need this service?
+                            </h2>
+
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                                Contact this provider or send them a
+                                service request.
+                            </p>
+
+                            <button
+                                onClick={() =>
+                                    navigate(
+                                        `/service-requests/create?provider=${provider.user}`
+                                    )
+                                }
+                                className="mt-5 w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-medium text-white transition hover:bg-blue-700"
+                            >
+                                Send Service Request
+                            </button>
+
+                            <button
+                                onClick={handleMessageProvider}
+                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                            >
+                                <MessageCircle size={18} />
+                                Message Provider
+                            </button>
                         </div>
                     </aside>
                 </div>
