@@ -5,6 +5,7 @@ import { getMyProvider } from "../services/providerService";
 import { getProviderServiceRequests } from "../services/serviceRequestService";
 import { logoutUser } from "../services/authService";
 import { getConversations } from "../services/messagingService";
+import { getMyProviderEnrolment } from "../services/providerEnrolmentService";
 
 function ProviderLayout({ children }) {
     const navigate = useNavigate();
@@ -13,16 +14,37 @@ function ProviderLayout({ children }) {
     const username = localStorage.getItem("username");
 
     const [profile, setProfile] = useState(null);
+    const [enrolment, setEnrolment] = useState(null);
+
     const [pendingCount, setPendingCount] = useState(0);
     const [messageCount, setMessageCount] = useState(0);
+
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-        return localStorage.getItem("providerSidebarCollapsed") === "true";
+        return (
+            localStorage.getItem(
+                "providerSidebarCollapsed"
+            ) === "true"
+        );
     });
+
+    const [providerStateLoading, setProviderStateLoading] =
+        useState(true);
 
     useEffect(() => {
         loadProviderData();
+    }, []);
+
+    useEffect(() => {
+        if (providerStateLoading) {
+            return;
+        }
+
+        if (enrolment?.status !== "approved") {
+            return;
+        }
+
         loadMessageCount();
 
         const interval = setInterval(() => {
@@ -30,38 +52,188 @@ function ProviderLayout({ children }) {
         }, 10000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [providerStateLoading, enrolment?.status]);
+
+    useEffect(() => {
+        if (providerStateLoading) {
+            return;
+        }
+
+        /*
+         * No enrolment yet.
+         *
+         * The dashboard is allowed to render so that
+         * ProviderDashboard can show the "Provider Enrolment
+         * Required" message.
+         *
+         * Other provider portal pages should send the user
+         * to the enrolment page.
+         */
+        if (!enrolment) {
+            if (
+                location.pathname !== "/provider/enrolment" &&
+                location.pathname !== "/provider-dashboard"
+            ) {
+                navigate("/provider/enrolment", {
+                    replace: true,
+                });
+            }
+
+            return;
+        }
+
+        /*
+         * Submitted applications are not allowed inside
+         * the provider portal.
+         */
+        if (enrolment.status === "submitted") {
+            if (location.pathname !== "/provider/pending") {
+                navigate("/provider/pending", {
+                    replace: true,
+                });
+            }
+
+            return;
+        }
+
+        /*
+         * Rejected applications must return to the
+         * enrolment page.
+         */
+        if (enrolment.status === "rejected") {
+            if (location.pathname !== "/provider/enrolment") {
+                navigate("/provider/enrolment", {
+                    replace: true,
+                });
+            }
+
+            return;
+        }
+
+        /*
+         * Draft applications should remain in the
+         * enrolment process.
+         */
+        if (enrolment.status === "draft") {
+            if (location.pathname !== "/provider/enrolment") {
+                navigate("/provider/enrolment", {
+                    replace: true,
+                });
+            }
+
+            return;
+        }
+    }, [
+        providerStateLoading,
+        enrolment,
+        location.pathname,
+        navigate,
+    ]);
 
     const loadProviderData = async () => {
         try {
-            const profileData = await getMyProvider();
+            setProviderStateLoading(true);
 
-            setProfile(profileData);
+            const enrolmentData =
+                await getMyProviderEnrolment();
+
+            setEnrolment(enrolmentData);
+
+            /*
+             * No enrolment exists.
+             */
+            if (!enrolmentData) {
+                setProfile(null);
+                setPendingCount(0);
+                setMessageCount(0);
+                return;
+            }
+
+            /*
+             * Application submitted.
+             *
+             * Do NOT load:
+             * - provider profile
+             * - service requests
+             * - conversations
+             */
+            if (enrolmentData.status === "submitted") {
+                setProfile(null);
+                setPendingCount(0);
+                setMessageCount(0);
+                return;
+            }
+
+            /*
+             * Application rejected.
+             */
+            if (enrolmentData.status === "rejected") {
+                setProfile(null);
+                setPendingCount(0);
+                setMessageCount(0);
+                return;
+            }
+
+            /*
+             * Application still in draft.
+             */
+            if (enrolmentData.status === "draft") {
+                setProfile(null);
+                setPendingCount(0);
+                setMessageCount(0);
+                return;
+            }
+
+            /*
+             * Only approved providers can load the
+             * normal provider portal data.
+             */
+            if (enrolmentData.status === "approved") {
+                const [
+                    profileData,
+                    requestsData,
+                ] = await Promise.all([
+                    getMyProvider(),
+                    getProviderServiceRequests(),
+                ]);
+
+                setProfile(profileData);
+
+                const pending = (
+                    requestsData || []
+                ).filter(
+                    (request) =>
+                        request.status === "pending"
+                );
+
+                setPendingCount(pending.length);
+            }
         } catch (error) {
-            console.error("Failed to load provider profile:", error);
-            setProfile(null);
-        }
-
-        try {
-            const requestsData = await getProviderServiceRequests();
-
-            const pending = (requestsData || []).filter(
-                (request) => request.status === "pending"
+            console.error(
+                "Failed to load provider account:",
+                error
             );
 
-            setPendingCount(pending.length);
-        } catch (error) {
-            console.error("Failed to load service request count:", error);
+            setEnrolment(null);
+            setProfile(null);
+            setPendingCount(0);
+            setMessageCount(0);
+        } finally {
+            setProviderStateLoading(false);
         }
     };
 
     const loadMessageCount = async () => {
         try {
-            const conversations = await getConversations();
+            const conversations =
+                await getConversations();
 
-            const totalUnread = (conversations || []).reduce(
+            const totalUnread = (
+                conversations || []
+            ).reduce(
                 (total, conversation) =>
-                    total + (conversation.unread_count || 0),
+                    total +
+                    (conversation.unread_count || 0),
                 0
             );
 
@@ -108,22 +280,79 @@ function ProviderLayout({ children }) {
 
     const isActive = (path) => {
         if (path === "/provider-dashboard") {
-            return location.pathname === "/provider-dashboard";
+            return (
+                location.pathname ===
+                "/provider-dashboard"
+            );
         }
 
         return location.pathname.startsWith(path);
     };
 
-    const profilePath = profile?.id
-        ? `/providers/${profile.id}`
-        : "/provider-dashboard";
-
     const reviewsPath = profile?.id
         ? `/providers/${profile.id}/reviews`
         : "/provider-dashboard";
 
-    const sidebarWidth = sidebarCollapsed ? "md:w-20" : "md:w-64";
-    const mainMargin = sidebarCollapsed ? "md:ml-20" : "md:ml-64";
+    const sidebarWidth = sidebarCollapsed
+        ? "md:w-20"
+        : "md:w-64";
+
+    const mainMargin = sidebarCollapsed
+        ? "md:ml-20"
+        : "md:ml-64";
+
+    /*
+     * Don't briefly show the provider portal while we
+     * determine the provider's enrolment state.
+     */
+    if (providerStateLoading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-slate-950">
+                <div className="text-center">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-blue-500" />
+
+                    <p className="mt-4 text-sm text-slate-400">
+                        Checking your provider account...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    /*
+     * Submitted applications belong on the dedicated
+     * pending approval page.
+     */
+    if (enrolment?.status === "submitted") {
+        return null;
+    }
+
+    /*
+     * Rejected and draft applications belong on the
+     * enrolment page.
+     */
+    if (
+        enrolment?.status === "rejected" ||
+        enrolment?.status === "draft"
+    ) {
+        return null;
+    }
+
+    /*
+     * No enrolment:
+     *
+     * Allow ProviderDashboard to show its enrolment
+     * required state.
+     *
+     * Other pages are redirected by the effect above.
+     */
+    if (
+        !enrolment &&
+        location.pathname !== "/provider-dashboard" &&
+        location.pathname !== "/provider/enrolment"
+    ) {
+        return null;
+    }
 
     return (
         <div className="min-h-screen bg-slate-100">
@@ -132,7 +361,9 @@ function ProviderLayout({ children }) {
             {mobileMenuOpen && (
                 <button
                     aria-label="Close sidebar"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() =>
+                        setMobileMenuOpen(false)
+                    }
                     className="fixed inset-0 z-40 bg-slate-950/50 md:hidden"
                 />
             )}
@@ -179,7 +410,9 @@ function ProviderLayout({ children }) {
                     `}
                 >
                     <button
-                        onClick={() => goTo("/provider-dashboard")}
+                        onClick={() =>
+                            goTo("/provider-dashboard")
+                        }
                         className="text-left"
                     >
                         {sidebarCollapsed ? (
@@ -189,7 +422,10 @@ function ProviderLayout({ children }) {
                         ) : (
                             <>
                                 <h1 className="text-2xl font-bold tracking-tight">
-                                    Fix<span className="text-blue-500">It</span>
+                                    Fix
+                                    <span className="text-blue-500">
+                                        It
+                                    </span>
                                 </h1>
 
                                 <p className="mt-1 text-xs text-slate-500">
@@ -256,7 +492,9 @@ function ProviderLayout({ children }) {
                     {/* Mobile close button */}
 
                     <button
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() =>
+                            setMobileMenuOpen(false)
+                        }
                         className="ml-auto rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
                     >
                         <svg
@@ -288,9 +526,15 @@ function ProviderLayout({ children }) {
                         {/* Dashboard */}
 
                         <button
-                            onClick={() => goTo("/provider-dashboard")}
+                            onClick={() =>
+                                goTo(
+                                    "/provider-dashboard"
+                                )
+                            }
                             title={
-                                sidebarCollapsed ? "Dashboard" : undefined
+                                sidebarCollapsed
+                                    ? "Dashboard"
+                                    : undefined
                             }
                             className={`
                                 flex
@@ -307,7 +551,9 @@ function ProviderLayout({ children }) {
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    isActive("/provider-dashboard")
+                                    isActive(
+                                        "/provider-dashboard"
+                                    )
                                         ? "bg-blue-600 text-white"
                                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }
@@ -327,14 +573,18 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && <span>Dashboard</span>}
+                            {!sidebarCollapsed && (
+                                <span>Dashboard</span>
+                            )}
                         </button>
 
                         {/* Service Requests */}
 
                         <button
                             onClick={() =>
-                                goTo("/provider/service-requests")
+                                goTo(
+                                    "/provider/service-requests"
+                                )
                             }
                             title={
                                 sidebarCollapsed
@@ -379,7 +629,9 @@ function ProviderLayout({ children }) {
                             </svg>
 
                             {!sidebarCollapsed && (
-                                <span>Service Requests</span>
+                                <span>
+                                    Service Requests
+                                </span>
                             )}
 
                             {pendingCount > 0 && (
@@ -419,9 +671,13 @@ function ProviderLayout({ children }) {
                         {/* Messages */}
 
                         <button
-                            onClick={() => goTo("/messages")}
+                            onClick={() =>
+                                goTo("/messages")
+                            }
                             title={
-                                sidebarCollapsed ? "Messages" : undefined
+                                sidebarCollapsed
+                                    ? "Messages"
+                                    : undefined
                             }
                             className={`
                                 flex
@@ -458,7 +714,9 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && <span>Messages</span>}
+                            {!sidebarCollapsed && (
+                                <span>Messages</span>
+                            )}
 
                             {messageCount > 0 && (
                                 <span
@@ -481,13 +739,17 @@ function ProviderLayout({ children }) {
                                         }
                                         ${
                                             !sidebarCollapsed &&
-                                            isActive("/messages")
+                                            isActive(
+                                                "/messages"
+                                            )
                                                 ? "bg-white text-blue-600"
                                                 : ""
                                         }
                                     `}
                                 >
-                                    {messageCount > 99 ? "99+" : messageCount}
+                                    {messageCount > 99
+                                        ? "99+"
+                                        : messageCount}
                                 </span>
                             )}
                         </button>
@@ -495,9 +757,13 @@ function ProviderLayout({ children }) {
                         {/* My Profile */}
 
                         <button
-                            onClick={() => goTo("/provider/profile")}
+                            onClick={() =>
+                                goTo("/provider/profile")
+                            }
                             title={
-                                sidebarCollapsed ? "My Profile" : undefined
+                                sidebarCollapsed
+                                    ? "My Profile"
+                                    : undefined
                             }
                             className={`
                                 flex
@@ -514,7 +780,8 @@ function ProviderLayout({ children }) {
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    location.pathname === "/provider/profile"
+                                    location.pathname ===
+                                    "/provider/profile"
                                         ? "bg-blue-600 text-white"
                                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }
@@ -534,15 +801,21 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && <span>My Profile</span>}
+                            {!sidebarCollapsed && (
+                                <span>My Profile</span>
+                            )}
                         </button>
 
                         {/* Reviews */}
 
                         <button
-                            onClick={() => goTo(reviewsPath)}
+                            onClick={() =>
+                                goTo(reviewsPath)
+                            }
                             title={
-                                sidebarCollapsed ? "Reviews" : undefined
+                                sidebarCollapsed
+                                    ? "Reviews"
+                                    : undefined
                             }
                             className={`
                                 flex
@@ -559,7 +832,9 @@ function ProviderLayout({ children }) {
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    location.pathname.includes("/reviews")
+                                    location.pathname.includes(
+                                        "/reviews"
+                                    )
                                         ? "bg-blue-600 text-white"
                                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                                 }
@@ -579,61 +854,63 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && <span>Reviews</span>}
+                            {!sidebarCollapsed && (
+                                <span>Reviews</span>
+                            )}
                         </button>
 
-                        {/* Enrolment - ONLY for providers without a profile */}
+                        {/* Enrolment */}
 
-                        {!profile && (
-                            <button
-                                onClick={() =>
-                                    goTo("/provider/enrolment")
-                                }
-                                title={
+                        <button
+                            onClick={() =>
+                                goTo("/provider/enrolment")
+                            }
+                            title={
+                                sidebarCollapsed
+                                    ? "Enrolment"
+                                    : undefined
+                            }
+                            className={`
+                                flex
+                                w-full
+                                items-center
+                                rounded-lg
+                                py-3
+                                text-sm
+                                font-medium
+                                transition
+                                ${
                                     sidebarCollapsed
-                                        ? "Enrolment"
-                                        : undefined
+                                        ? "justify-center px-2"
+                                        : "gap-3 px-3"
                                 }
-                                className={`
-                                    flex
-                                    w-full
-                                    items-center
-                                    rounded-lg
-                                    py-3
-                                    text-sm
-                                    font-medium
-                                    transition
-                                    ${
-                                        sidebarCollapsed
-                                            ? "justify-center px-2"
-                                            : "gap-3 px-3"
-                                    }
-                                    ${
-                                        isActive("/provider/enrolment")
-                                            ? "bg-blue-600 text-white"
-                                            : "text-slate-400 hover:bg-white/5 hover:text-white"
-                                    }
-                                `}
+                                ${
+                                    isActive(
+                                        "/provider/enrolment"
+                                    )
+                                        ? "bg-blue-600 text-white"
+                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                }
+                            `}
+                        >
+                            <svg
+                                className="h-5 w-5 shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                <svg
-                                    className="h-5 w-5 shrink-0"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="1.8"
-                                        d="M9 12l2 2 4-4m6-1a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="1.8"
+                                    d="M9 12l2 2 4-4m6-1a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
 
-                                {!sidebarCollapsed && (
-                                    <span>Enrolment</span>
-                                )}
-                            </button>
-                        )}
+                            {!sidebarCollapsed && (
+                                <span>Enrolment</span>
+                            )}
+                        </button>
                     </nav>
 
                     {/* General */}
@@ -737,7 +1014,11 @@ function ProviderLayout({ children }) {
 
                     <button
                         onClick={handleLogout}
-                        title={sidebarCollapsed ? "Logout" : undefined}
+                        title={
+                            sidebarCollapsed
+                                ? "Logout"
+                                : undefined
+                        }
                         className={`
                             flex
                             w-full
@@ -771,7 +1052,9 @@ function ProviderLayout({ children }) {
                             />
                         </svg>
 
-                        {!sidebarCollapsed && <span>Logout</span>}
+                        {!sidebarCollapsed && (
+                            <span>Logout</span>
+                        )}
                     </button>
                 </div>
             </aside>
@@ -793,7 +1076,9 @@ function ProviderLayout({ children }) {
                         {/* Mobile menu */}
 
                         <button
-                            onClick={() => setMobileMenuOpen(true)}
+                            onClick={() =>
+                                setMobileMenuOpen(true)
+                            }
                             className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
                         >
                             <svg
@@ -826,7 +1111,9 @@ function ProviderLayout({ children }) {
 
                         <div className="ml-auto flex items-center gap-4">
                             <button
-                                onClick={() => goTo("/messages")}
+                                onClick={() =>
+                                    goTo("/messages")
+                                }
                                 className="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                             >
                                 <svg

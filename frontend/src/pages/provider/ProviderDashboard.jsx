@@ -44,23 +44,62 @@ function ProviderDashboard() {
 
             setEnrolment(enrolmentData);
 
+            /*
+             * No enrolment yet.
+             * Keep the provider on this page so they can
+             * click "Complete Enrolment".
+             */
             if (!enrolmentData) {
                 return;
             }
 
-            const [
-                profileData,
-                requestsData,
-                conversationsData,
-            ] = await Promise.all([
-                getMyProvider(),
-                getProviderServiceRequests(),
-                getConversations(),
-            ]);
+            /*
+             * Enrolment has been submitted and is waiting
+             * for admin approval.
+             *
+             * Do not load the normal provider dashboard.
+             */
+            if (enrolmentData.status === "submitted") {
+                navigate("/provider/pending", { replace: true });
+                return;
+            }
 
-            setProfile(profileData);
-            setRequests(requestsData || []);
-            setConversations(conversationsData || []);
+            /*
+             * Only approved providers should load:
+             * - ProviderProfile
+             * - Service Requests
+             * - Conversations
+             */
+            if (enrolmentData.status === "approved") {
+                const [
+                    profileData,
+                    requestsData,
+                    conversationsData,
+                ] = await Promise.all([
+                    getMyProvider(),
+                    getProviderServiceRequests(),
+                    getConversations(),
+                ]);
+
+                setProfile(profileData);
+                setRequests(requestsData || []);
+                setConversations(conversationsData || []);
+
+                return;
+            }
+
+            /*
+             * If the application was rejected, keep the
+             * provider out of the normal provider portal.
+             */
+            if (enrolmentData.status === "rejected") {
+                setError(
+                    "Your provider enrolment was not approved. Please review your application."
+                );
+
+                return;
+            }
+
         } catch (err) {
             console.error(err);
 
@@ -204,6 +243,9 @@ function ProviderDashboard() {
     }
 
 
+    /*
+     * Provider has not started an enrolment yet.
+     */
     if (!enrolment) {
         return (
             <div
@@ -267,10 +309,8 @@ function ProviderDashboard() {
                 backgroundImage: "url('/images/dashboard.jpg')",
             }}
         >
-            {/* Background overlay */}
             <div className="fixed inset-0 -z-0 bg-blue-950/65" />
 
-            {/* Soft blue glow */}
             <div className="fixed -left-32 top-20 -z-0 h-80 w-80 rounded-full " />
             <div className="fixed -right-32 bottom-10 -z-0 h-96 w-96 rounded-full" />
 
@@ -317,7 +357,6 @@ function ProviderDashboard() {
                 {/* Statistics */}
                 <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
 
-                    {/* Total Requests */}
                     <button
                         onClick={() =>
                             navigate(
@@ -338,7 +377,6 @@ function ProviderDashboard() {
                     </button>
 
 
-                    {/* Pending */}
                     <button
                         onClick={() =>
                             navigate(
@@ -359,7 +397,6 @@ function ProviderDashboard() {
                     </button>
 
 
-                    {/* Accepted */}
                     <button
                         onClick={() =>
                             navigate(
@@ -380,7 +417,6 @@ function ProviderDashboard() {
                     </button>
 
 
-                    {/* Conversations */}
                     <button
                         onClick={() =>
                             navigate("/messages")
@@ -440,7 +476,6 @@ function ProviderDashboard() {
 
                         <div className="relative mt-3 grid items-center gap-4 sm:grid-cols-2">
 
-                            {/* Gauge */}
                             <div className="flex flex-col items-center justify-center">
                                 <div className="relative h-[115px] w-[205px]">
                                     <svg
@@ -509,7 +544,6 @@ function ProviderDashboard() {
                             </div>
 
 
-                            {/* Breakdown */}
                             <div className="space-y-2">
 
                                 <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
@@ -901,7 +935,6 @@ function ProviderDashboard() {
 
                         <div className="relative mt-3 grid grid-cols-2 gap-2">
 
-                            {/* Requests */}
                             <button
                                 onClick={() =>
                                     navigate(
@@ -942,7 +975,6 @@ function ProviderDashboard() {
                             </button>
 
 
-                            {/* Messages */}
                             <button
                                 onClick={() =>
                                     navigate("/messages")
@@ -981,7 +1013,6 @@ function ProviderDashboard() {
                             </button>
 
 
-                            {/* Profile */}
                             <button
                                 onClick={() =>
                                     profile?.id &&
@@ -1023,7 +1054,6 @@ function ProviderDashboard() {
                             </button>
 
 
-                            {/* Reviews */}
                             <button
                                 onClick={() =>
                                     profile?.id &&
@@ -1040,7 +1070,7 @@ function ProviderDashboard() {
                                             className="h-3.5 w-3.5"
                                             fill="none"
                                             stroke="currentColor"
-                                            viewBox="0 0 24 24"
+                                            viewBox="0 0 24 0"
                                         >
                                             <path
                                                 strokeLinecap="round"
