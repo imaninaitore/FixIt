@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import {
     Briefcase,
     Camera,
@@ -19,15 +20,11 @@ import { API_URL } from "../../services/api";
 
 function ProviderOwnProfile() {
     const [provider, setProvider] = useState(null);
-
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-
-    const [showEditModal, setShowEditModal] =
-        useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     const [editForm, setEditForm] = useState({
         business_name: "",
@@ -54,20 +51,14 @@ function ProviderOwnProfile() {
             setProvider(data);
 
             setEditForm({
-                business_name:
-                    data.business_name || "",
-                service_category:
-                    data.service_category || "",
-                description:
-                    data.description || "",
-                location:
-                    data.location || "",
+                business_name: data.business_name || "",
+                service_category: data.service_category || "",
+                description: data.description || "",
+                location: data.location || "",
                 years_of_experience:
                     data.years_of_experience ?? "",
-                phone_number:
-                    data.phone_number || "",
-                is_available:
-                    data.is_available ?? true,
+                phone_number: data.phone_number || "",
+                is_available: data.is_available ?? true,
                 profile_image: null,
             });
         } catch (err) {
@@ -85,8 +76,6 @@ function ProviderOwnProfile() {
             return null;
         }
 
-        // If Django already returns a complete URL,
-        // use it directly.
         if (
             image.startsWith("http://") ||
             image.startsWith("https://")
@@ -94,18 +83,8 @@ function ProviderOwnProfile() {
             return image;
         }
 
-        // API_URL should normally be:
-        // http://127.0.0.1:8000/api
-        //
-        // We remove /api to get:
-        // http://127.0.0.1:8000
-        const backendUrl = API_URL.replace(
-            /\/api\/?$/,
-            ""
-        );
+        const backendUrl = API_URL.replace(/\/api\/?$/, "");
 
-        // Django normally returns:
-        // /media/provider_profiles/image.jpg
         if (image.startsWith("/")) {
             return `${backendUrl}${image}`;
         }
@@ -131,8 +110,8 @@ function ProviderOwnProfile() {
                 type === "checkbox"
                     ? checked
                     : type === "file"
-                    ? files?.[0] || null
-                    : value,
+                      ? files?.[0] || null
+                      : value,
         }));
     }
 
@@ -178,9 +157,7 @@ function ProviderOwnProfile() {
 
             formData.append(
                 "is_available",
-                editForm.is_available
-                    ? "true"
-                    : "false"
+                editForm.is_available ? "true" : "false"
             );
 
             if (editForm.profile_image) {
@@ -194,18 +171,14 @@ function ProviderOwnProfile() {
                 await updateMyProvider(formData);
 
             setProvider(updatedProvider);
-
             setShowEditModal(false);
 
             setSuccess(
                 "Your profile has been updated successfully."
             );
 
-            // Reload the profile so the newly uploaded
-            // image is retrieved from Django.
             await loadProfile();
 
-            // Keep success message visible.
             setTimeout(() => {
                 setSuccess("");
             }, 4000);
@@ -226,18 +199,32 @@ function ProviderOwnProfile() {
 
     if (loading) {
         return (
-            <div className="flex min-h-[60vh] items-center justify-center">
-                <p className="text-sm text-slate-500">
-                    Loading your profile...
-                </p>
+            <div
+                className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-cover bg-center"
+                style={{
+                    backgroundImage:
+                        "url('/images/tools2.jpg')",
+                }}
+            >
+                <div className="rounded-2xl border border-white/20 bg-white/15 px-8 py-6 text-white shadow-xl backdrop-blur-lg">
+                    <p className="text-sm">
+                        Loading your profile...
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (error && !provider) {
         return (
-            <div className="p-4 sm:p-6">
-                <div className="border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            <div
+                className="min-h-[calc(100vh-4rem)] bg-cover bg-center p-4 sm:p-6"
+                style={{
+                    backgroundImage:
+                        "url('/images/tools2.jpg')",
+                }}
+            >
+                <div className="mx-auto max-w-6xl rounded-2xl border border-red-300/30 bg-red-950/60 p-5 text-sm text-red-100 shadow-xl backdrop-blur-md">
                     {error}
                 </div>
             </div>
@@ -253,26 +240,37 @@ function ProviderOwnProfile() {
     );
 
     return (
-        <div className="min-h-full bg-slate-50">
-            <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+        <div
+            className="relative min-h-[calc(100vh-4rem)] bg-cover bg-center bg-fixed"
+            style={{
+                backgroundImage:
+                    "url('/images/tools2.jpg')",
+            }}
+        >
+            {/* Light overlay - keeps the background image clearly visible */}
+            <div className="absolute inset-0 bg-slate-950/20" />
+
+            <div className="relative z-10 mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+                {/* Page heading */}
 
                 <div className="mb-6">
-                    <h1 className="text-2xl font-semibold text-slate-900">
+                    <h1 className="text-2xl font-semibold text-white drop-shadow-md">
                         My Profile
                     </h1>
 
-                    <p className="mt-1 text-sm text-slate-500">
+                    <p className="mt-1 text-sm text-white/80">
                         Manage the information customers see
                         about your services.
                     </p>
                 </div>
 
                 {/* Success message */}
+
                 {success && (
-                    <div className="mb-5 flex items-center gap-3 border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                    <div className="mb-5 flex items-center gap-3 rounded-xl border border-green-300/30 bg-green-500/20 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md">
                         <CheckCircle
                             size={18}
-                            className="shrink-0"
+                            className="shrink-0 text-green-300"
                         />
 
                         <span>{success}</span>
@@ -280,21 +278,23 @@ function ProviderOwnProfile() {
                 )}
 
                 {/* Error message */}
+
                 {error && provider && (
-                    <div className="mb-5 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <div className="mb-5 rounded-xl border border-red-300/30 bg-red-500/20 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md">
                         {error}
                     </div>
                 )}
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-
                     {/* Main profile card */}
-                    <div className="overflow-hidden border border-slate-200 bg-white">
 
-                        <div className="border-b border-slate-200 p-5 sm:p-6">
+                    <div className="overflow-hidden rounded-2xl border border-white/20 bg-white/15 shadow-2xl backdrop-blur-xl">
+                        {/* Profile header */}
+
+                        <div className="border-b border-white/15 p-5 sm:p-6">
                             <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-
                                 {/* Profile image */}
+
                                 <div className="shrink-0">
                                     {profileImage ? (
                                         <img
@@ -303,7 +303,7 @@ function ProviderOwnProfile() {
                                                 provider.business_name ||
                                                 "Provider"
                                             }
-                                            className="h-24 w-24 rounded-full object-cover"
+                                            className="h-24 w-24 rounded-full border-2 border-white/40 object-cover shadow-lg"
                                             onError={(event) => {
                                                 console.error(
                                                     "Failed to load profile image:",
@@ -327,8 +327,9 @@ function ProviderOwnProfile() {
                                     ) : null}
 
                                     {/* Fallback avatar */}
+
                                     <div
-                                        className={`flex h-24 w-24 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold text-white ${
+                                        className={`flex h-24 w-24 items-center justify-center rounded-full bg-blue-600 text-3xl font-semibold text-white shadow-lg ${
                                             profileImage
                                                 ? "hidden"
                                                 : ""
@@ -343,16 +344,17 @@ function ProviderOwnProfile() {
                                     </div>
                                 </div>
 
+                                {/* Provider information */}
+
                                 <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-2">
-
-                                        <h2 className="break-words text-xl font-semibold text-slate-900">
+                                        <h2 className="break-words text-xl font-semibold text-white">
                                             {provider.business_name ||
                                                 "Your Business"}
                                         </h2>
 
                                         {provider.is_verified && (
-                                            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                            <span className="inline-flex items-center gap-1 rounded-full border border-blue-300/30 bg-blue-500/20 px-2.5 py-1 text-xs font-medium text-blue-100">
                                                 <ShieldCheck
                                                     size={14}
                                                 />
@@ -361,20 +363,21 @@ function ProviderOwnProfile() {
                                         )}
                                     </div>
 
-                                    <p className="mt-1 text-sm text-slate-500">
+                                    <p className="mt-1 text-sm text-white/70">
                                         {provider.service_category ||
                                             "Service Provider"}
                                     </p>
 
                                     {provider.location && (
-                                        <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-500">
-                                            <MapPin
-                                                size={15}
-                                            />
+                                        <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
+                                            <MapPin size={15} />
+
                                             {provider.location}
                                         </p>
                                     )}
                                 </div>
+
+                                {/* Edit button */}
 
                                 <button
                                     type="button"
@@ -383,7 +386,7 @@ function ProviderOwnProfile() {
                                         setSuccess("");
                                         setShowEditModal(true);
                                     }}
-                                    className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
+                                    className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-lg transition hover:bg-blue-700"
                                 >
                                     <Save size={17} />
                                     Edit Profile
@@ -392,23 +395,20 @@ function ProviderOwnProfile() {
                         </div>
 
                         {/* Profile information */}
-                        <div className="p-5 sm:p-6">
 
-                            <h2 className="text-base font-semibold text-slate-900">
+                        <div className="p-5 sm:p-6">
+                            <h2 className="text-base font-semibold text-white">
                                 Profile Information
                             </h2>
 
                             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-
                                 <InfoCard
                                     label="Business Name"
                                     value={
                                         provider.business_name
                                     }
                                     icon={
-                                        <Briefcase
-                                            size={17}
-                                        />
+                                        <Briefcase size={17} />
                                     }
                                 />
 
@@ -418,9 +418,7 @@ function ProviderOwnProfile() {
                                         provider.service_category
                                     }
                                     icon={
-                                        <Briefcase
-                                            size={17}
-                                        />
+                                        <Briefcase size={17} />
                                     }
                                 />
 
@@ -431,9 +429,7 @@ function ProviderOwnProfile() {
                                         "Not provided"
                                     }
                                     icon={
-                                        <MapPin
-                                            size={17}
-                                        />
+                                        <MapPin size={17} />
                                     }
                                 />
 
@@ -441,9 +437,7 @@ function ProviderOwnProfile() {
                                     label="Years of Experience"
                                     value={`${provider.years_of_experience ?? 0} years`}
                                     icon={
-                                        <CheckCircle
-                                            size={17}
-                                        />
+                                        <CheckCircle size={17} />
                                     }
                                 />
 
@@ -454,9 +448,7 @@ function ProviderOwnProfile() {
                                         "Not provided"
                                     }
                                     icon={
-                                        <Phone
-                                            size={17}
-                                        />
+                                        <Phone size={17} />
                                     }
                                 />
 
@@ -468,19 +460,19 @@ function ProviderOwnProfile() {
                                             : "Currently unavailable"
                                     }
                                     icon={
-                                        <CheckCircle
-                                            size={17}
-                                        />
+                                        <CheckCircle size={17} />
                                     }
                                 />
                             </div>
 
-                            <div className="mt-4 border border-slate-200 bg-slate-50 p-4">
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                            {/* Description */}
+
+                            <div className="mt-4 rounded-xl border border-white/15 bg-white/10 p-4">
+                                <p className="text-xs font-medium uppercase tracking-wide text-white/60">
                                     Description
                                 </p>
 
-                                <p className="mt-2 text-sm leading-6 text-slate-700">
+                                <p className="mt-2 text-sm leading-6 text-white/90">
                                     {provider.description ||
                                         "No description has been added yet."}
                                 </p>
@@ -489,14 +481,13 @@ function ProviderOwnProfile() {
                     </div>
 
                     {/* Profile status */}
-                    <div className="h-fit border border-slate-200 bg-white p-5">
 
-                        <h2 className="text-base font-semibold text-slate-900">
+                    <div className="h-fit rounded-2xl border border-white/20 bg-white/15 p-5 shadow-2xl backdrop-blur-xl">
+                        <h2 className="text-base font-semibold text-white">
                             Profile Status
                         </h2>
 
                         <div className="mt-4 space-y-3">
-
                             <StatusRow
                                 label="Availability"
                                 value={
@@ -522,8 +513,8 @@ function ProviderOwnProfile() {
                             />
                         </div>
 
-                        <div className="mt-5 border-t border-slate-200 pt-5">
-                            <p className="text-xs leading-5 text-slate-500">
+                        <div className="mt-5 border-t border-white/15 pt-5">
+                            <p className="text-xs leading-5 text-white/65">
                                 Keep your profile information
                                 accurate so customers can make
                                 informed decisions when choosing
@@ -535,20 +526,21 @@ function ProviderOwnProfile() {
             </div>
 
             {/* Edit modal */}
-            {showEditModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-5">
 
-                    <div className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
+            {showEditModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-5">
+                    <div className="flex max-h-[95vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+                        {/* Modal header */}
 
                         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-5 py-4 sm:px-6">
-
                             <div>
                                 <h2 className="text-lg font-semibold text-slate-900">
                                     Edit Profile
                                 </h2>
 
                                 <p className="mt-1 text-xs text-slate-500">
-                                    Update your provider information.
+                                    Update your provider
+                                    information.
                                 </p>
                             </div>
 
@@ -569,15 +561,14 @@ function ProviderOwnProfile() {
                             className="overflow-y-auto"
                         >
                             <div className="space-y-5 p-5 sm:p-6">
-
                                 {/* Profile image upload */}
+
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-slate-700">
                                         Profile Image
                                     </label>
 
-                                    <label className="flex cursor-pointer items-center gap-3 border border-dashed border-slate-300 p-4 transition hover:border-blue-400 hover:bg-blue-50/30">
-
+                                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-slate-300 p-4 transition hover:border-blue-400 hover:bg-blue-50/30">
                                         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
                                             <Camera size={20} />
                                         </div>
@@ -609,8 +600,8 @@ function ProviderOwnProfile() {
                                 </div>
 
                                 {/* Business and category */}
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                     <FormField
                                         label="Business Name"
                                         name="business_name"
@@ -637,6 +628,7 @@ function ProviderOwnProfile() {
                                 </div>
 
                                 {/* Description */}
+
                                 <div>
                                     <label className="mb-2 block text-sm font-medium text-slate-700">
                                         Description
@@ -656,8 +648,8 @@ function ProviderOwnProfile() {
                                 </div>
 
                                 {/* Location and experience */}
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                     <FormField
                                         label="Location"
                                         name="location"
@@ -684,6 +676,7 @@ function ProviderOwnProfile() {
                                 </div>
 
                                 {/* Phone */}
+
                                 <FormField
                                     label="Phone Number"
                                     name="phone_number"
@@ -691,14 +684,12 @@ function ProviderOwnProfile() {
                                     value={
                                         editForm.phone_number
                                     }
-                                    onChange={
-                                        handleChange
-                                    }
+                                    onChange={handleChange}
                                 />
 
                                 {/* Availability */}
-                                <label className="flex cursor-pointer items-start gap-3 border border-slate-200 bg-slate-50 p-4">
 
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                                     <input
                                         type="checkbox"
                                         name="is_available"
@@ -713,27 +704,26 @@ function ProviderOwnProfile() {
 
                                     <div>
                                         <p className="text-sm font-medium text-slate-800">
-                                            Available for new service
-                                            requests
+                                            Available for new
+                                            service requests
                                         </p>
 
                                         <p className="mt-1 text-xs leading-5 text-slate-500">
-                                            Turn this off when you are
-                                            not accepting new requests.
+                                            Turn this off when
+                                            you are not accepting
+                                            new requests.
                                         </p>
                                     </div>
                                 </label>
                             </div>
 
                             {/* Modal buttons */}
-                            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white p-5 sm:flex-row sm:justify-end sm:px-6">
 
+                            <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-white p-5 sm:flex-row sm:justify-end sm:px-6">
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setShowEditModal(
-                                            false
-                                        )
+                                        setShowEditModal(false)
                                     }
                                     disabled={saving}
                                     className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
@@ -763,16 +753,16 @@ function ProviderOwnProfile() {
 
 function InfoCard({ label, value, icon }) {
     return (
-        <div className="border border-slate-200 bg-white p-4">
-            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-slate-500">
-                <span className="text-blue-600">
+        <div className="rounded-xl border border-white/15 bg-white/10 p-4 shadow-sm backdrop-blur-md transition hover:bg-white/15">
+            <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-white/60">
+                <span className="text-blue-300">
                     {icon}
                 </span>
 
                 {label}
             </div>
 
-            <p className="mt-2 break-words text-sm font-medium text-slate-800">
+            <p className="mt-2 break-words text-sm font-medium text-white">
                 {value || "Not provided"}
             </p>
         </div>
@@ -781,16 +771,16 @@ function InfoCard({ label, value, icon }) {
 
 function StatusRow({ label, value, active }) {
     return (
-        <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
-            <span className="text-sm text-slate-600">
+        <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3 last:border-0 last:pb-0">
+            <span className="text-sm text-white/70">
                 {label}
             </span>
 
             <span
                 className={`text-xs font-medium ${
                     active
-                        ? "text-green-600"
-                        : "text-slate-500"
+                        ? "text-green-300"
+                        : "text-white/50"
                 }`}
             >
                 {value}
