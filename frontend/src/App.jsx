@@ -38,6 +38,7 @@ import CreateReview from "./pages/reviews/CreateReview";
 import ProviderReviews from "./pages/provider/ProviderReviews";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProviderPendingApproval from "./pages/provider/ProviderPendingApproval";
 
 function App() {
     return (
@@ -206,6 +207,11 @@ function App() {
             </ProviderLayout>
         }
     />
+
+    <Route
+    path="/provider/pending"
+    element={<ProviderPendingApproval />}
+/>
 </Route>
 
                 {/* Admin pages */}
@@ -257,6 +263,7 @@ function App() {
                         element={<AdminReports />}
                     />
                 </Route>
+
 
             </Routes>
         </BrowserRouter>

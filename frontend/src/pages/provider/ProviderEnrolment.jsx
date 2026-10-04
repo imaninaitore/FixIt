@@ -1,6 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { submitProviderEnrolment } from "../../services/providerEnrolmentService";
+import {
+    Building2,
+    BriefcaseBusiness,
+    CalendarDays,
+    CreditCard,
+    FileText,
+    MapPin,
+    Phone,
+    Send,
+} from "lucide-react";
+
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
+
+import {
+    getMyProviderEnrolment,
+    submitProviderEnrolment,
+} from "../../services/providerEnrolmentService";
 
 function ProviderEnrolment() {
     const navigate = useNavigate();
@@ -18,198 +35,208 @@ function ProviderEnrolment() {
         payment_date: "",
     });
 
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
 
-    function handleChange(event) {
+    useEffect(() => {
+        checkExistingEnrolment();
+    }, []);
+
+    const checkExistingEnrolment = async () => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const enrolment = await getMyProviderEnrolment();
+
+            if (!enrolment) {
+                setLoading(false);
+                return;
+            }
+
+            if (enrolment.status === "submitted") {
+                navigate("/provider/pending", { replace: true });
+                return;
+            }
+
+            if (enrolment.status === "approved") {
+                navigate("/provider-dashboard", { replace: true });
+                return;
+            }
+
+            if (enrolment.status === "rejected") {
+                setError(
+                    "Your previous provider application was rejected. Please contact the FixIt administration team for assistance."
+                );
+            }
+        } catch (err) {
+            console.error("Failed to check provider enrolment:", err);
+            setError("Unable to check your existing application.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleChange = (event) => {
         const { name, value } = event.target;
 
-        setFormData({
-            ...formData,
+        setFormData((previous) => ({
+            ...previous,
             [name]: value,
-        });
-    }
+        }));
+    };
 
-    async function handleSubmit(event) {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
-        setError("");
-        setSuccess("");
-        setLoading(true);
-try {
-    const data = await submitProviderEnrolment({
-        ...formData,
-        years_of_experience: Number(formData.years_of_experience),
-        amount: Number(formData.amount),
-    });
+        try {
+            setSubmitting(true);
+            setError("");
 
-    setSuccessMessage(
-        data.message || "Your provider enrolment was submitted successfully."
-    );
+            const data = await submitProviderEnrolment({
+                ...formData,
+                years_of_experience: Number(formData.years_of_experience),
+                amount: Number(formData.amount),
+            });
 
-    // Clear the form
-    setFormData({
-        business_name: "",
-        service_category: "",
-        description: "",
-        location: "",
-        years_of_experience: "",
-        phone_number: "",
-        plan: "provider_subscription",
-        amount: "50.00",
-        transaction_code: "",
-        payment_date: "",
-    });
+            if (data?.enrolment?.status === "submitted") {
+                navigate("/provider/pending", { replace: true });
+                return;
+            }
 
-} catch (error) {
-    setError(error.message);
-} finally {
-    setLoading(false);
-}
-    }
-return (
-        <div className="min-h-screen bg-slate-100 px-4 py-10">
+            setError(
+                "Your application was submitted, but its status could not be confirmed."
+            );
+        } catch (err) {
+            console.error("Provider enrolment submission failed:", err);
 
-            <div className="mx-auto max-w-4xl">
+            setError(
+                err?.message ||
+                    "Failed to submit your provider enrolment."
+            );
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
-                <div className="mb-8">
-                    <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">
-                        FixIt Provider
-                    </p>
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 text-white">
+                <Navbar />
 
-                    <h1 className="mt-2 text-3xl font-bold text-slate-800 md:text-4xl">
-                        Become a Service Provider
-                    </h1>
+                <div className="flex min-h-[calc(100vh-80px)] items-center justify-center">
+                    <div className="text-center">
+                        <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-blue-500" />
 
-                    <p className="mt-3 max-w-2xl text-slate-500">
-                        Tell us about your business and submit your
-                        subscription payment details for review.
-                    </p>
+                        <p className="text-sm text-slate-300">
+                            Checking your provider application...
+                        </p>
+                    </div>
                 </div>
 
-                {error && (
-                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-600">
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700">
-                        {success}
-                    </div>
-                )}
-
-                {successMessage && (
-    <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-5">
-
-        <div className="flex items-start gap-3">
-
-            <div>
-                <h2 className="font-semibold text-green-800">
-                    Submitted Successfully
-                </h2>
-
-                <p className="mt-1 text-sm text-green-700">
-                    {successMessage}
-                </p>
-
-                <p className="mt-2 text-sm text-green-700">
-                    Your application has been submitted and is awaiting
-                    admin review.
-                </p>
+                <Footer />
             </div>
+        );
+    }
 
-        </div>
+    return (
+        <div className="min-h-screen bg-slate-950 text-white">
+            <Navbar />
 
-    </div>
-)}
+            <main
+                className="relative min-h-[calc(100vh-80px)] bg-cover bg-center"
+                style={{
+                    backgroundImage: "url('/images/bg.png')",
+                }}
+            >
+                <div className="absolute inset-0 bg-slate-950/45" />
 
-                <form
-                    onSubmit={handleSubmit}
-                    className="overflow-hidden rounded-2xl bg-white shadow-lg"
-                >
+                <div className="relative mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+                    <div className="mb-8 text-center">
+                        <h1 className="text-2xl font-bold sm:text-3xl">
+                            Provider Enrolment
+                        </h1>
 
-                    {/* Business information */}
-                    <div className="border-b border-slate-200 p-6 md:p-8">
-
-                        <h2 className="text-xl font-bold text-slate-800">
-                            Business Information
-                        </h2>
-
-                        <p className="mt-1 text-sm text-slate-500">
-                            Provide information about the service you offer.
+                        <p className="mx-auto mt-2 max-w-2xl text-sm text-slate-300 sm:text-base">
+                            Complete your provider application and submit your
+                            payment details for admin review.
                         </p>
+                    </div>
 
-                        <div className="mt-6 grid gap-5 md:grid-cols-2">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:p-7"
+                    >
+                        {error && (
+                            <div className="mb-6 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                                {error}
+                            </div>
+                        )}
 
+                        <div className="grid gap-5 md:grid-cols-2">
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Business Name
                                 </label>
 
-                                <input
-                                    type="text"
-                                    name="business_name"
-                                    value={formData.business_name}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="e.g. Imani Electrical Services"
-                                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                <div className="relative">
+                                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        type="text"
+                                        name="business_name"
+                                        value={formData.business_name}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Your business name"
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Service Category
                                 </label>
 
-                                <input
-                                    type="text"
-                                    name="service_category"
-                                    value={formData.service_category}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="e.g. Electrical"
-                                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
+                                <div className="relative">
+                                    <BriefcaseBusiness className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                            <div className="md:col-span-2">
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
-                                    Description
-                                </label>
-
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleChange}
-                                    required
-                                    rows="4"
-                                    placeholder="Describe the services you provide..."
-                                    className="w-full resize-none rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                    <input
+                                        type="text"
+                                        name="service_category"
+                                        value={formData.service_category}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="e.g. Electrical"
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Location
                                 </label>
 
-                                <input
-                                    type="text"
-                                    name="location"
-                                    value={formData.location}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="e.g. Nairobi"
-                                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        value={formData.location}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Your service area"
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+                                    />
+                                </div>
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Years of Experience
                                 </label>
 
@@ -220,66 +247,71 @@ return (
                                     onChange={handleChange}
                                     min="0"
                                     required
-                                    placeholder="e.g. 5"
-                                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Years of experience"
+                                    className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Phone Number
                                 </label>
 
-                                <input
-                                    type="tel"
-                                    name="phone_number"
-                                    value={formData.phone_number}
-                                    onChange={handleChange}
-                                    required
-                                    placeholder="e.g. 0712345678"
-                                    className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
-                            </div>
+                                <div className="relative">
+                                    <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
 
-                        </div>
-                    </div>
-
-
-                    {/* Payment information */}
-                    <div className="border-b border-slate-200 bg-slate-50 p-6 md:p-8">
-
-                        <h2 className="text-xl font-bold text-slate-800">
-                            Subscription Payment
-                        </h2>
-
-                        <p className="mt-1 text-sm text-slate-500">
-                            Enter the payment details for your provider subscription.
-                        </p>
-
-                        <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-slate-600">
-                                        Provider Subscription
-                                    </p>
-
-                                    <p className="mt-1 text-2xl font-bold text-slate-800">
-                                        KSh 50
-                                    </p>
+                                    <input
+                                        type="tel"
+                                        name="phone_number"
+                                        value={formData.phone_number}
+                                        onChange={handleChange}
+                                        required
+                                        placeholder="Phone number"
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+                                    />
                                 </div>
-
-                                <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-                                    Subscription
-                                </span>
                             </div>
-
-                        </div>
-
-                        <div className="mt-6 grid gap-5 md:grid-cols-2">
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
+                                    Payment Amount
+                                </label>
+
+                                <div className="relative">
+                                    <CreditCard className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        type="number"
+                                        name="amount"
+                                        value={formData.amount}
+                                        readOnly
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-slate-300 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
+                                    Description
+                                </label>
+
+                                <div className="relative">
+                                    <FileText className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+
+                                    <textarea
+                                        name="description"
+                                        value={formData.description}
+                                        onChange={handleChange}
+                                        required
+                                        rows="4"
+                                        placeholder="Describe the services you provide..."
+                                        className="w-full resize-none rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Transaction Code
                                 </label>
 
@@ -289,60 +321,49 @@ return (
                                     value={formData.transaction_code}
                                     onChange={handleChange}
                                     required
-                                    placeholder="Enter transaction code"
-                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                    placeholder="Payment transaction code"
+                                    className="w-full rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-500 focus:border-blue-400"
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-sm font-medium text-slate-700">
+                                <label className="mb-2 block text-sm font-medium text-slate-200">
                                     Payment Date
                                 </label>
 
-                                <input
-                                    type="date"
-                                    name="payment_date"
-                                    value={formData.payment_date}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                />
+                                <div className="relative">
+                                    <CalendarDays className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+                                    <input
+                                        type="date"
+                                        name="payment_date"
+                                        value={formData.payment_date}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full rounded-xl border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white outline-none focus:border-blue-400"
+                                    />
+                                </div>
                             </div>
-
                         </div>
 
-                    </div>
+                        <div className="mt-7 flex justify-end">
+                            <button
+                                type="submit"
+                                disabled={submitting}
+                                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <Send className="h-4 w-4" />
 
-
-                    {/* Submit */}
-                    <div className="flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between md:p-8">
-
-                        <div>
-                            <p className="text-sm font-medium text-slate-700">
-                                Ready to submit?
-                            </p>
-
-                            <p className="text-xs text-slate-500">
-                                Your application will be reviewed by an administrator.
-                            </p>
+                                {submitting
+                                    ? "Submitting..."
+                                    : "Submit Application"}
+                            </button>
                         </div>
+                    </form>
+                </div>
+            </main>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="rounded-lg bg-blue-600 px-7 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
-                        >
-                            {loading
-                                ? "Submitting..."
-                                : "Submit Application"}
-                        </button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
+            <Footer />
         </div>
     );
 }
