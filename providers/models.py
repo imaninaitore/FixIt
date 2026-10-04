@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-# Create your models here.
-
 # Stores additional information about a service provider
 class ProviderProfile(models.Model):
     user = models.OneToOneField(
@@ -18,6 +16,11 @@ class ProviderProfile(models.Model):
     location = models.CharField(max_length=150)
     years_of_experience = models.PositiveIntegerField(default=0)
     phone_number = models.CharField(max_length=20, blank=True)
+    profile_image = models.ImageField(
+        upload_to="provider_profiles/",
+        blank=True,
+        null=True
+    )
     is_available = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +28,7 @@ class ProviderProfile(models.Model):
 
     def __str__(self):
         return f"{self.business_name} - {self.user.username}"
+
 
 # Stores a service provider's enrolment application
 class ProviderEnrolment(models.Model):

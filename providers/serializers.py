@@ -1,11 +1,12 @@
 from rest_framework import serializers
-from .models import ProviderEnrolment
+from .models import ProviderEnrolment, ProviderProfile
 
 
 class ProviderEnrolmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProviderEnrolment
+
         fields = [
             "id",
             "provider",
@@ -32,6 +33,7 @@ class ProviderEnrolmentSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+
 class ProviderEnrolmentSubmissionSerializer(serializers.Serializer):
 
     business_name = serializers.CharField(max_length=255)
@@ -41,20 +43,26 @@ class ProviderEnrolmentSubmissionSerializer(serializers.Serializer):
     years_of_experience = serializers.IntegerField(min_value=0)
 
     phone_number = serializers.CharField(max_length=20)
+
     plan = serializers.ChoiceField(
         choices=[
-            ("provider_subscription", "Provider Subscription")
+            (
+                "provider_subscription",
+                "Provider Subscription"
+            )
         ]
     )
+
     amount = serializers.DecimalField(
         max_digits=10,
         decimal_places=2
     )
-    transaction_code = serializers.CharField(max_length=100)
-    payment_date = serializers.DateField()      
 
-from rest_framework import serializers
-from .models import ProviderEnrolment, ProviderProfile
+    transaction_code = serializers.CharField(
+        max_length=100
+    )
+
+    payment_date = serializers.DateField()
 
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
@@ -71,6 +79,7 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
             "location",
             "years_of_experience",
             "phone_number",
+            "profile_image",
             "is_available",
             "created_at",
             "updated_at",
@@ -81,4 +90,4 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
             "user",
             "created_at",
             "updated_at",
-        ]    
+        ]

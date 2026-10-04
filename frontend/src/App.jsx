@@ -13,6 +13,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
 import ProviderProfile from "./pages/provider/ProviderProfile";
+import ProviderOwnProfile from "./pages/provider/ProviderOwnProfile";
 import ProviderDashboard from "./pages/provider/ProviderDashboard";
 import ProviderServiceRequests from "./pages/provider/ProviderServiceRequests";
 
@@ -45,107 +46,167 @@ function App() {
 
                 {/* Public pages */}
 
-                <Route path="/" element={<Home />} />
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
 
-                <Route path="/login" element={<Login />} />
+                <Route
+                    path="/login"
+                    element={<Login />}
+                />
 
-                <Route path="/register" element={<Register />} />
+                <Route
+                    path="/register"
+                    element={<Register />}
+                />
 
-                <Route path="/registerProvider" element={<RegisterProvider />} />
+                <Route
+                    path="/registerProvider"
+                    element={<RegisterProvider />}
+                />
 
-                <Route path="/about" element={<About/>}/>
+                <Route
+                    path="/about"
+                    element={<About />}
+                />
 
-                <Route path="/contact" element={<Contact/>}/>
+                <Route
+                    path="/contact"
+                    element={<Contact />}
+                />
 
-                <Route path="/terms" element={<TermsAndConditions/>}/>
+                <Route
+                    path="/terms"
+                    element={<TermsAndConditions />}
+                />
 
-                <Route path="/privacy" element={<PrivacyPolicy/>}/>
+                <Route
+                    path="/privacy"
+                    element={<PrivacyPolicy />}
+                />
 
-                <Route path="/providers" element={<Providers />}/>
+                <Route
+                    path="/providers"
+                    element={<Providers />}
+                />
 
+                {/* 
+                    Public provider profile
+
+                    This route is intentionally NOT wrapped
+                    with ProviderLayout.
+
+                    Customers see the public provider profile.
+                */}
+                <Route
+                    path="/providers/:providerId"
+                    element={<ProviderProfile />}
+                />
 
                 {/* Customer pages */}
 
                 <Route
                     element={
-                        <ProtectedRoute allowedRoles={["customer"]}/>
-                    }>
-                    <Route path="/customer-dashboard" element={<CustomerDashboard />}/>
+                        <ProtectedRoute
+                            allowedRoles={["customer"]}
+                        />
+                    }
+                >
+                    <Route
+                        path="/customer-dashboard"
+                        element={<CustomerDashboard />}
+                    />
 
-                    <Route path="/service-requests" element={<ServiceRequests />}/>
+                    <Route
+                        path="/service-requests"
+                        element={<ServiceRequests />}
+                    />
 
-                    <Route path="/service-requests/create" element={<CreateServiceRequest />} />
+                    <Route
+                        path="/service-requests/create"
+                        element={<CreateServiceRequest />}
+                    />
 
-                    <Route path="/providers/:providerId/reviews/create" element={<CreateReview />}/>
+                    <Route
+                        path="/providers/:providerId/reviews/create"
+                        element={<CreateReview />}
+                    />
                 </Route>
 
 
-{/* Provider pages */}
+                {/* Provider pages */}
 
 <Route
-    path="/provider-dashboard"
     element={
-        <ProviderLayout>
-            <ProviderDashboard />
-        </ProviderLayout>
+        <ProtectedRoute
+            allowedRoles={["provider"]}
+        />
     }
-/>
+>
+    <Route
+        path="/provider-dashboard"
+        element={
+            <ProviderLayout>
+                <ProviderDashboard />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/provider/service-requests"
-    element={
-        <ProviderLayout>
-            <ProviderServiceRequests />
-        </ProviderLayout>
-    }
-/>
+    <Route
+        path="/provider/service-requests"
+        element={
+            <ProviderLayout>
+                <ProviderServiceRequests />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/messages"
-    element={
-        <ProviderLayout>
-            <Conversations />
-        </ProviderLayout>
-    }
-/>
+    <Route
+        path="/messages"
+        element={
+            <ProviderLayout>
+                <Conversations />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/messages/:conversationId"
-    element={
-        <ProviderLayout>
-            <Conversation />
-        </ProviderLayout>
-    }
-/>
+    <Route
+        path="/messages/:conversationId"
+        element={
+            <ProviderLayout>
+                <Conversation />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/providers/:providerId"
-    element={
-        <ProviderLayout>
-            <ProviderProfile />
-        </ProviderLayout>
-    }
-/>
+    <Route
+        path="/provider/profile"
+        element={
+            <ProviderLayout>
+                <ProviderOwnProfile />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/providers/:providerId/reviews"
-    element={
-        <ProviderLayout>
-            <ProviderReviews />
-        </ProviderLayout>
-    }
-/>
+    <Route
+        path="/providers/:providerId/reviews"
+        element={
+            <ProviderLayout>
+                <ProviderReviews />
+            </ProviderLayout>
+        }
+    />
 
-<Route
-    path="/provider/enrolment"
-    element={
-        <ProviderLayout>
-            <ProviderEnrolment />
-        </ProviderLayout>
-    }
-/>
-
-
+    <Route
+        path="/provider/enrolment"
+        element={
+            <ProviderLayout>
+                <ProviderEnrolment />
+            </ProviderLayout>
+        }
+    />
+</Route>
 
                 {/* Admin pages */}
 
