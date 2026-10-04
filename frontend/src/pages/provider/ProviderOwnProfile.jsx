@@ -203,7 +203,7 @@ function ProviderOwnProfile() {
                 className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-cover bg-center"
                 style={{
                     backgroundImage:
-                        "url('/images/tools2.jpg')",
+                        "url('/images/bg.png')",
                 }}
             >
                 <div className="rounded-2xl border border-white/20 bg-white/15 px-8 py-6 text-white shadow-xl backdrop-blur-lg">
@@ -221,7 +221,7 @@ function ProviderOwnProfile() {
                 className="min-h-[calc(100vh-4rem)] bg-cover bg-center p-4 sm:p-6"
                 style={{
                     backgroundImage:
-                        "url('/images/tools2.jpg')",
+                        "url('/images/bg.png')",
                 }}
             >
                 <div className="mx-auto max-w-6xl rounded-2xl border border-red-300/30 bg-red-950/60 p-5 text-sm text-red-100 shadow-xl backdrop-blur-md">
@@ -244,7 +244,7 @@ function ProviderOwnProfile() {
             className="relative min-h-[calc(100vh-4rem)] bg-cover bg-center bg-fixed"
             style={{
                 backgroundImage:
-                    "url('/images/tools2.jpg')",
+                    "url('/images/bg.png')",
             }}
         >
             {/* Light overlay - keeps the background image clearly visible */}

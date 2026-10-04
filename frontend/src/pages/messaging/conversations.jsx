@@ -122,7 +122,7 @@ function Conversations() {
                 bg-no-repeat
             "
             style={{
-                backgroundImage: "url('/images/messages2.jpg')",
+                backgroundImage: "url('/images/mountain.jpg')",
             }}
         >
             <div className="min-h-[calc(100vh-4rem)] bg-black/10">
