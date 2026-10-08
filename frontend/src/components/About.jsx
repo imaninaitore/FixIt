@@ -3,10 +3,7 @@ function About() {
         <section
             id="about"
             className="
-                bg-gradient-to-br
-                from-slate-400
-                via-[#f4f7fb]
-                to-white
+                bg-[#F4EDE5]
                 py-12
 
                 sm:py-20
@@ -48,7 +45,7 @@ function About() {
                                 font-semibold
                                 uppercase
                                 tracking-[0.2em]
-                                text-blue-500
+                                text-[#C66A4A]
 
                                 sm:text-sm
                                 sm:tracking-[0.25em]
@@ -64,7 +61,7 @@ function About() {
                                 font-semibold
                                 leading-tight
                                 tracking-tight
-                                text-slate-900
+                                text-[#172A46]
 
                                 sm:mt-4
                                 sm:text-4xl
@@ -80,7 +77,7 @@ function About() {
                                 mt-4
                                 text-sm
                                 leading-6
-                                text-slate-600
+                                text-[#536070]
 
                                 sm:mt-6
                                 sm:text-base
@@ -99,7 +96,7 @@ function About() {
                                 mt-3
                                 text-sm
                                 leading-6
-                                text-slate-600
+                                text-[#536070]
 
                                 sm:mt-4
                                 sm:text-base
@@ -124,7 +121,9 @@ function About() {
                                 relative
                                 overflow-hidden
                                 rounded-2xl
-                                bg-slate-900
+                                border
+                                border-[#D9B99B]
+                                bg-[#172A46]
                                 shadow-xl
 
                                 sm:rounded-2xl
@@ -152,10 +151,7 @@ function About() {
                                     absolute
                                     inset-0
                                     rounded-2xl
-                                    bg-gradient-to-t
-                                    from-slate-950/80
-                                    via-slate-950/10
-                                    to-transparent
+                                    bg-[#172A46]/45
                                 "
                             />
 
@@ -166,6 +162,9 @@ function About() {
                                     bottom-0
                                     left-0
                                     right-0
+                                    border-t
+                                    border-[#D9B99B]/40
+                                    bg-[#172A46]/90
                                     p-5
 
                                     sm:p-6
@@ -179,7 +178,7 @@ function About() {
                                         font-medium
                                         uppercase
                                         tracking-wider
-                                        text-blue-300
+                                        text-[#D9B99B]
 
                                         sm:text-xs
 

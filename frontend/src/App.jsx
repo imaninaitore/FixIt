@@ -4,11 +4,14 @@ import Home from "./pages/Home";
 import Login from "./pages/account/Login";
 import Register from "./pages/account/Register";
 import RegisterProvider from "./pages/account/RegisterProvider";
+
 import CustomerDashboard from "./pages/CustomerDashboard";
 import About from "./components/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
+
+import CustomerDashboardLayout from "./components/CustomerDashboardLayout";
 
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
@@ -45,7 +48,9 @@ function App() {
         <BrowserRouter>
             <Routes>
 
-                {/* Public pages */}
+                {/* =========================
+                    Public pages
+                ========================= */}
 
                 <Route
                     path="/"
@@ -87,25 +92,21 @@ function App() {
                     element={<PrivacyPolicy />}
                 />
 
-                <Route
-                    path="/providers"
-                    element={<Providers />}
-                />
-
                 {/* 
-                    Public provider profile
+                    Public provider profile.
 
-                    This route is intentionally NOT wrapped
-                    with ProviderLayout.
-
-                    Customers see the public provider profile.
+                    This remains outside ProviderLayout because
+                    customers can view an individual provider profile.
                 */}
                 <Route
                     path="/providers/:providerId"
                     element={<ProviderProfile />}
                 />
 
-                {/* Customer pages */}
+
+                {/* =========================
+                    Customer pages
+                ========================= */}
 
                 <Route
                     element={
@@ -115,106 +116,129 @@ function App() {
                     }
                 >
                     <Route
-                        path="/customer-dashboard"
-                        element={<CustomerDashboard />}
-                    />
+                        element={<CustomerDashboardLayout />}
+                    >
 
-                    <Route
-                        path="/service-requests"
-                        element={<ServiceRequests />}
-                    />
+                        {/* Customer's first page */}
+                        <Route
+                            path="/customer-dashboard"
+                            element={<CustomerDashboard />}
+                        />
 
-                    <Route
-                        path="/service-requests/create"
-                        element={<CreateServiceRequest />}
-                    />
+                        {/* Find Providers */}
+                        <Route
+                            path="/providers"
+                            element={<Providers />}
+                        />
 
-                    <Route
-                        path="/providers/:providerId/reviews/create"
-                        element={<CreateReview />}
-                    />
+                        {/* My Requests */}
+                        <Route
+                            path="/service-requests"
+                            element={<ServiceRequests />}
+                        />
+
+                        {/* Create Request */}
+                        <Route
+                            path="/service-requests/create"
+                            element={<CreateServiceRequest />}
+                        />
+
+                        {/* Create Review */}
+                        <Route
+                            path="/providers/:providerId/reviews/create"
+                            element={<CreateReview />}
+                        />
+
+                    </Route>
                 </Route>
 
 
-                {/* Provider pages */}
+                {/* =========================
+                    Provider pages
+                ========================= */}
 
-<Route
-    element={
-        <ProtectedRoute
-            allowedRoles={["provider"]}
-        />
-    }
->
-    <Route
-        path="/provider-dashboard"
-        element={
-            <ProviderLayout>
-                <ProviderDashboard />
-            </ProviderLayout>
-        }
-    />
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["provider"]}
+                        />
+                    }
+                >
 
-    <Route
-        path="/provider/service-requests"
-        element={
-            <ProviderLayout>
-                <ProviderServiceRequests />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/provider-dashboard"
+                        element={
+                            <ProviderLayout>
+                                <ProviderDashboard />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-        path="/messages"
-        element={
-            <ProviderLayout>
-                <Conversations />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/provider/service-requests"
+                        element={
+                            <ProviderLayout>
+                                <ProviderServiceRequests />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-        path="/messages/:conversationId"
-        element={
-            <ProviderLayout>
-                <Conversation />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/messages"
+                        element={
+                            <ProviderLayout>
+                                <Conversations />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-        path="/provider/profile"
-        element={
-            <ProviderLayout>
-                <ProviderOwnProfile />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/messages/:conversationId"
+                        element={
+                            <ProviderLayout>
+                                <Conversation />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-        path="/providers/:providerId/reviews"
-        element={
-            <ProviderLayout>
-                <ProviderReviews />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/provider/profile"
+                        element={
+                            <ProviderLayout>
+                                <ProviderOwnProfile />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-        path="/provider/enrolment"
-        element={
-            <ProviderLayout>
-                <ProviderEnrolment />
-            </ProviderLayout>
-        }
-    />
+                    <Route
+                        path="/providers/:providerId/reviews"
+                        element={
+                            <ProviderLayout>
+                                <ProviderReviews />
+                            </ProviderLayout>
+                        }
+                    />
 
-    <Route
-    path="/provider/pending"
-    element={<ProviderPendingApproval />}
-/>
-</Route>
+                    <Route
+                        path="/provider/enrolment"
+                        element={
+                            <ProviderLayout>
+                                <ProviderEnrolment />
+                            </ProviderLayout>
+                        }
+                    />
 
-                {/* Admin pages */}
+                    <Route
+                        path="/provider/pending"
+                        element={<ProviderPendingApproval />}
+                    />
+
+                </Route>
+
+
+                {/* =========================
+                    Admin pages
+                ========================= */}
 
                 <Route
                     element={
@@ -223,6 +247,7 @@ function App() {
                         />
                     }
                 >
+
                     <Route
                         path="/admin/dashboard"
                         element={<AdminDashboard />}
@@ -262,8 +287,8 @@ function App() {
                         path="/admin/reports"
                         element={<AdminReports />}
                     />
-                </Route>
 
+                </Route>
 
             </Routes>
         </BrowserRouter>

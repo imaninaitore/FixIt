@@ -142,7 +142,7 @@ function Login() {
                         "
                     >
                         <img
-                            src="/images/tools.png"
+                            src="/images/tools.jpg"
                             alt="FixIt tools"
                             className="
                                 absolute

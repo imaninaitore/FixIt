@@ -115,7 +115,7 @@ function TermsAndConditions() {
     ];
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-[#dbe7f3] via-[#e8eef5] to-[#cbd5e1]">
+        <main className="min-h-screen bg-gradient-to-br from-[#D9C2AD] via-[#F4EDE5] to-[#E8DED2]">
             <Navbar />
 
             {/* Introduction */}
@@ -124,15 +124,15 @@ function TermsAndConditions() {
 
                     {/* Page Introduction */}
                     <div className="mx-auto mb-14 max-w-3xl text-center sm:mb-16">
-                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#C66A4A]">
                             FixIt Platform
                         </p>
 
-                        <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-800 sm:text-3xl lg:text-4xl">
+                        <h1 className="mt-3 text-2xl font-bold tracking-tight text-[#172A46] sm:text-3xl lg:text-4xl">
                             Terms & Conditions
                         </h1>
 
-                        <p className="mt-5 text-sm leading-7 text-slate-600 sm:text-base">
+                        <p className="mt-5 text-sm leading-7 text-[#536070] sm:text-base">
                             Welcome to FixIt. These Terms & Conditions govern
                             your use of the FixIt platform and the services
                             provided through it. By accessing or using FixIt,
@@ -178,8 +178,8 @@ function TermsAndConditions() {
                                                 overflow-hidden
                                                 rounded-2xl
                                                 border
-                                                border-slate-200
-                                                bg-white
+                                                border-[#D9C2AD]
+                                                bg-[#FFFDF9]
                                                 p-4
                                                 shadow-sm
                                                 transition
@@ -223,8 +223,8 @@ function TermsAndConditions() {
                                                 justify-center
                                                 rounded-2xl
                                                 border
-                                                border-slate-200
-                                                bg-white/90
+                                                border-[#D9C2AD]
+                                                bg-[#FFFDF9]/90
                                                 p-6
                                                 shadow-sm
                                                 backdrop-blur-sm
@@ -248,16 +248,16 @@ function TermsAndConditions() {
                                                         items-center
                                                         justify-center
                                                         rounded-xl
-                                                        bg-blue-50
+                                                        bg-[#F2D8CC]
                                                         text-sm
                                                         font-bold
-                                                        text-blue-600
+                                                        text-[#C66A4A]
                                                     "
                                                 >
                                                     {term.number}
                                                 </span>
 
-                                                <div className="h-px flex-1 bg-slate-200" />
+                                                <div className="h-px flex-1 bg-[#D9C2AD]" />
                                             </div>
 
                                             {/* Title */}
@@ -267,7 +267,7 @@ function TermsAndConditions() {
                                                     text-xl
                                                     font-bold
                                                     tracking-tight
-                                                    text-slate-800
+                                                    text-[#172A46]
 
                                                     sm:text-2xl
 
@@ -291,7 +291,7 @@ function TermsAndConditions() {
                                                             className="
                                                                 text-sm
                                                                 leading-7
-                                                                text-slate-600
+                                                                text-[#536070]
 
                                                                 sm:text-base
                                                             "
@@ -316,8 +316,8 @@ function TermsAndConditions() {
                             max-w-4xl
                             rounded-2xl
                             border
-                            border-blue-100
-                            bg-blue-50/70
+                            border-[#E8C7BA]
+                            bg-[#F2D8CC]/70
                             p-6
 
                             sm:mt-20

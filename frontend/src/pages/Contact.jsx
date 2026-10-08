@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 
 function Contact() {
     return (
-        <main className="min-h-screen bg-slate-900">
+        <main className="min-h-screen bg-[#172A46]">
 
             {/* Contact Hero */}
             <section
@@ -20,7 +20,7 @@ function Contact() {
                 }}
             >
                 {/* Background overlay */}
-                <div className="absolute inset-0 bg-slate-900/30" />
+                <div className="absolute inset-0 bg-[#172A46]/30" />
 
                 {/* Navbar */}
                 <div className="relative z-30">
@@ -67,7 +67,7 @@ function Contact() {
                                 sm:text-4xl
                             "
                         >
-                            Contact <span className="text-blue-400">Us</span>
+                            Contact <span className="text-[#C66A4A]">Us</span>
                         </h1>
 
                         {/* Location */}
@@ -76,7 +76,7 @@ function Contact() {
                                 Nairobi, Kenya
                             </p>
 
-                            <div className="mt-4 h-px w-full bg-white" />
+                            <div className="mt-4 h-px w-full bg-[#D9B99B]" />
                         </div>
 
                         {/* Phone */}
@@ -85,7 +85,7 @@ function Contact() {
                                 +254 716 869 670
                             </p>
 
-                            <div className="mt-4 h-px w-full bg-white" />
+                            <div className="mt-4 h-px w-full bg-[#D9B99B]" />
                         </div>
 
                         {/* Email */}
@@ -94,7 +94,7 @@ function Contact() {
                                 fixitsupport@gmail.com
                             </p>
 
-                            <div className="mt-5 h-px w-full bg-white" />
+                            <div className="mt-5 h-px w-full bg-[#D9B99B]" />
                         </div>
 
                         {/* Social Media */}
@@ -117,7 +117,7 @@ function Contact() {
                                     transition
                                     duration-200
                                     hover:scale-110
-                                    hover:text-blue-400
+                                    hover:text-[#C66A4A]
                                 "
                             >
                                 <svg
@@ -138,7 +138,7 @@ function Contact() {
                                     transition
                                     duration-200
                                     hover:scale-110
-                                    hover:text-blue-400
+                                    hover:text-[#C66A4A]
                                 "
                             >
                                 <svg
@@ -159,7 +159,7 @@ function Contact() {
                                     transition
                                     duration-200
                                     hover:scale-110
-                                    hover:text-blue-400
+                                    hover:text-[#C66A4A]
                                 "
                             >
                                 <svg

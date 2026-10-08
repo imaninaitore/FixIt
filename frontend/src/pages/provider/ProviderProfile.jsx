@@ -88,7 +88,7 @@ function ProviderProfile() {
                 "
                 style={{
                     backgroundImage:
-                        "url('/images/tools.png')",
+                        "url('/images/tools.jpg')",
                 }}
             >
                 <div
@@ -126,7 +126,7 @@ function ProviderProfile() {
                 "
                 style={{
                     backgroundImage:
-                        "url('/images/tools.png')",
+                        "url('/images/tools.jpg')",
                 }}
             >
                 <div className="mx-auto max-w-6xl">
@@ -194,7 +194,7 @@ function ProviderProfile() {
             "
             style={{
                 backgroundImage:
-                    "url('/images/tools.png')",
+                    "url('/images/tools.jpg')",
             }}
         >
             <div className="min-h-screen bg-black/5">

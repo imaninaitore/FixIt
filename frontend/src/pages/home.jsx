@@ -63,7 +63,7 @@ function Home() {
     const navigate = useNavigate();
 
     return (
-        <main className="min-h-screen bg-white">
+        <main className="min-h-screen bg-[#F8F6F1]">
             {/* Hero */}
             <section
                 className="
@@ -145,7 +145,7 @@ function Home() {
                                 mt-3
                                 h-px
                                 w-14
-                                bg-white/60
+                                bg-[#C46B4B]
                             "
                         />
 
@@ -163,20 +163,20 @@ function Home() {
                                 gap-2
                                 rounded-xl
                                 border
-                                border-white/30
-                                bg-[#53627c]/70
+                                border-[#E7D8C5]/40
+                                bg-[#17324D]/80
                                 px-7
                                 py-3
                                 text-sm
                                 font-medium
                                 text-white
-                                shadow-[0_8px_25px_rgba(31,41,55,0.25)]
+                                shadow-[0_8px_25px_rgba(23,50,77,0.25)]
                                 backdrop-blur-md
                                 transition-all
                                 duration-300
-                                hover:border-white/50
-                                hover:bg-[#53627c]/90
-                                hover:shadow-[0_10px_30px_rgba(31,41,55,0.35)]
+                                hover:border-[#C46B4B]/70
+                                hover:bg-[#426A86]
+                                hover:shadow-[0_10px_30px_rgba(23,50,77,0.35)]
                                 active:scale-[0.98]
                             "
                         >
@@ -184,6 +184,7 @@ function Home() {
                                 size={18}
                                 strokeWidth={1.8}
                                 className="
+                                    text-[#C46B4B]
                                     transition-transform
                                     duration-300
                                     group-hover:scale-110
@@ -211,7 +212,7 @@ function Home() {
                     <div
                         className="
                             rounded-2xl
-                            bg-white
+                            bg-[#F8F6F1]
                             px-4
                             py-5
                             shadow-[0_12px_40px_rgba(0,0,0,0.16)]
@@ -227,7 +228,7 @@ function Home() {
                                 overflow-x-auto
                                 overflow-y-hidden
                                 scrollbar-thin
-                                scrollbar-thumb-slate-300
+                                scrollbar-thumb-[#426A86]
                                 scrollbar-track-transparent
                                 sm:overflow-x-visible
                             "
@@ -271,7 +272,7 @@ function Home() {
                                                 text-center
                                                 transition-all
                                                 duration-200
-                                                hover:bg-[#eef3f8]
+                                                hover:bg-[#E7D8C5]/50
                                                 sm:w-auto
                                                 sm:min-w-0
                                             "
@@ -284,11 +285,11 @@ function Home() {
                                                     items-center
                                                     justify-center
                                                     rounded-xl
-                                                    text-[#53627c]
+                                                    text-[#426A86]
                                                     transition-all
                                                     duration-200
-                                                    group-hover:bg-blue-50
-                                                    group-hover:text-blue-600
+                                                    group-hover:bg-[#E7D8C5]
+                                                    group-hover:text-[#C46B4B]
                                                     sm:h-11
                                                     sm:w-11
                                                     lg:h-12
@@ -313,10 +314,10 @@ function Home() {
                                                     text-[9px]
                                                     font-medium
                                                     leading-4
-                                                    text-[#53627c]
+                                                    text-[#17324D]
                                                     transition-colors
                                                     duration-200
-                                                    group-hover:text-blue-600
+                                                    group-hover:text-[#C46B4B]
                                                     sm:text-[10px]
                                                     lg:text-xs
                                                 "
@@ -337,9 +338,9 @@ function Home() {
                 className="
                     relative
                     bg-gradient-to-b
-                    from-slate-100
-                    via-white
-                    to-white
+                    from-[#E7D8C5]
+                    via-[#F8F6F1]
+                    to-[#F8F6F1]
                     pt-24
                     sm:pt-28
                     lg:pt-32

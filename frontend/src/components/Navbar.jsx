@@ -34,7 +34,7 @@ function Navbar() {
                     onClick={() => navigate("/")}
                     className="text-2xl font-bold text-white"
                 >
-                    Fix<span className="text-blue-400">It</span>
+                    Fix<span className="text-[#C66A4A]">It</span>
                 </button>
 
                 {/* Navigation links */}
@@ -43,7 +43,7 @@ function Navbar() {
                     {/* Home */}
                     <button
                         onClick={() => navigate("/")}
-                        className="text-sm font-medium text-white transition hover:text-blue-300"
+                        className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                     >
                         Home
                     </button>
@@ -51,7 +51,7 @@ function Navbar() {
                     {/* Find a Provider */}
                     <button
                         onClick={() => navigate("/providers")}
-                        className="text-sm font-medium text-white transition hover:text-blue-300"
+                        className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                     >
                         Find a Provider
                     </button>
@@ -61,14 +61,14 @@ function Navbar() {
                         <>
                             <button
                                 onClick={() => navigate("/about")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 About
                             </button>
 
                             <button
                                 onClick={() => navigate("/contact")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Contact Us
                             </button>
@@ -80,21 +80,21 @@ function Navbar() {
                         <>
                             <button
                                 onClick={() => navigate("/customer-dashboard")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Dashboard
                             </button>
 
                             <button
                                 onClick={() => navigate("/service-requests")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Service Requests
                             </button>
 
                             <button
                                 onClick={() => navigate("/messages")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Messages
                             </button>
@@ -106,7 +106,7 @@ function Navbar() {
                         <>
                             <button
                                 onClick={() => navigate("/provider-dashboard")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Dashboard
                             </button>
@@ -115,14 +115,14 @@ function Navbar() {
                                 onClick={() =>
                                     navigate("/provider/service-requests")
                                 }
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Service Requests
                             </button>
 
                             <button
                                 onClick={() => navigate("/messages")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                             >
                                 Messages
                             </button>
@@ -133,7 +133,7 @@ function Navbar() {
                     {username && isAdmin && (
                         <button
                             onClick={() => navigate("/admin/dashboard")}
-                            className="text-sm font-medium text-white transition hover:text-blue-300"
+                            className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
                         >
                             Administration
                         </button>
@@ -150,7 +150,7 @@ function Navbar() {
                             {/* User information */}
                             <div className="flex items-center gap-3">
 
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#172A46] text-sm font-bold text-white">
                                     {username.charAt(0).toUpperCase()}
                                 </div>
 
@@ -159,7 +159,7 @@ function Navbar() {
                                         {username}
                                     </p>
 
-                                    <p className="text-xs text-blue-100">
+                                    <p className="text-xs text-[#D9B99B]">
                                         {isAdmin
                                             ? "Administrator"
                                             : isProvider
@@ -176,7 +176,7 @@ function Navbar() {
                                     onClick={() =>
                                         navigate("/customer-dashboard")
                                     }
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                    className="rounded-lg bg-[#C66A4A] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172A46]"
                                 >
                                     Dashboard
                                 </button>
@@ -187,7 +187,7 @@ function Navbar() {
                                     onClick={() =>
                                         navigate("/provider-dashboard")
                                     }
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                    className="rounded-lg bg-[#C66A4A] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172A46]"
                                 >
                                     Dashboard
                                 </button>
@@ -198,7 +198,7 @@ function Navbar() {
                                     onClick={() =>
                                         navigate("/admin/dashboard")
                                     }
-                                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+                                    className="rounded-lg bg-[#C66A4A] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172A46]"
                                 >
                                     Admin Dashboard
                                 </button>
@@ -207,7 +207,7 @@ function Navbar() {
                             {/* Logout */}
                             <button
                                 onClick={handleLogout}
-                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                                className="rounded-lg border border-[#D9B99B]/60 px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172A46]/40"
                             >
                                 Log Out
                             </button>
@@ -219,21 +219,21 @@ function Navbar() {
 
                             <button
                                 onClick={() => navigate("/registerProvider")}
-                                className="text-sm font-medium text-white transition hover:text-blue-300  sm:text-xs lg:text-sm"
+                                className="text-sm font-medium text-white transition hover:text-[#D9B99B] sm:text-xs lg:text-sm"
                             >
                                 Register as a Provider
                             </button>
 
                             <button
                                 onClick={() => navigate("/login")}
-                                className="rounded-lg border border-white/30 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 hover:bg-white/10 sm:px-3  sm:py-1.5 sm:text-xs lg:px-4 lg:py-2 lg:text-sm"
+                                className="rounded-lg border border-[#D9B99B]/60 px-4 py-2 text-sm font-medium text-white transition hover:bg-[#172A46]/40 sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:py-2 lg:text-sm"
                             >
                                 Log In
                             </button>
 
                             <button
                                 onClick={() => navigate("/register")}
-                                className="rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-600 sm:px-4 sm:py-2 sm:text-xs lg:px-5 lg:py-2.5  lg:text-sm"
+                                className="rounded-lg bg-[#C66A4A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#172A46] sm:px-4 sm:py-2 sm:text-xs lg:px-5 lg:py-2.5 lg:text-sm"
                             >
                                 Sign Up
                             </button>

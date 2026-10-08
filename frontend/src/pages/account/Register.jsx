@@ -135,7 +135,7 @@ function Register() {
                         "
                     >
                         <img
-                            src="/images/tools.png"
+                            src="/images/tools.jpg"
                             alt="FixIt tools"
                             className="
                                 absolute

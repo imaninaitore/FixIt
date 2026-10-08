@@ -69,7 +69,7 @@ function RegisterProvider() {
                 lg:px-10
             "
             style={{
-                backgroundImage: "url('/images/tools.png')",
+                backgroundImage: "url('/images/tools.jpg')",
             }}
         >
             {/* Background overlay */}
