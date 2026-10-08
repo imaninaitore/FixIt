@@ -34,11 +34,13 @@ import AdminReports from "./pages/administration/AdminReports";
 import CreateServiceRequest from "./pages/requests/CreateServiceRequest";
 import ServiceRequests from "./pages/requests/ServiceRequests";
 
+
 import Conversations from "./pages/messaging/Conversations";
 import Conversation from "./pages/messaging/Conversation";
 
 import CreateReview from "./pages/reviews/CreateReview";
 import ProviderReviews from "./pages/provider/ProviderReviews";
+import Reviews from "./pages/reviews/Reviews";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProviderPendingApproval from "./pages/provider/ProviderPendingApproval";
@@ -137,17 +139,24 @@ function App() {
                             element={<ServiceRequests />}
                         />
 
-                        {/* Create Request */}
-                        <Route
-                            path="/service-requests/create"
-                            element={<CreateServiceRequest />}
-                        />
+{/* Create Request */}
+<Route
+    path="/service-requests/create"
+    element={<CreateServiceRequest />}
+/>
 
-                        {/* Create Review */}
-                        <Route
-                            path="/providers/:providerId/reviews/create"
-                            element={<CreateReview />}
-                        />
+{/* Customer Reviews */}
+<Route
+    path="/reviews"
+    element={<Reviews />}
+/>
+
+{/* Create Review */}
+<Route
+    path="/providers/:providerId/reviews/create"
+    element={<CreateReview />}
+/>
+
 
                     </Route>
                 </Route>
