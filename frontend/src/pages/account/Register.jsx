@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/authService";
 
 function Register() {
+    
+    const [agreedTerms, setAgreedTerms] = useState(false);
     const navigate = useNavigate();
 
     const [formData, setFormData] = useState({
@@ -112,7 +114,7 @@ function Register() {
                         overflow-hidden
                         rounded-[24px]
                         bg-white/95
-                        p-2.5
+                        p-2
                         shadow-2xl
                         backdrop-blur-sm
                         md:flex-row
@@ -123,14 +125,14 @@ function Register() {
                     <div
                         className="
                             relative
-                            min-h-[210px]
+                            min-h-[180px]
                             w-full
                             flex-shrink-0
                             overflow-hidden
                             rounded-[19px]
                             bg-black
-                            sm:min-h-[240px]
-                            md:min-h-[500px]
+                            sm:min-h-[200px]
+                            md:min-h-[420px]
                             md:w-[44%]
                         "
                     >
@@ -219,18 +221,18 @@ function Register() {
                             w-full
                             flex-col
                             justify-center
-                            px-5
-                            py-5
-                            sm:px-8
-                            sm:py-6
+                            px-4
+                            py-3
+                            sm:px-6
+                            sm:py-4
                             md:w-[56%]
-                            md:px-9
-                            md:py-7
+                            md:px-7
+                            md:py-4
                         "
                     >
 
                         {/* Heading */}
-                        <div className="mb-4">
+                        <div className="mb-3">
                             <h1
                                 className="
                                     text-2xl
@@ -283,7 +285,7 @@ function Register() {
                         <form onSubmit={handleSubmit}>
 
                             {/* Username */}
-                            <div className="mb-2.5">
+                            <div className="mb-2">
                                 <label
                                     htmlFor="username"
                                     className="
@@ -326,7 +328,7 @@ function Register() {
                             </div>
 
                             {/* Email */}
-                            <div className="mb-2.5">
+                            <div className="mb-2">
                                 <label
                                     htmlFor="email"
                                     className="
@@ -369,7 +371,7 @@ function Register() {
                             </div>
 
                             {/* Password */}
-                            <div className="mb-2.5">
+                            <div className="mb-2">
                                 <label
                                     htmlFor="password"
                                     className="
@@ -411,13 +413,13 @@ function Register() {
                                     "
                                 />
 
-                                <p className="mt-1 text-[10px] text-gray-500">
+                                <p className="mt-0.5 text-[10px] text-gray-500">
                                     Password must be at least 6 characters.
                                 </p>
                             </div>
 
                             {/* Confirm Password */}
-                            <div className="mb-2.5">
+                            <div className="mb-2">
                                 <label
                                     htmlFor="confirmPassword"
                                     className="
@@ -530,6 +532,52 @@ function Register() {
                                 </select>
                             </div>
 
+                              {/* Terms & Conditions */}
+                            <div className="flex items-start gap-2 pt-0.5">
+                                <input
+                                    type="checkbox"
+                                    id="terms"
+                                    checked={agreedTerms}
+                                    onChange={(e) =>
+                                        setAgreedTerms(e.target.checked)
+                                    }
+                                    required
+                                    className="
+                                        mt-0.5
+                                        h-3.5
+                                        w-3.5
+                                        flex-shrink-0
+                                        rounded
+                                        border-gray-300
+                                        accent-black
+                                        focus:ring-black
+                                    "
+                                />
+
+                                <label
+                                    htmlFor="terms"
+                                    className="
+                                        text-[11px]
+                                        leading-4
+                                        text-gray-600
+                                    "
+                                >
+                                    I agree to the{" "}
+                                    <a
+                                        href="/terms"
+                                        className="
+                                            font-bold
+                                            text-black
+                                            underline
+                                            underline-offset-2
+                                        
+                                        "
+                                    >
+                                        Terms & Conditions
+                                    </a>
+                                </label>
+                            </div>
+
                             {/* Submit */}
                             <button
                                 type="submit"
@@ -538,7 +586,8 @@ function Register() {
                                     w-full
                                     rounded-full
                                     bg-black
-                                    py-2.5
+                                    py-2
+                                    mt-2
                                     text-sm
                                     font-semibold
                                     text-white
