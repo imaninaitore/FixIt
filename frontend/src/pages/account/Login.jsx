@@ -8,7 +8,6 @@ function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
-    const [agreedTerms, setAgreedTerms] = useState(false);
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -17,15 +16,6 @@ function Login() {
         event.preventDefault();
 
         setError("");
-
-        // Require Terms & Conditions agreement
-        if (!agreedTerms) {
-            setError(
-                "You must agree to the Terms & Conditions before logging in."
-            );
-            return;
-        }
-
         setLoading(true);
 
         try {
@@ -72,7 +62,6 @@ function Login() {
 
     return (
         <div className="relative min-h-screen w-full overflow-hidden font-sans">
-
             {/* Blurred Background */}
             <div
                 className="
@@ -125,7 +114,6 @@ function Login() {
                         md:flex-row
                     "
                 >
-
                     {/* Left Image Section */}
                     <div
                         className="
@@ -226,7 +214,6 @@ function Login() {
                             md:py-8
                         "
                     >
-
                         {/* Back Button */}
                         <button
                             type="button"
@@ -307,7 +294,6 @@ function Login() {
                             onSubmit={handleSubmit}
                             className="mt-5 space-y-3.5"
                         >
-
                             {/* Username */}
                             <div>
                                 <label
@@ -331,6 +317,7 @@ function Login() {
                                         setUsername(e.target.value)
                                     }
                                     required
+                                    autoComplete="username"
                                     placeholder="Enter your username"
                                     className="
                                         w-full
@@ -378,6 +365,7 @@ function Login() {
                                             setPassword(e.target.value)
                                         }
                                         required
+                                        autoComplete="current-password"
                                         placeholder="Enter your password"
                                         className="
                                             w-full
@@ -455,72 +443,12 @@ function Login() {
                                         )}
                                     </button>
                                 </div>
-
-                                {/* Forgot Password */}
-                                <div className="mt-1 text-right">
-                                    <a
-                                        href="#forgot"
-                                        className="
-                                            text-[11px]
-                                            font-bold
-                                            text-black
-                                            hover:underline
-                                        "
-                                    >
-                                        Forgot Password?
-                                    </a>
-                                </div>
-                            </div>
-
-                            {/* Terms & Conditions */}
-                            <div className="flex items-start gap-2 pt-0.5">
-                                <input
-                                    type="checkbox"
-                                    id="terms"
-                                    checked={agreedTerms}
-                                    onChange={(e) =>
-                                        setAgreedTerms(e.target.checked)
-                                    }
-                                    required
-                                    className="
-                                        mt-0.5
-                                        h-3.5
-                                        w-3.5
-                                        flex-shrink-0
-                                        rounded
-                                        border-gray-300
-                                        accent-black
-                                        focus:ring-black
-                                    "
-                                />
-
-                                <label
-                                    htmlFor="terms"
-                                    className="
-                                        text-[11px]
-                                        leading-4
-                                        text-gray-600
-                                    "
-                                >
-                                    I agree to the{" "}
-                                    <a
-                                        href="/terms"
-                                        className="
-                                            font-bold
-                                            text-black
-                                            underline
-                                            underline-offset-2
-                                        "
-                                    >
-                                        Terms & Conditions
-                                    </a>
-                                </label>
                             </div>
 
                             {/* Submit Button */}
                             <button
                                 type="submit"
-                                disabled={loading || !agreedTerms}
+                                disabled={loading}
                                 className="
                                     w-full
                                     rounded-full
@@ -535,9 +463,7 @@ function Login() {
                                     disabled:opacity-50
                                 "
                             >
-                                {loading
-                                    ? "Logging in..."
-                                    : "Log in"}
+                                {loading ? "Logging in..." : "Log in"}
                             </button>
                         </form>
                     </div>
