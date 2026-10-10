@@ -346,7 +346,8 @@ function Home() {
                     lg:pt-32
                 "
             >
-                <About />
+               <About />
+
             </section>
 
             {/* Footer */}
