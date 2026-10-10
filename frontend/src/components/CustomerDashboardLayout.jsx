@@ -41,7 +41,7 @@ function CustomerDashboardLayout() {
         },
         {
             name: "Create Request",
-            path: "/create-service-request",
+            path: "/service-requests/create",
             icon: PlusCircle,
         },
         {
