@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../services/authService";
+import { Link } from "react-router-dom";
 
 function Navbar() {
     const navigate = useNavigate();
@@ -59,11 +60,13 @@ function Navbar() {
                     {/* Public navigation */}
                     {!username && (
                         <>
-                            <button
-                                onClick={() => navigate("/about")}
-                                className="text-sm font-medium text-white transition hover:text-[#D9B99B]"
-                            >
+                            <button>
+                            <a
+                               href="/#about"
+                               className="text-sm font-medium text-white transition hover:text-[#D9B99B]">
                                 About
+                            </a>
+
                             </button>
 
                             <button
