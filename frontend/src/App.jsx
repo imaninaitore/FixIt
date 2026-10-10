@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -6,7 +7,6 @@ import Register from "./pages/account/Register";
 import RegisterProvider from "./pages/account/RegisterProvider";
 
 import CustomerDashboard from "./pages/CustomerDashboard";
-import About from "./components/About";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
@@ -34,7 +34,6 @@ import AdminReports from "./pages/administration/AdminReports";
 import CreateServiceRequest from "./pages/requests/CreateServiceRequest";
 import ServiceRequests from "./pages/requests/ServiceRequests";
 
-
 import Conversations from "./pages/messaging/Conversations";
 import Conversation from "./pages/messaging/Conversation";
 
@@ -49,40 +48,19 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
+                {/* Public pages */}
+                <Route path="/" element={<Home />} />
 
-                {/* =========================
-                    Public pages
-                ========================= */}
+                <Route path="/login" element={<Login />} />
 
-                <Route
-                    path="/"
-                    element={<Home />}
-                />
-
-                <Route
-                    path="/login"
-                    element={<Login />}
-                />
-
-                <Route
-                    path="/register"
-                    element={<Register />}
-                />
+                <Route path="/register" element={<Register />} />
 
                 <Route
                     path="/registerProvider"
                     element={<RegisterProvider />}
                 />
 
-                <Route
-                    path="/about"
-                    element={<About />}
-                />
-
-                <Route
-                    path="/contact"
-                    element={<Contact />}
-                />
+                <Route path="/contact" element={<Contact />} />
 
                 <Route
                     path="/terms"
@@ -94,86 +72,71 @@ function App() {
                     element={<PrivacyPolicy />}
                 />
 
-                {/* 
-                    Public provider profile.
+                {/* Public provider browsing */}
+                <Route
+                    path="/providers"
+                    element={<Providers />}
+                />
 
-                    This remains outside ProviderLayout because
-                    customers can view an individual provider profile.
-                */}
+                {/* Public individual provider profile */}
                 <Route
                     path="/providers/:providerId"
                     element={<ProviderProfile />}
                 />
 
-
-                {/* =========================
-                    Customer pages
-                ========================= */}
-
+                {/* Customer pages */}
                 <Route
                     element={
-                        <ProtectedRoute
-                            allowedRoles={["customer"]}
-                        />
+                        <ProtectedRoute allowedRoles={["customer"]} />
                     }
                 >
-                    <Route
-                        element={<CustomerDashboardLayout />}
-                    >
-
-                        {/* Customer's first page */}
+                    <Route element={<CustomerDashboardLayout />}>
                         <Route
                             path="/customer-dashboard"
                             element={<CustomerDashboard />}
                         />
 
-                        {/* Find Providers */}
-                        <Route
-                            path="/providers"
-                            element={<Providers />}
-                        />
-
-                        {/* My Requests */}
+                        {/* Customer service requests */}
                         <Route
                             path="/service-requests"
                             element={<ServiceRequests />}
                         />
 
-{/* Create Request */}
-<Route
-    path="/service-requests/create"
-    element={<CreateServiceRequest />}
-/>
+                        <Route
+                            path="/service-requests/create"
+                            element={<CreateServiceRequest />}
+                        />
 
-{/* Customer Reviews */}
-<Route
-    path="/reviews"
-    element={<Reviews />}
-/>
+                        {/* Customer reviews */}
+                        <Route
+                            path="/reviews"
+                            element={<Reviews />}
+                        />
 
-{/* Create Review */}
-<Route
-    path="/providers/:providerId/reviews/create"
-    element={<CreateReview />}
-/>
+                        <Route
+                            path="/providers/:providerId/reviews/create"
+                            element={<CreateReview />}
+                        />
 
+                        {/* Customer messaging */}
+                        <Route
+                            path="/messages"
+                            element={<Conversations />}
+                        />
 
+                        <Route
+                            path="/messages/:conversationId"
+                            element={<Conversation />}
+                        />
                     </Route>
                 </Route>
 
-
-                {/* =========================
-                    Provider pages
-                ========================= */}
-
+                {/* Provider pages */}
                 <Route
                     element={
-                        <ProtectedRoute
-                            allowedRoles={["provider"]}
-                        />
+                        <ProtectedRoute allowedRoles={["provider"]} />
                     }
                 >
-
                     <Route
                         path="/provider-dashboard"
                         element={
@@ -192,6 +155,7 @@ function App() {
                         }
                     />
 
+                    {/* Provider messaging */}
                     <Route
                         path="/messages"
                         element={
@@ -241,22 +205,14 @@ function App() {
                         path="/provider/pending"
                         element={<ProviderPendingApproval />}
                     />
-
                 </Route>
 
-
-                {/* =========================
-                    Admin pages
-                ========================= */}
-
+                {/* Admin pages */}
                 <Route
                     element={
-                        <ProtectedRoute
-                            allowedRoles={["admin"]}
-                        />
+                        <ProtectedRoute allowedRoles={["admin"]} />
                     }
                 >
-
                     <Route
                         path="/admin/dashboard"
                         element={<AdminDashboard />}
@@ -296,9 +252,7 @@ function App() {
                         path="/admin/reports"
                         element={<AdminReports />}
                     />
-
                 </Route>
-
             </Routes>
         </BrowserRouter>
     );
