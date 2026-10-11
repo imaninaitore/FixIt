@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -13,6 +14,10 @@ import { getConversations } from "../../services/messagingService";
 function Conversations() {
     const navigate = useNavigate();
 
+    const accountType = localStorage.getItem("account_type");
+
+    const isCustomer = accountType === "customer";
+
     const [conversations, setConversations] = useState([]);
     const [filteredConversations, setFilteredConversations] = useState([]);
     const [search, setSearch] = useState("");
@@ -21,13 +26,51 @@ function Conversations() {
     const [error, setError] = useState("");
 
     useEffect(() => {
+        let isMounted = true;
+
+        async function loadConversations(silent = false) {
+            try {
+                if (!silent && isMounted) {
+                    setLoading(true);
+                }
+
+                if (isMounted) {
+                    setError("");
+                }
+
+                const data = await getConversations();
+
+                if (!isMounted) return;
+
+                const conversationList = Array.isArray(data) ? data : [];
+
+                setConversations(conversationList);
+            } catch (err) {
+                console.error("Failed to load conversations:", err);
+
+                if (isMounted && !silent) {
+                    setError(
+                        err.message ||
+                            "Failed to load your conversations."
+                    );
+                }
+            } finally {
+                if (isMounted && !silent) {
+                    setLoading(false);
+                }
+            }
+        }
+
         loadConversations();
 
         const interval = setInterval(() => {
             loadConversations(true);
         }, 10000);
 
-        return () => clearInterval(interval);
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
     }, []);
 
     useEffect(() => {
@@ -39,76 +82,55 @@ function Conversations() {
         }
 
         const filtered = conversations.filter((conversation) => {
-            const provider =
-                conversation.provider?.toLowerCase() || "";
+            const name = getConversationName(conversation).toLowerCase();
 
-            const customer =
-                conversation.customer?.toLowerCase() || "";
+            const customer = String(
+                conversation.customer ?? ""
+            ).toLowerCase();
+
+            const provider = String(
+                conversation.provider ?? ""
+            ).toLowerCase();
 
             return (
-                provider.includes(searchTerm) ||
-                customer.includes(searchTerm)
+                name.includes(searchTerm) ||
+                customer.includes(searchTerm) ||
+                provider.includes(searchTerm)
             );
         });
 
         setFilteredConversations(filtered);
-    }, [search, conversations]);
+    }, [search, conversations, accountType]);
 
-    async function loadConversations(silent = false) {
-        try {
-            if (!silent) {
-                setLoading(true);
-            }
-
-            setError("");
-
-            const data = await getConversations();
-
-            setConversations(data);
-            setFilteredConversations(data);
-        } catch (err) {
-            console.error(err);
-
-            if (!silent) {
-                setError(
-                    err.message ||
-                        "Failed to load your conversations."
-                );
-            }
-        } finally {
-            if (!silent) {
-                setLoading(false);
-            }
+    function getConversationName(conversation) {
+        if (isCustomer) {
+            return conversation.provider || "Provider";
         }
+
+        return conversation.customer || "Customer";
     }
 
     function getInitial(name) {
-        if (!name) {
-            return "?";
-        }
+        if (!name) return "?";
 
-        return name.charAt(0).toUpperCase();
+        return String(name).charAt(0).toUpperCase();
     }
 
     function formatDate(date) {
-        if (!date) {
+        if (!date) return "No recent activity";
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
             return "No recent activity";
         }
 
-        return new Date(date).toLocaleString();
-    }
-
-    function getConversationName(conversation) {
-        return (
-            conversation.customer ||
-            conversation.provider ||
-            "Conversation"
-        );
+        return parsedDate.toLocaleString();
     }
 
     const totalUnread = conversations.reduce(
         (total, conversation) =>
-            total + (conversation.unread_count || 0),
+            total + (Number(conversation.unread_count) || 0),
         0
     );
 
@@ -130,7 +152,6 @@ function Conversations() {
 
                     {/* Header */}
                     <div className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-
                         <div
                             className="
                                 rounded-2xl
@@ -159,13 +180,20 @@ function Conversations() {
                             </div>
 
                             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700">
-                                Communicate with customers about their service
-                                requests and keep track of your conversations.
+                                {isCustomer
+                                    ? "Communicate with service providers about your service requests and keep track of your conversations."
+                                    : "Communicate with customers about their service requests and keep track of your conversations."}
                             </p>
                         </div>
 
                         <button
-                            onClick={() => navigate("/providers")}
+                            onClick={() =>
+                                navigate(
+                                    isCustomer
+                                        ? "/providers"
+                                        : "/provider/service-requests"
+                                )
+                            }
                             className="
                                 inline-flex
                                 items-center
@@ -173,20 +201,21 @@ function Conversations() {
                                 gap-2
                                 rounded-xl
                                 border border-blue-500/30
-                                bg-blue-500
-                                px-10
+                                bg-blue-600
+                                px-8
                                 py-3
                                 text-sm
                                 font-semibold
                                 text-white
                                 shadow-lg
-                                backdrop-blur-sm
                                 transition
                                 hover:bg-blue-700
                                 hover:shadow-xl
                             "
                         >
-                            Find Providers
+                            {isCustomer
+                                ? "Find Providers"
+                                : "View Service Requests"}
                         </button>
                     </div>
 
@@ -221,7 +250,11 @@ function Conversations() {
                                 onChange={(event) =>
                                     setSearch(event.target.value)
                                 }
-                                placeholder="Search conversations..."
+                                placeholder={
+                                    isCustomer
+                                        ? "Search providers..."
+                                        : "Search customers..."
+                                }
                                 className="
                                     w-full
                                     rounded-xl
@@ -262,6 +295,13 @@ function Conversations() {
                             <p className="mt-1 text-sm text-red-700">
                                 {error}
                             </p>
+
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-3 text-sm font-semibold text-red-800 underline"
+                            >
+                                Reload page
+                            </button>
                         </div>
                     )}
 
@@ -334,8 +374,9 @@ function Conversations() {
                                 </h2>
 
                                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-700">
-                                    Your conversations with customers will
-                                    appear here.
+                                    {isCustomer
+                                        ? "Your conversations with service providers will appear here."
+                                        : "Your conversations with customers will appear here."}
                                 </p>
                             </div>
                         )}
@@ -364,7 +405,8 @@ function Conversations() {
                                 </h2>
 
                                 <p className="mt-2 text-sm text-slate-700">
-                                    Try searching for a different customer.
+                                    Try searching for a different{" "}
+                                    {isCustomer ? "provider" : "customer"}.
                                 </p>
                             </div>
                         )}
@@ -395,7 +437,6 @@ function Conversations() {
                                     "
                                 >
                                     <div className="flex items-center justify-between">
-
                                         <p className="text-sm font-semibold text-slate-900">
                                             Recent conversations
                                         </p>
@@ -403,7 +444,6 @@ function Conversations() {
                                         <p className="text-xs font-medium text-slate-600">
                                             {filteredConversations.length} shown
                                         </p>
-
                                     </div>
                                 </div>
 
@@ -412,7 +452,14 @@ function Conversations() {
                                     {filteredConversations.map(
                                         (conversation) => {
                                             const unread =
-                                                conversation.unread_count || 0;
+                                                Number(
+                                                    conversation.unread_count
+                                                ) || 0;
+
+                                            const participantName =
+                                                getConversationName(
+                                                    conversation
+                                                );
 
                                             return (
                                                 <button
@@ -441,7 +488,7 @@ function Conversations() {
                                                 >
                                                     <div className="flex items-center gap-3 sm:gap-4">
 
-                                                        {/* Avatar */}
+                                                        {/* Participant avatar */}
                                                         <div
                                                             className={`
                                                                 flex
@@ -462,17 +509,13 @@ function Conversations() {
                                                             `}
                                                         >
                                                             {getInitial(
-                                                                getConversationName(
-                                                                    conversation
-                                                                )
+                                                                participantName
                                                             )}
                                                         </div>
 
-                                                        {/* Content */}
+                                                        {/* Conversation details */}
                                                         <div className="min-w-0 flex-1">
-
                                                             <div className="flex items-center justify-between gap-3">
-
                                                                 <h3
                                                                     className={`
                                                                         truncate
@@ -485,15 +528,10 @@ function Conversations() {
                                                                         }
                                                                     `}
                                                                 >
-                                                                    {
-                                                                        getConversationName(
-                                                                            conversation
-                                                                        )
-                                                                    }
+                                                                    {participantName}
                                                                 </h3>
 
                                                                 <div className="flex shrink-0 items-center gap-2">
-
                                                                     {unread > 0 && (
                                                                         <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-blue-600 px-2 text-[11px] font-bold text-white shadow-sm">
                                                                             {unread > 99
@@ -508,15 +546,13 @@ function Conversations() {
                                                                             Archived
                                                                         </span>
                                                                     )}
-
                                                                 </div>
                                                             </div>
 
                                                             <p className="mt-1 truncate text-sm text-slate-700">
-                                                                Customer:{" "}
-                                                                {
-                                                                    conversation.customer
-                                                                }
+                                                                {isCustomer
+                                                                    ? "Service provider"
+                                                                    : "Customer"}
                                                             </p>
 
                                                             <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
