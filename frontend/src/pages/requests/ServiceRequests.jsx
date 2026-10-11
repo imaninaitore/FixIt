@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+    ArrowLeft,
     ArrowRight,
     CalendarDays,
     CheckCircle2,
     Clock3,
+    Eye,
     MapPin,
     MessageSquare,
     Plus,
     Star,
+    User,
+    X,
     XCircle,
 } from "lucide-react";
 
@@ -16,17 +20,30 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 
 import { getServiceRequests } from "../../services/serviceRequestService";
+import { createConversation } from "../../services/messagingService";
+
 
 function ServiceRequests() {
     const [serviceRequests, setServiceRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    const [selectedRequest, setSelectedRequest] = useState(null);
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const [openingConversation, setOpeningConversation] =
+        useState(false);
+
     const navigate = useNavigate();
+
+    const requestsPerPage = 5;
+
 
     useEffect(() => {
         loadServiceRequests();
     }, []);
+
 
     async function loadServiceRequests() {
         try {
@@ -44,13 +61,40 @@ function ServiceRequests() {
         }
     }
 
+
+    async function handleMessageProvider(providerId) {
+        if (!providerId || openingConversation) {
+            return;
+        }
+
+        try {
+            setOpeningConversation(true);
+            setError("");
+
+            const conversation =
+                await createConversation(providerId);
+
+            navigate(`/messages/${conversation.id}`);
+        } catch (err) {
+            console.error(err);
+
+            setError(
+                err.message ||
+                    "Unable to open the conversation."
+            );
+        } finally {
+            setOpeningConversation(false);
+        }
+    }
+
+
     function getStatusStyles(status) {
         switch (status) {
             case "pending":
                 return {
                     icon: Clock3,
                     container:
-                        "bg-amber-50 text-amber-700 border-amber-200",
+                        "bg-[#D9B99B]/30 text-[#8A5A42] border-[#D9B99B]",
                     label: "Pending",
                 };
 
@@ -58,15 +102,23 @@ function ServiceRequests() {
                 return {
                     icon: CheckCircle2,
                     container:
-                        "bg-emerald-50 text-emerald-700 border-emerald-200",
+                        "bg-[#E8DED2] text-[#365B4A] border-[#C9D8CE]",
                     label: "Accepted",
+                };
+
+            case "in_progress":
+                return {
+                    icon: Clock3,
+                    container:
+                        "bg-[#D9B99B]/25 text-[#7A573F] border-[#D9B99B]",
+                    label: "In Progress",
                 };
 
             case "completed":
                 return {
                     icon: CheckCircle2,
                     container:
-                        "bg-blue-50 text-blue-700 border-blue-200",
+                        "bg-[#E8DED2] text-[#365B4A] border-[#C9D8CE]",
                     label: "Completed",
                 };
 
@@ -74,67 +126,107 @@ function ServiceRequests() {
                 return {
                     icon: XCircle,
                     container:
-                        "bg-red-50 text-red-700 border-red-200",
+                        "bg-[#F4E1DC] text-[#9B4930] border-[#E2B8AB]",
                     label: "Rejected",
+                };
+
+            case "cancelled":
+                return {
+                    icon: XCircle,
+                    container:
+                        "bg-[#F4EDE5] text-[#6B7280] border-[#D9B99B]",
+                    label: "Cancelled",
                 };
 
             default:
                 return {
                     icon: Clock3,
                     container:
-                        "bg-slate-50 text-slate-600 border-slate-200",
+                        "bg-[#F4EDE5] text-[#536070] border-[#D9B99B]",
                     label: status,
                 };
         }
     }
 
-    return (
-        <div className="min-h-screen bg-slate-50">
 
-            <Navbar />
+    function formatDate(date) {
+        if (!date) {
+            return "—";
+        }
+
+        return new Date(date).toLocaleDateString("en-KE", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    }
+
+
+    function openRequest(request) {
+        setSelectedRequest(request);
+    }
+
+
+    function closeRequest() {
+        setSelectedRequest(null);
+    }
+
+
+    function handlePageChange(page) {
+        setCurrentPage(page);
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    }
+
+
+    const totalPages = Math.ceil(
+        serviceRequests.length / requestsPerPage
+    );
+
+    const startIndex =
+        (currentPage - 1) * requestsPerPage;
+
+    const currentRequests = serviceRequests.slice(
+        startIndex,
+        startIndex + requestsPerPage
+    );
+
+
+    return (
+        <div className="min-h-screen bg-[#F4EDE5]">
+
 
             {/* Hero */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-[#071426] via-[#0d2b50] to-[#1769aa]">
 
-                <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-blue-400/20 blur-3xl"></div>
+            <section className="relative overflow-hidden bg-[#172A46]">
 
-                <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-cyan-400/10 blur-3xl"></div>
+                <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#C66A4A]/20 blur-3xl"></div>
 
-                <div className="relative mx-auto max-w-6xl px-6 py-14 lg:px-8">
+                <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-[#D9B99B]/10 blur-3xl"></div>
 
-                    <div className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+                <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+
+                    <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
 
                         <div className="max-w-2xl">
 
-                            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-300/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-blue-100 backdrop-blur-sm">
-                                <MessageSquare className="h-3.5 w-3.5" />
-                                Your activity
-                            </div>
-
-                            <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
                                 My Service{" "}
-                                <span className="text-blue-300">
+                                <span className="text-[#D9B99B]">
                                     Requests
                                 </span>
                             </h1>
 
-                            <p className="mt-4 max-w-xl text-sm leading-7 text-blue-100/80 sm:text-base">
-                                Keep track of the services you have requested,
+                            <p className="mt-4 max-w-xl text-sm leading-7 text-[#E8DED2]/80 sm:text-base">
+                                Keep track of your requested services,
                                 monitor their progress, and stay connected
                                 with your service providers.
                             </p>
 
                         </div>
-
-                        <button
-                            onClick={() =>
-                                navigate("/service-requests/create")
-                            }
-                            className="inline-flex w-fit items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition duration-200 hover:scale-[1.02] hover:from-blue-400 hover:to-cyan-300"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Create Request
-                        </button>
 
                     </div>
 
@@ -142,18 +234,21 @@ function ServiceRequests() {
             </section>
 
 
-            {/* Main content */}
-            <main className="mx-auto max-w-6xl px-6 py-10 lg:px-8">
+            {/* Main Content */}
+
+            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+
 
                 {/* Loading */}
+
                 {loading && (
-                    <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
 
                         <div className="text-center">
 
-                            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600"></div>
+                            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#D9B99B] border-t-[#C66A4A]"></div>
 
-                            <p className="mt-4 text-sm text-slate-500">
+                            <p className="mt-4 text-sm text-[#6B7280]">
                                 Loading your service requests...
                             </p>
 
@@ -164,20 +259,21 @@ function ServiceRequests() {
 
 
                 {/* Error */}
-                {!loading && error && (
-                    <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-7 shadow-sm">
 
-                        <h2 className="font-semibold text-red-800">
+                {!loading && error && (
+                    <div className="rounded-2xl border border-[#E2B8AB] bg-[#FFFDF9] p-6 shadow-sm sm:p-7">
+
+                        <h2 className="font-semibold text-[#172A46]">
                             Unable to load service requests
                         </h2>
 
-                        <p className="mt-2 text-sm text-red-700">
+                        <p className="mt-2 text-sm text-[#9B4930]">
                             {error}
                         </p>
 
                         <button
                             onClick={loadServiceRequests}
-                            className="mt-5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 px-5 py-2.5 text-sm font-medium text-white transition hover:from-red-700 hover:to-red-600"
+                            className="mt-5 rounded-lg bg-[#C66A4A] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#172A46]"
                         >
                             Try Again
                         </button>
@@ -186,215 +282,643 @@ function ServiceRequests() {
                 )}
 
 
-                {/* Empty state */}
+                {/* Empty State */}
+
                 {!loading &&
                     !error &&
                     serviceRequests.length === 0 && (
-                        <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-white via-blue-50/50 to-blue-100/60 px-6 py-20 text-center shadow-sm">
 
-                            <div className="absolute -right-20 -top-20 h-52 w-52 rounded-full bg-blue-200/30 blur-3xl"></div>
+                        <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-16 text-center shadow-sm">
 
-                            <div className="relative">
-
-                                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-400 text-white shadow-lg shadow-blue-200">
-                                    <MessageSquare className="h-7 w-7" />
-                                </div>
-
-                                <h2 className="mt-6 text-2xl font-bold text-slate-900">
-                                    No service requests yet
-                                </h2>
-
-                                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">
-                                    You haven't submitted a service request.
-                                    Find a professional and create your first
-                                    request when you're ready.
-                                </p>
-
-                                <button
-                                    onClick={() =>
-                                        navigate("/providers")
-                                    }
-                                    className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:from-blue-700 hover:to-cyan-600"
-                                >
-                                    Find a Provider
-                                    <ArrowRight className="h-4 w-4" />
-                                </button>
-
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#172A46] text-white">
+                                <MessageSquare className="h-6 w-6" />
                             </div>
+
+                            <h2 className="mt-5 text-xl font-bold text-[#172A46] sm:text-2xl">
+                                No service requests yet
+                            </h2>
+
+                            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6B7280]">
+                                You haven't submitted a service request.
+                                Find a professional and create your first
+                                request when you're ready.
+                            </p>
+
+                            <button
+                                onClick={() =>
+                                    navigate("/providers")
+                                }
+                                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#C66A4A] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#172A46]"
+                            >
+                                Find a Provider
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
 
                         </div>
                     )}
 
 
-                {/* Requests */}
+                {/* Request List */}
+
                 {!loading &&
                     !error &&
                     serviceRequests.length > 0 && (
-                        <div className="space-y-6">
 
-                            {serviceRequests.map((request) => {
+                        <div>
 
-                                const status =
-                                    getStatusStyles(request.status);
+                            {/* List Header */}
 
-                                const StatusIcon = status.icon;
+                            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
 
-                                return (
-                                    <article
-                                        key={request.id}
-                                        className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100/50"
-                                    >
+                                <div>
+                                    <h2 className="text-lg font-semibold text-[#172A46]">
+                                        Your Requests
+                                    </h2>
 
-                                        {/* Gradient accent */}
-                                        <div className="h-1.5 bg-gradient-to-r from-blue-700 via-blue-500 to-cyan-400"></div>
+                                    <p className="mt-1 text-sm text-[#6B7280]">
+                                        {serviceRequests.length}{" "}
+                                        {serviceRequests.length === 1
+                                            ? "request"
+                                            : "requests"}{" "}
+                                        submitted
+                                    </p>
+                                </div>
+
+                                {totalPages > 1 && (
+                                    <p className="text-xs text-[#6B7280]">
+                                        Page {currentPage} of {totalPages}
+                                    </p>
+                                )}
+
+                            </div>
 
 
-                                        {/* Request header */}
-                                        <div className="border-b border-slate-100 px-6 py-6 sm:px-7">
+                            {/* List */}
 
-                                            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="overflow-hidden rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
 
-                                                <div className="flex items-start gap-4">
+                                {/* Desktop Header */}
 
-                                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-400 text-white shadow-md shadow-blue-100">
-                                                        <MessageSquare className="h-5 w-5" />
-                                                    </div>
+                                <div className="hidden border-b border-[#E8DED2] bg-[#F4EDE5] px-5 py-3 md:grid md:grid-cols-[1.7fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
 
-                                                    <div>
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                        Service
+                                    </p>
 
-                                                        <p className="text-xs font-semibold uppercase tracking-widest text-blue-600">
-                                                            Service Request
-                                                        </p>
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                        Provider
+                                    </p>
 
-                                                        <h2 className="mt-1 text-xl font-bold text-slate-900">
-                                                            {request.service_title}
-                                                        </h2>
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                        Date
+                                    </p>
+
+                                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                        Status
+                                    </p>
+
+                                    <span></span>
+
+                                </div>
+
+
+                                {currentRequests.map((request) => {
+
+                                    const status =
+                                        getStatusStyles(request.status);
+
+                                    const StatusIcon = status.icon;
+
+                                    return (
+                                        <article
+                                            key={request.id}
+                                            className="border-b border-[#E8DED2] last:border-b-0"
+                                        >
+
+                                            {/* Desktop Row */}
+
+                                            <div className="hidden px-5 py-4 md:grid md:grid-cols-[1.7fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
+
+                                                <div className="min-w-0">
+
+                                                    <div className="flex items-center gap-3">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleMessageProvider(
+                                                                    request.provider_user_id
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                !request.provider_user_id ||
+                                                                openingConversation
+                                                            }
+                                                            aria-label={
+                                                                request.provider_user_id
+                                                                    ? `Message ${request.provider || "provider"}`
+                                                                    : "No provider assigned"
+                                                            }
+                                                            title={
+                                                                request.provider_user_id
+                                                                    ? "Message provider"
+                                                                    : "No provider assigned"
+                                                            }
+                                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white transition hover:bg-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                                        >
+                                                            <MessageSquare className="h-4 w-4" />
+                                                        </button>
+
+                                                        <div className="min-w-0">
+
+                                                            <p className="truncate text-sm font-semibold text-[#172A46]">
+                                                                {request.service_title}
+                                                            </p>
+
+                                                            <p className="mt-0.5 text-xs text-[#6B7280]">
+                                                                Request #{request.id}
+                                                            </p>
+
+                                                        </div>
 
                                                     </div>
 
                                                 </div>
 
 
-                                                <span
-                                                    className={`inline-flex w-fit items-center gap-2 rounded-full border px-3.5 py-2 text-xs font-semibold ${status.container}`}
-                                                >
-                                                    <StatusIcon className="h-3.5 w-3.5" />
+                                                <div className="min-w-0">
 
-                                                    {status.label}
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* Details */}
-                                        <div className="px-6 py-7 sm:px-7">
-
-                                            <p className="max-w-4xl text-sm leading-7 text-slate-600">
-                                                {request.description}
-                                            </p>
-
-
-                                            {/* Information */}
-                                            <div className="mt-7 grid gap-3 md:grid-cols-3">
-
-                                                <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4">
-
-                                                    <div className="flex items-center gap-2">
-
-                                                        <MapPin className="h-4 w-4 text-blue-600" />
-
-                                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                                            Location
-                                                        </p>
-
-                                                    </div>
-
-                                                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                                                        {request.location}
+                                                    <p className="truncate text-sm text-[#536070]">
+                                                        {request.provider || "Not assigned"}
                                                     </p>
 
                                                 </div>
 
 
-                                                <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4">
+                                                <div>
 
-                                                    <div className="flex items-center gap-2">
+                                                    <p className="text-sm text-[#536070]">
+                                                        {formatDate(
+                                                            request.preferred_date
+                                                        )}
+                                                    </p>
 
-                                                        <CalendarDays className="h-4 w-4 text-blue-600" />
+                                                </div>
 
-                                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+
+                                                <div>
+
+                                                    <span
+                                                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.container}`}
+                                                    >
+
+                                                        <StatusIcon className="h-3 w-3" />
+
+                                                        {status.label}
+
+                                                    </span>
+
+                                                </div>
+
+
+                                                <button
+                                                    onClick={() =>
+                                                        openRequest(request)
+                                                    }
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                >
+                                                    <Eye className="h-3.5 w-3.5" />
+                                                    View
+                                                </button>
+
+                                            </div>
+
+
+                                            {/* Mobile Row */}
+
+                                            <div className="p-4 md:hidden">
+
+                                                <div className="flex items-start justify-between gap-3">
+
+                                                    <div className="flex min-w-0 items-start gap-3">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleMessageProvider(
+                                                                    request.provider_user_id
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                !request.provider_user_id ||
+                                                                openingConversation
+                                                            }
+                                                            aria-label={
+                                                                request.provider_user_id
+                                                                    ? `Message ${request.provider || "provider"}`
+                                                                    : "No provider assigned"
+                                                            }
+                                                            title={
+                                                                request.provider_user_id
+                                                                    ? "Message provider"
+                                                                    : "No provider assigned"
+                                                            }
+                                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white transition hover:bg-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                                        >
+                                                            <MessageSquare className="h-4 w-4" />
+                                                        </button>
+
+                                                        <div className="min-w-0">
+
+                                                            <h3 className="truncate text-sm font-semibold text-[#172A46]">
+                                                                {request.service_title}
+                                                            </h3>
+
+                                                            <p className="mt-1 text-xs text-[#6B7280]">
+                                                                Request #{request.id}
+                                                            </p>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <span
+                                                        className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${status.container}`}
+                                                    >
+                                                        <StatusIcon className="h-3 w-3" />
+                                                        {status.label}
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div className="mt-4 grid grid-cols-2 gap-3">
+
+                                                    <div>
+                                                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                                            Provider
+                                                        </p>
+
+                                                        <p className="mt-1 truncate text-xs font-medium text-[#536070]">
+                                                            {request.provider ||
+                                                                "Not assigned"}
+                                                        </p>
+                                                    </div>
+
+
+                                                    <div>
+                                                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                                                             Preferred Date
                                                         </p>
 
-                                                    </div>
-
-                                                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                                                        {request.preferred_date}
-                                                    </p>
-
-                                                </div>
-
-
-                                                <div className="rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4">
-
-                                                    <div className="flex items-center gap-2">
-
-                                                        <Clock3 className="h-4 w-4 text-blue-600" />
-
-                                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                                            Created
+                                                        <p className="mt-1 text-xs font-medium text-[#536070]">
+                                                            {formatDate(
+                                                                request.preferred_date
+                                                            )}
                                                         </p>
-
                                                     </div>
 
-                                                    <p className="mt-2 text-sm font-semibold text-slate-700">
-                                                        {new Date(
-                                                            request.created_at
-                                                        ).toLocaleDateString()}
-                                                    </p>
-
                                                 </div>
+
+
+                                                <button
+                                                    onClick={() =>
+                                                        openRequest(request)
+                                                    }
+                                                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-[#D9B99B] px-3 py-2.5 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                >
+                                                    <Eye className="h-3.5 w-3.5" />
+                                                    View Request
+                                                </button>
 
                                             </div>
 
+                                        </article>
+                                    );
+                                })}
 
-                                            {/* Review */}
-                                            {request.status === "completed" &&
-                                                request.provider_user_id && (
-                                                    <div className="mt-6 flex justify-end border-t border-slate-100 pt-5">
+                            </div>
 
-                                                        <button
-                                                            onClick={() =>
-                                                                navigate(
-                                                                    `/providers/${request.provider_user_id}/reviews/create?request=${request.id}`
-                                                                )
-                                                            }
-                                                            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-100 transition hover:from-blue-700 hover:to-cyan-600"
-                                                        >
-                                                            <Star className="h-4 w-4" />
-                                                            Leave Review
-                                                        </button>
 
-                                                    </div>
-                                                )}
+                            {/* Pagination */}
+
+                            {totalPages > 1 && (
+                                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                                    <p className="text-xs text-[#6B7280]">
+                                        Showing{" "}
+                                        {startIndex + 1}–
+                                        {Math.min(
+                                            startIndex + requestsPerPage,
+                                            serviceRequests.length
+                                        )}{" "}
+                                        of {serviceRequests.length}
+                                    </p>
+
+
+                                    <div className="flex items-center gap-2">
+
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    currentPage - 1
+                                                )
+                                            }
+                                            disabled={currentPage === 1}
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            <ArrowLeft className="h-3.5 w-3.5" />
+                                            Previous
+                                        </button>
+
+
+                                        <div className="flex items-center gap-1">
+
+                                            {Array.from(
+                                                { length: totalPages },
+                                                (_, index) => index + 1
+                                            ).map((page) => (
+                                                <button
+                                                    key={page}
+                                                    onClick={() =>
+                                                        handlePageChange(page)
+                                                    }
+                                                    className={`h-8 min-w-8 rounded-lg px-2 text-xs font-semibold transition ${
+                                                        currentPage === page
+                                                            ? "bg-[#172A46] text-white"
+                                                            : "border border-[#D9B99B] bg-[#FFFDF9] text-[#536070] hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            ))}
 
                                         </div>
 
-                                    </article>
-                                );
-                            })}
+
+                                        <button
+                                            onClick={() =>
+                                                handlePageChange(
+                                                    currentPage + 1
+                                                )
+                                            }
+                                            disabled={
+                                                currentPage === totalPages
+                                            }
+                                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            Next
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                        </button>
+
+                                    </div>
+
+                                </div>
+                            )}
 
                         </div>
                     )}
 
             </main>
 
+
             <Footer />
+
+
+            {/* Request Details Modal */}
+
+            {selectedRequest && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-[#172A46]/60 p-4 backdrop-blur-sm"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            closeRequest();
+                        }
+                    }}
+                >
+
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-2xl">
+
+                        {/* Modal Header */}
+
+                        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-[#E8DED2] bg-[#FFFDF9] px-5 py-4 sm:px-6">
+
+                            <div className="min-w-0 pr-4">
+
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C66A4A]">
+                                    Service Request #{selectedRequest.id}
+                                </p>
+
+                                <h2 className="mt-1 text-xl font-bold text-[#172A46]">
+                                    {selectedRequest.service_title}
+                                </h2>
+
+                            </div>
+
+
+                            <button
+                                onClick={closeRequest}
+                                aria-label="Close request details"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#D9B99B] text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+
+                        </div>
+
+
+                        {/* Modal Content */}
+
+                        <div className="space-y-6 p-5 sm:p-6">
+
+                            {/* Status */}
+
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#F4EDE5] p-4">
+
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                        Current Status
+                                    </p>
+
+                                    <div className="mt-2">
+
+                                        {(() => {
+                                            const status =
+                                                getStatusStyles(
+                                                    selectedRequest.status
+                                                );
+
+                                            const StatusIcon =
+                                                status.icon;
+
+                                            return (
+                                                <span
+                                                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${status.container}`}
+                                                >
+                                                    <StatusIcon className="h-3.5 w-3.5" />
+                                                    {status.label}
+                                                </span>
+                                            );
+                                        })()}
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+
+                            {/* Description */}
+
+                            <div>
+
+                                <h3 className="text-sm font-semibold text-[#172A46]">
+                                    Request Description
+                                </h3>
+
+                                <p className="mt-2 rounded-xl border border-[#E8DED2] bg-white p-4 text-sm leading-7 text-[#536070]">
+                                    {selectedRequest.description ||
+                                        "No description provided."}
+                                </p>
+
+                            </div>
+
+
+                            {/* Details */}
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                            Provider
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {selectedRequest.provider ||
+                                            "Not assigned"}
+                                    </p>
+
+                                </div>
+
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                            Location
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {selectedRequest.location ||
+                                            "Not provided"}
+                                    </p>
+
+                                </div>
+
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+
+                                    <div className="flex items-center gap-2">
+                                        <CalendarDays className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                            Preferred Date
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {formatDate(
+                                            selectedRequest.preferred_date
+                                        )}
+                                    </p>
+
+                                </div>
+
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+
+                                    <div className="flex items-center gap-2">
+                                        <Clock3 className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                            Created
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {formatDate(
+                                            selectedRequest.created_at
+                                        )}
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* Updated */}
+
+                            {selectedRequest.updated_at && (
+                                <p className="text-xs text-[#9CA3AF]">
+                                    Last updated{" "}
+                                    {formatDate(
+                                        selectedRequest.updated_at
+                                    )}
+                                </p>
+                            )}
+
+                        </div>
+
+
+                        {/* Modal Footer */}
+
+                        <div className="flex flex-col-reverse gap-3 border-t border-[#E8DED2] bg-[#F4EDE5]/60 px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+
+                            <button
+                                onClick={closeRequest}
+                                className="rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-5 py-2.5 text-sm font-medium text-[#536070] transition hover:border-[#172A46] hover:text-[#172A46]"
+                            >
+                                Close
+                            </button>
+
+
+                            {selectedRequest.status === "completed" &&
+                                selectedRequest.provider_user_id && (
+
+                                    <button
+                                        onClick={() => {
+                                            closeRequest();
+
+                                            navigate(
+                                                `/providers/${selectedRequest.provider_user_id}/reviews/create?request=${selectedRequest.id}`
+                                            );
+                                        }}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#C66A4A] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#172A46]"
+                                    >
+                                        <Star className="h-4 w-4" />
+                                        Leave Review
+                                    </button>
+
+                                )}
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
 
         </div>
     );
 }
+
 
 export default ServiceRequests;
