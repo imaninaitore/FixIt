@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Login from "./pages/account/Login";
@@ -12,6 +12,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsAndConditions from "./pages/TermsAndConditions";
 
 import CustomerDashboardLayout from "./components/CustomerDashboardLayout";
+import ProviderLayout from "./components/ProviderLayout";
+import AdminLayout from "./components/AdminLayout";
 
 import ProviderEnrolment from "./pages/provider/ProviderEnrolment";
 import Providers from "./pages/provider/Providers";
@@ -19,8 +21,7 @@ import ProviderProfile from "./pages/provider/ProviderProfile";
 import ProviderOwnProfile from "./pages/provider/ProviderOwnProfile";
 import ProviderDashboard from "./pages/provider/ProviderDashboard";
 import ProviderServiceRequests from "./pages/provider/ProviderServiceRequests";
-
-import ProviderLayout from "./components/ProviderLayout";
+import ProviderPendingApproval from "./pages/provider/ProviderPendingApproval";
 
 import AdminDashboard from "./pages/administration/AdminDashboard";
 import AdminUsers from "./pages/administration/AdminUsers";
@@ -42,7 +43,21 @@ import ProviderReviews from "./pages/provider/ProviderReviews";
 import Reviews from "./pages/reviews/Reviews";
 
 import ProtectedRoute from "./components/ProtectedRoute";
-import ProviderPendingApproval from "./pages/provider/ProviderPendingApproval";
+
+// Select the correct dashboard layout for the logged-in account.
+function MessagingLayout() {
+    const accountType = localStorage.getItem("account_type");
+
+    if (accountType === "provider") {
+        return (
+            <ProviderLayout>
+                <Outlet />
+            </ProviderLayout>
+        );
+    }
+
+    return <CustomerDashboardLayout />;
+}
 
 function App() {
     return (
@@ -50,35 +65,18 @@ function App() {
             <Routes>
                 {/* Public pages */}
                 <Route path="/" element={<Home />} />
-
                 <Route path="/login" element={<Login />} />
-
                 <Route path="/register" element={<Register />} />
-
                 <Route
                     path="/registerProvider"
                     element={<RegisterProvider />}
                 />
-
                 <Route path="/contact" element={<Contact />} />
-
-                <Route
-                    path="/terms"
-                    element={<TermsAndConditions />}
-                />
-
-                <Route
-                    path="/privacy"
-                    element={<PrivacyPolicy />}
-                />
+                <Route path="/terms" element={<TermsAndConditions />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
 
                 {/* Public provider browsing */}
-                <Route
-                    path="/providers"
-                    element={<Providers />}
-                />
-
-                {/* Public individual provider profile */}
+                <Route path="/providers" element={<Providers />} />
                 <Route
                     path="/providers/:providerId"
                     element={<ProviderProfile />}
@@ -95,35 +93,35 @@ function App() {
                             path="/customer-dashboard"
                             element={<CustomerDashboard />}
                         />
-
-                        {/* Customer service requests */}
                         <Route
                             path="/service-requests"
                             element={<ServiceRequests />}
                         />
-
                         <Route
                             path="/service-requests/create"
                             element={<CreateServiceRequest />}
                         />
-
-                        {/* Customer reviews */}
-                        <Route
-                            path="/reviews"
-                            element={<Reviews />}
-                        />
-
+                        <Route path="/reviews" element={<Reviews />} />
                         <Route
                             path="/providers/:providerId/reviews/create"
                             element={<CreateReview />}
                         />
+                    </Route>
+                </Route>
 
-                        {/* Customer messaging */}
+                {/* Shared customer and provider messaging */}
+                <Route
+                    element={
+                        <ProtectedRoute
+                            allowedRoles={["customer", "provider"]}
+                        />
+                    }
+                >
+                    <Route element={<MessagingLayout />}>
                         <Route
                             path="/messages"
                             element={<Conversations />}
                         />
-
                         <Route
                             path="/messages/:conversationId"
                             element={<Conversation />}
@@ -145,7 +143,6 @@ function App() {
                             </ProviderLayout>
                         }
                     />
-
                     <Route
                         path="/provider/service-requests"
                         element={
@@ -154,26 +151,6 @@ function App() {
                             </ProviderLayout>
                         }
                     />
-
-                    {/* Provider messaging */}
-                    <Route
-                        path="/messages"
-                        element={
-                            <ProviderLayout>
-                                <Conversations />
-                            </ProviderLayout>
-                        }
-                    />
-
-                    <Route
-                        path="/messages/:conversationId"
-                        element={
-                            <ProviderLayout>
-                                <Conversation />
-                            </ProviderLayout>
-                        }
-                    />
-
                     <Route
                         path="/provider/profile"
                         element={
@@ -182,7 +159,6 @@ function App() {
                             </ProviderLayout>
                         }
                     />
-
                     <Route
                         path="/providers/:providerId/reviews"
                         element={
@@ -191,7 +167,6 @@ function App() {
                             </ProviderLayout>
                         }
                     />
-
                     <Route
                         path="/provider/enrolment"
                         element={
@@ -200,58 +175,52 @@ function App() {
                             </ProviderLayout>
                         }
                     />
-
                     <Route
                         path="/provider/pending"
                         element={<ProviderPendingApproval />}
                     />
                 </Route>
 
-                {/* Admin pages */}
+                {/* Admin pages share one fixed sidebar */}
                 <Route
                     element={
                         <ProtectedRoute allowedRoles={["admin"]} />
                     }
                 >
-                    <Route
-                        path="/admin/dashboard"
-                        element={<AdminDashboard />}
-                    />
-
-                    <Route
-                        path="/admin/users"
-                        element={<AdminUsers />}
-                    />
-
-                    <Route
-                        path="/admin/users/:userId"
-                        element={<AdminUserDetails />}
-                    />
-
-                    <Route
-                        path="/admin/enrolments"
-                        element={<AdminEnrolments />}
-                    />
-
-                    <Route
-                        path="/admin/enrolments/:enrolmentId"
-                        element={<AdminEnrolmentDetails />}
-                    />
-
-                    <Route
-                        path="/admin/requests"
-                        element={<AdminServiceRequests />}
-                    />
-
-                    <Route
-                        path="/admin/payments"
-                        element={<AdminPayments />}
-                    />
-
-                    <Route
-                        path="/admin/reports"
-                        element={<AdminReports />}
-                    />
+                    <Route element={<AdminLayout />}>
+                        <Route
+                            path="/admin/dashboard"
+                            element={<AdminDashboard />}
+                        />
+                        <Route
+                            path="/admin/users"
+                            element={<AdminUsers />}
+                        />
+                        <Route
+                            path="/admin/users/:userId"
+                            element={<AdminUserDetails />}
+                        />
+                        <Route
+                            path="/admin/enrolments"
+                            element={<AdminEnrolments />}
+                        />
+                        <Route
+                            path="/admin/enrolments/:enrolmentId"
+                            element={<AdminEnrolmentDetails />}
+                        />
+                        <Route
+                            path="/admin/requests"
+                            element={<AdminServiceRequests />}
+                        />
+                        <Route
+                            path="/admin/payments"
+                            element={<AdminPayments />}
+                        />
+                        <Route
+                            path="/admin/reports"
+                            element={<AdminReports />}
+                        />
+                    </Route>
                 </Route>
             </Routes>
         </BrowserRouter>
