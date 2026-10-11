@@ -107,7 +107,9 @@ def admin_user_status(request, user_id):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_enrolments(request):
-    enrolments = ProviderEnrolment.objects.all().order_by("-id")
+    enrolments = ProviderEnrolment.objects.select_related(
+        "provider"
+    ).order_by("-id")
 
     enrolment_data = []
 
@@ -116,7 +118,14 @@ def admin_enrolments(request):
             {
                 "id": enrolment.id,
                 "provider": enrolment.provider.username,
+                "provider_id": enrolment.provider_id,
+                "business_name": enrolment.business_name,
+                "service_category": enrolment.service_category,
+                "location": enrolment.location,
+                "phone_number": enrolment.phone_number,
                 "status": enrolment.status,
+                "payment_status": enrolment.payment_status,
+                "created_at": enrolment.created_at,
             }
         )
 
@@ -125,24 +134,69 @@ def admin_enrolments(request):
             "count": len(enrolment_data),
             "enrolments": enrolment_data,
         },
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
+
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_enrolment_detail(request, enrolment_id):
     enrolment = get_object_or_404(
-        ProviderEnrolment,
-        id=enrolment_id
+        ProviderEnrolment.objects.select_related("provider"),
+        id=enrolment_id,
     )
+
+    document_name = None
+
+    if enrolment.qualification_document:
+        document_name = enrolment.qualification_document.name.split("/")[-1]
+
+    payments = Payment.objects.filter(
+        enrolment=enrolment
+    ).order_by("-created_at")
+
+    payment_data = [
+        {
+            "id": payment.id,
+            "phone_number": payment.phone_number,
+            "plan": payment.plan,
+            "amount": str(payment.amount),
+            "transaction_code": payment.transaction_code,
+            "payment_date": payment.payment_date,
+            "status": payment.status,
+            "created_at": payment.created_at,
+        }
+        for payment in payments
+    ]
 
     return Response(
         {
             "id": enrolment.id,
             "provider": enrolment.provider.username,
+            "provider_id": enrolment.provider_id,
+            "provider_email": enrolment.provider.email,
+            "business_name": enrolment.business_name,
+            "service_category": enrolment.service_category,
+            "description": enrolment.description,
+            "location": enrolment.location,
+            "years_of_experience": enrolment.years_of_experience,
+            "phone_number": enrolment.phone_number,
+            "referee_name": enrolment.referee_name,
+            "referee_email": enrolment.referee_email,
+            "referee_phone": enrolment.referee_phone,
+            "qualification_document": document_name,
+            "has_qualification_document": bool(
+                enrolment.qualification_document
+            ),
             "status": enrolment.status,
+            "payment_status": enrolment.payment_status,
+            "payment_reference": enrolment.payment_reference,
+            "paid_at": enrolment.paid_at,
+            "created_at": enrolment.created_at,
+            "updated_at": enrolment.updated_at,
+            "payments": payment_data,
         },
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
 
 @api_view(["PATCH"])
@@ -189,7 +243,6 @@ def admin_reject_enrolment(request, enrolment_id):
         status=status.HTTP_200_OK
     )
 
-
 # GET /api/admin/requests/
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
@@ -202,6 +255,9 @@ def admin_service_requests(request):
         request_data.append(
             {
                 "id": service_request.id,
+                "service_title": service_request.service_title,
+                "status": service_request.status,
+                "created_at": service_request.created_at,
             }
         )
 
