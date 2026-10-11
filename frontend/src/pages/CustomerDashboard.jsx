@@ -152,17 +152,6 @@ function CustomerDashboard() {
                                 <Search className="h-4 w-4" />
                                 Find a Provider
                             </button>
-
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    navigate("/service-requests/create")
-                                }
-                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#D9B99B]/50 bg-white/10 px-6 py-3.5 text-sm font-medium text-white backdrop-blur-md transition hover:bg-[#D9B99B]/20"
-                            >
-                                <PlusCircle className="h-4 w-4" />
-                                Create a Request
-                            </button>
                         </div>
                     </div>
                 </div>

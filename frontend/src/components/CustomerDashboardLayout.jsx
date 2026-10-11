@@ -7,7 +7,7 @@ import {
     MessageSquare,
     Star,
     User,
-    PlusCircle,
+    Home,
     ChevronLeft,
     ChevronRight,
     Menu,
@@ -38,11 +38,6 @@ function CustomerDashboardLayout() {
             name: "My Requests",
             path: "/service-requests",
             icon: ClipboardList,
-        },
-        {
-            name: "Create Request",
-            path: "/service-requests/create",
-            icon: PlusCircle,
         },
         {
             name: "Messages",
@@ -188,6 +183,31 @@ function CustomerDashboardLayout() {
 
                     {/* Bottom controls */}
                     <div className="shrink-0 space-y-2 border-t border-[#D9B99B]/20 p-3">
+
+                        {/* Home */}
+                        <button
+                            type="button"
+                            onClick={() => navigate("/")}
+                            className={`
+                                flex w-full items-center rounded-xl
+                                text-[#D6D0CB] transition
+                                hover:bg-[#243754] hover:text-white
+                                ${
+                                    collapsed
+                                        ? "justify-center px-2 py-3.5"
+                                        : "gap-3 px-4 py-3.5"
+                                }
+                            `}
+                            title="Home"
+                        >
+                            <Home className="h-5 w-5 shrink-0 text-[#D9B99B]" />
+
+                            {!collapsed && (
+                                <span className="text-sm font-medium">
+                                    Home
+                                </span>
+                            )}
+                        </button>
 
                         {/* Logout */}
                         <button
@@ -345,6 +365,23 @@ function CustomerDashboardLayout() {
                     {/* Mobile bottom controls */}
                     <div className="shrink-0 border-t border-[#D9B99B]/20 p-3">
 
+                        {/* Home */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                closeMobileSidebar();
+                                navigate("/");
+                            }}
+                            className="flex w-full items-center gap-3 rounded-xl px-4 py-3.5 text-[#D6D0CB] transition hover:bg-[#243754] hover:text-white"
+                        >
+                            <Home className="h-5 w-5 text-[#D9B99B]" />
+
+                            <span className="text-sm font-medium">
+                                Home
+                            </span>
+                        </button>
+
+                        {/* Logout */}
                         <button
                             type="button"
                             onClick={handleLogout}
