@@ -89,6 +89,16 @@ const inputClass =
 
 const optionClass = "bg-slate-900 text-white";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_FILE_TYPES = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+];
+
+const ALLOWED_FILE_EXTENSIONS = /\.(pdf|jpg|jpeg|png)$/i;
+
 function ProviderEnrolment() {
     const navigate = useNavigate();
 
@@ -145,7 +155,11 @@ function ProviderEnrolment() {
             }
         } catch (err) {
             console.error("Failed to check provider enrolment:", err);
-            setError("Unable to check your existing application.");
+
+            setError(
+                err?.message ||
+                "Unable to check your existing application. Please refresh the page and try again."
+            );
         } finally {
             setLoading(false);
         }
@@ -157,28 +171,48 @@ function ProviderEnrolment() {
         if (name === "qualification_document") {
             const file = files?.[0] || null;
 
-            if (file && file.size > 5 * 1024 * 1024) {
-                setError("The qualification document must not exceed 5 MB.");
+            if (file && file.size > MAX_FILE_SIZE) {
+                setError(
+                    "Your professional qualification certificate exceeds the 5 MB limit. Please choose a smaller file."
+                );
+
+                event.target.value = "";
+                return;
+            }
+
+            if (file && !ALLOWED_FILE_EXTENSIONS.test(file.name)) {
+                setError(
+                    "Unsupported certificate format. Please upload a PDF, JPG, JPEG, or PNG file."
+                );
+
                 event.target.value = "";
                 return;
             }
 
             if (
                 file &&
-                !/\.(pdf|jpg|jpeg|png)$/i.test(file.name)
+                file.type &&
+                !ALLOWED_FILE_TYPES.includes(file.type)
             ) {
-                setError("Upload a PDF, JPG, JPEG, or PNG document.");
+                setError(
+                    "The selected file type is not supported. Please upload a PDF, JPG, JPEG, or PNG certificate."
+                );
+
                 event.target.value = "";
                 return;
             }
 
             setError("");
+
             setFormData((previous) => ({
                 ...previous,
                 qualification_document: file,
             }));
+
             return;
         }
+
+        setError("");
 
         setFormData((previous) => ({
             ...previous,
@@ -189,8 +223,41 @@ function ProviderEnrolment() {
     async function handleSubmit(event) {
         event.preventDefault();
 
-        if (!formData.qualification_document) {
-            setError("Please upload your professional qualification document.");
+        if (submitting) {
+            return;
+        }
+
+        const certificate = formData.qualification_document;
+
+        if (!(certificate instanceof File)) {
+            setError(
+                "Please select your professional qualification certificate before submitting your application."
+            );
+            return;
+        }
+
+        if (certificate.size > MAX_FILE_SIZE) {
+            setError(
+                "Your professional qualification certificate must not exceed 5 MB."
+            );
+            return;
+        }
+
+        if (!ALLOWED_FILE_EXTENSIONS.test(certificate.name)) {
+            setError(
+                "Please upload your certificate as a PDF, JPG, JPEG, or PNG file."
+            );
+            return;
+        }
+
+        if (
+            !formData.years_of_experience.trim() ||
+            !Number.isInteger(Number(formData.years_of_experience)) ||
+            Number(formData.years_of_experience) < 0
+        ) {
+            setError(
+                "Enter a valid whole number of years of professional experience."
+            );
             return;
         }
 
@@ -201,13 +268,17 @@ function ProviderEnrolment() {
             const payload = new FormData();
 
             Object.entries(formData).forEach(([key, value]) => {
+                if (key === "qualification_document") {
+                    return;
+                }
+
                 if (value !== null && value !== undefined) {
-                    payload.append(
-                        key,
+                    const formattedValue =
                         key === "amount"
                             ? Number(value).toFixed(2)
-                            : String(value)
-                    );
+                            : String(value);
+
+                    payload.append(key, formattedValue);
                 }
             });
 
@@ -216,6 +287,10 @@ function ProviderEnrolment() {
                 String(Number(formData.years_of_experience))
             );
 
+            // Append the actual File object, not its name or string value.
+            payload.append("qualification_document", certificate, certificate.name);
+
+            // Keep this as FormData. Do not manually set Content-Type.
             const data = await submitProviderEnrolment(payload);
 
             if (data?.enrolment?.status === "submitted") {
@@ -224,12 +299,14 @@ function ProviderEnrolment() {
             }
 
             setError(
-                "Your application was submitted, but its status could not be confirmed."
+                "Your application was sent, but we could not confirm its submission status. Please check your application before trying again."
             );
         } catch (err) {
             console.error("Provider enrolment submission failed:", err);
+
             setError(
-                err?.message || "Failed to submit your provider enrolment."
+                err?.message ||
+                "We couldn't submit your provider enrolment. Please check your details and try again."
             );
         } finally {
             setSubmitting(false);
@@ -280,7 +357,14 @@ function ProviderEnrolment() {
                         className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:p-7"
                     >
                         {error && (
-                            <div className="mb-6 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                            <div
+                                role="alert"
+                                aria-live="polite"
+                                className="mb-6 whitespace-pre-line rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-200"
+                            >
+                                <p className="mb-1 font-semibold">
+                                    Please check the following:
+                                </p>
                                 {error}
                             </div>
                         )}
@@ -506,17 +590,20 @@ function ProviderEnrolment() {
                                             type="file"
                                             name="qualification_document"
                                             onChange={handleChange}
-                                            accept=".pdf,.jpg,.jpeg,.png"
+                                            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                                             required
                                             className="w-full rounded-xl border border-white/15 bg-white/10 py-2.5 pl-10 pr-3 text-sm text-white file:mr-3 file:rounded-lg file:border-0 file:bg-[#C66A4A] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-white"
                                         />
                                     </div>
+
                                     <p className="mt-2 text-xs text-slate-300">
                                         PDF, JPG, JPEG, or PNG. Maximum size: 5 MB.
                                     </p>
+
                                     {formData.qualification_document && (
                                         <p className="mt-2 break-all text-xs text-slate-200">
-                                            Selected: {formData.qualification_document.name}
+                                            Selected:{" "}
+                                            {formData.qualification_document.name}
                                         </p>
                                     )}
                                 </div>

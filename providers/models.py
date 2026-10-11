@@ -63,18 +63,13 @@ class ProviderEnrolment(models.Model):
     location = models.CharField(max_length=255)
     years_of_experience = models.PositiveIntegerField()
 
-    # Provider contact information
-    phone_number = models.CharField(max_length=13)
-
-    # Referee information
-    referee_name = models.CharField(max_length=150)
-    referee_email = models.EmailField()
-    referee_phone = models.CharField(max_length=13)
-
-    # Professional qualification document
+    phone_number = models.CharField(max_length=20, blank=True, default="")
+    referee_name = models.CharField(max_length=255, blank=True, default="")
+    referee_email = models.EmailField(blank=True, default="")
     qualification_document = models.FileField(
-        upload_to="provider_qualifications/"
-    )
+    upload_to="provider_qualifications/",
+    blank=True,
+    default="",)
 
     # Application status
     status = models.CharField(
