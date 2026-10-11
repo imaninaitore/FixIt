@@ -278,3 +278,45 @@ export async function getAdminReports() {
 
     return data;
 }
+
+// Download a provider's qualification document.
+export async function downloadQualificationDocument(enrolmentId) {
+    const response = await authenticatedFetch(
+        `${API_URL}/providers/enrolment/${enrolmentId}/qualification-document/`,
+        {
+            method: "GET",
+        }
+    );
+
+    if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let message = "Failed to download qualification document.";
+
+        if (contentType?.includes("application/json")) {
+            const data = await response.json();
+            message = data.detail || data.error || message;
+        }
+
+        throw new Error(message);
+    }
+
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get("content-disposition");
+    const filenameMatch = contentDisposition?.match(
+        /filename="?([^";]+)"?/i
+    );
+
+    const filename =
+        filenameMatch?.[1] || `qualification-document-${enrolmentId}`;
+
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(objectUrl);
+}

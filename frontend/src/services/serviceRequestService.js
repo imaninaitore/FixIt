@@ -1,4 +1,4 @@
-import { API_URL } from "./api";
+import { API_URL, authenticatedFetch } from "./api";
 
 async function getAuthHeaders() {
     const token = localStorage.getItem("access_token");
@@ -32,27 +32,54 @@ export async function getServiceRequests() {
 }
 
 export async function createServiceRequest(requestData) {
-    const response = await fetch(
-        `${API_URL}/requests/`,
-        {
-            method: "POST",
-            headers: await getAuthHeaders(),
-            body: JSON.stringify(requestData),
-        }
-    );
+    const response = await authenticatedFetch(`${API_URL}/requests/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData),
+    });
 
-    const data = await response.json();
+    const responseText = await response.text();
+
+    let data = {};
+
+    try {
+        data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+        data = { detail: responseText };
+    }
 
     if (!response.ok) {
+        console.error("Service request failed:", {
+            status: response.status,
+            response: data,
+            submittedData: requestData,
+        });
+
+        const details =
+            typeof data === "object"
+                ? Object.entries(data)
+                      .map(([field, messages]) => {
+                          const message = Array.isArray(messages)
+                              ? messages.join(", ")
+                              : typeof messages === "object"
+                                ? JSON.stringify(messages)
+                                : String(messages);
+
+                          return `${field}: ${message}`;
+                      })
+                      .join(" | ")
+                : String(data);
+
         throw new Error(
-            data.detail ||
-            data.error ||
-            "Failed to create service request."
+            details || `Request failed with status ${response.status}`
         );
     }
 
     return data;
 }
+
 
 export async function getServiceRequest(requestId) {
     const response = await fetch(

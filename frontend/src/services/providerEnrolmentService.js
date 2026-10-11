@@ -1,20 +1,50 @@
 import { API_URL, authenticatedFetch } from "./api";
 
+// Convert the submitted data into the format expected by Django.
+// FormData is required when uploading files.
+function prepareRequestBody(formData) {
+    if (formData instanceof FormData) {
+        return {
+            body: formData,
+            headers: {},
+        };
+    }
 
-// Submit provider enrolment and payment
+    return {
+        body: JSON.stringify(formData),
+        headers: {
+            "Content-Type": "application/json",
+        },
+    };
+}
+
+// Safely read the response returned by Django.
+async function readResponse(response) {
+    const contentType = response.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
+        return response.json();
+    }
+
+    const message = await response.text();
+
+    return message ? { detail: message } : {};
+}
+
+// Submit provider enrolment and payment.
 export async function submitProviderEnrolment(formData) {
+    const request = prepareRequestBody(formData);
+
     const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/submit/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
+            headers: request.headers,
+            body: request.body,
         }
     );
 
-    const data = await response.json();
+    const data = await readResponse(response);
 
     if (!response.ok) {
         throw new Error(
@@ -27,25 +57,21 @@ export async function submitProviderEnrolment(formData) {
     return data;
 }
 
-
-// Get the logged-in provider's enrolment
+// Get the logged-in provider's enrolment.
 export async function getMyProviderEnrolment() {
     const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/`,
         {
             method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-            },
         }
     );
 
-    // A 404 means the provider has not created an enrolment yet
+    // A 404 means the provider has not created an enrolment yet.
     if (response.status === 404) {
         return null;
     }
 
-    const data = await response.json();
+    const data = await readResponse(response);
 
     if (!response.ok) {
         throw new Error(
@@ -58,21 +84,20 @@ export async function getMyProviderEnrolment() {
     return data;
 }
 
-
-// Update the logged-in provider's enrolment
+// Update the logged-in provider's enrolment.
 export async function updateProviderEnrolment(formData) {
+    const request = prepareRequestBody(formData);
+
     const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/update/`,
         {
             method: "PATCH",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(formData),
+            headers: request.headers,
+            body: request.body,
         }
     );
 
-    const data = await response.json();
+    const data = await readResponse(response);
 
     if (!response.ok) {
         throw new Error(
@@ -85,20 +110,16 @@ export async function updateProviderEnrolment(formData) {
     return data;
 }
 
-
-// Withdraw provider enrolment
+// Withdraw provider enrolment.
 export async function withdrawProviderEnrolment() {
     const response = await authenticatedFetch(
         `${API_URL}/providers/enrolment/me/withdraw/`,
         {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
         }
     );
 
-    const data = await response.json();
+    const data = await readResponse(response);
 
     if (!response.ok) {
         throw new Error(
