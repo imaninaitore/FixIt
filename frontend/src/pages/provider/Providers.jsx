@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -242,7 +243,7 @@ function Providers() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#e2eaf2] via-[#edf2f7] to-[#d5e0eb]">
+        <div className="min-h-screen bg-gradient-to-br from-[#F7F0E6] via-[#FFFCF7] to-[#EADCC8]">
             <Navbar />
 
             {/* Hero / Search */}
@@ -253,7 +254,7 @@ function Providers() {
                         "url('/images/bg.png')",
                 }}
             >
-                <div className="absolute inset-0 bg-slate-950/70" />
+                <div className="absolute inset-0 bg-[#172638]/80" />
 
                 <div
                     className="
@@ -276,7 +277,7 @@ function Providers() {
                             font-semibold
                             uppercase
                             tracking-[0.2em]
-                            text-blue-300
+                            text-[#E2A184]
                             sm:text-sm
                         "
                     >
@@ -304,7 +305,7 @@ function Providers() {
                             max-w-2xl
                             text-sm
                             leading-7
-                            text-slate-200
+                            text-[#F7F0E6]
                             sm:text-base
                         "
                     >
@@ -371,9 +372,9 @@ function Providers() {
                                         shadow-sm
                                         outline-none
                                         placeholder:text-slate-400
-                                        focus:border-blue-500
+                                        focus:border-[#B85C3B]
                                         focus:ring-2
-                                        focus:ring-blue-200
+                                        focus:ring-[#B85C3B]/20
                                     "
                                 />
 
@@ -388,7 +389,7 @@ function Providers() {
                                             -translate-y-1/2
                                             text-slate-400
                                             transition
-                                            hover:text-slate-700
+                                            hover:text-[#172638]
                                         "
                                     >
                                         <X className="h-5 w-5" />
@@ -434,12 +435,12 @@ function Providers() {
                                         pl-11
                                         pr-10
                                         text-sm
-                                        text-slate-700
+                                        text-[#51483F]
                                         shadow-sm
                                         outline-none
-                                        focus:border-blue-500
+                                        focus:border-[#B85C3B]
                                         focus:ring-2
-                                        focus:ring-blue-200
+                                        focus:ring-[#B85C3B]/20
                                     "
                                 >
                                     <option value="all">
@@ -509,14 +510,14 @@ function Providers() {
                                 text-xl
                                 font-bold
                                 tracking-tight
-                                text-slate-900
+                                text-[#172638]
                                 sm:text-2xl
                             "
                         >
                             Available providers
                         </h2>
 
-                        <p className="mt-1.5 text-sm text-slate-500">
+                        <p className="mt-1.5 text-sm text-[#74695F]">
                             {search ||
                             category !== "all"
                                 ? `${providers.length} provider${
@@ -546,9 +547,9 @@ function Providers() {
                                 gap-2
                                 text-sm
                                 font-medium
-                                text-blue-600
+                                text-[#B85C3B]
                                 transition
-                                hover:text-blue-700
+                                hover:text-[#9F4B30]
                             "
                         >
                             <X className="h-4 w-4" />
@@ -576,12 +577,12 @@ function Providers() {
                                     animate-spin
                                     rounded-full
                                     border-4
-                                    border-slate-200
-                                    border-t-blue-600
+                                    border-[#E7DCCB]
+                                    border-t-[#B85C3B]
                                 "
                             />
 
-                            <p className="mt-4 text-sm text-slate-500">
+                            <p className="mt-4 text-sm text-[#74695F]">
                                 Loading providers...
                             </p>
                         </div>
@@ -594,18 +595,18 @@ function Providers() {
                         className="
                             rounded-2xl
                             border
-                            border-red-200
-                            bg-white
+                            border-[#E7DCCB]
+                            bg-[#FFFCF7]
                             p-8
                             text-center
                             shadow-sm
                         "
                     >
-                        <h2 className="font-semibold text-slate-900">
+                        <h2 className="font-semibold text-[#172638]">
                             Unable to load providers
                         </h2>
 
-                        <p className="mt-2 text-sm text-slate-500">
+                        <p className="mt-2 text-sm text-[#74695F]">
                             {error}
                         </p>
 
@@ -615,14 +616,14 @@ function Providers() {
                             className="
                                 mt-5
                                 rounded-lg
-                                bg-blue-600
+                                bg-[#B85C3B]
                                 px-5
                                 py-2.5
                                 text-sm
                                 font-medium
                                 text-white
                                 transition
-                                hover:bg-blue-700
+                                hover:bg-[#9F4B30]
                             "
                         >
                             Try Again
@@ -638,21 +639,21 @@ function Providers() {
                             className="
                                 rounded-2xl
                                 border
-                                border-slate-200
-                                bg-white
+                                border-[#E7DCCB]
+                                bg-[#FFFCF7]
                                 p-10
                                 text-center
                                 shadow-sm
                             "
                         >
-                            <h2 className="font-semibold text-slate-900">
+                            <h2 className="font-semibold text-[#172638]">
                                 {search ||
                                 category !== "all"
                                     ? "No providers found"
                                     : "No providers available"}
                             </h2>
 
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-[#74695F]">
                                 {search ||
                                 category !== "all"
                                     ? "Try searching for a different provider, service, location, or category."
@@ -670,9 +671,9 @@ function Providers() {
                                         mt-5
                                         text-sm
                                         font-medium
-                                        text-blue-600
+                                        text-[#B85C3B]
                                         transition
-                                        hover:text-blue-700
+                                        hover:text-[#9F4B30]
                                     "
                                 >
                                     Clear filters
@@ -706,14 +707,14 @@ function Providers() {
                                             justify-between
                                             rounded-xl
                                             border
-                                            border-slate-200
-                                            bg-white
+                                            border-[#E7DCCB]
+                                            bg-[#FFFCF7]
                                             p-5
                                             shadow-sm
                                             transition
                                             duration-200
                                             hover:-translate-y-0.5
-                                            hover:border-blue-200
+                                            hover:border-[#B85C3B]/50
                                             hover:shadow-md
                                         "
                                     >
@@ -729,10 +730,10 @@ function Providers() {
                                                         items-center
                                                         justify-center
                                                         rounded-lg
-                                                        bg-blue-50
+                                                        bg-[#F3E8D8]
                                                         text-base
                                                         font-bold
-                                                        text-blue-600
+                                                        text-[#B85C3B]
                                                     "
                                                 >
                                                     {provider
@@ -750,7 +751,7 @@ function Providers() {
                                                         truncate
                                                         text-sm
                                                         font-semibold
-                                                        text-slate-900
+                                                        text-[#172638]
                                                     "
                                                 >
                                                     {provider.business_name ||
@@ -766,10 +767,10 @@ function Providers() {
                                                     items-center
                                                     gap-2
                                                     text-sm
-                                                    text-slate-600
+                                                    text-[#51483F]
                                                 "
                                             >
-                                                <Briefcase className="h-4 w-4 shrink-0 text-blue-600" />
+                                                <Briefcase className="h-4 w-4 shrink-0 text-[#B85C3B]" />
 
                                                 <span className="truncate">
                                                     {getCategoryDisplayName(
@@ -787,10 +788,10 @@ function Providers() {
                                                     items-center
                                                     gap-2
                                                     text-sm
-                                                    text-slate-500
+                                                    text-[#74695F]
                                                 "
                                             >
-                                                <MapPin className="h-4 w-4 shrink-0 text-blue-600" />
+                                                <MapPin className="h-4 w-4 shrink-0 text-[#B85C3B]" />
 
                                                 <span className="truncate">
                                                     {provider.location ||
@@ -811,14 +812,14 @@ function Providers() {
                                                 mt-5
                                                 w-full
                                                 rounded-lg
-                                                bg-blue-600
+                                                bg-[#B85C3B]
                                                 px-4
                                                 py-2.5
                                                 text-sm
                                                 font-medium
                                                 text-white
                                                 transition
-                                                hover:bg-blue-700
+                                                hover:bg-[#9F4B30]
                                             "
                                         >
                                             View Details
@@ -845,20 +846,20 @@ function Providers() {
                                 sm:justify-between
                             "
                         >
-                            <p className="text-xs text-slate-500 sm:text-sm">
+                            <p className="text-xs text-[#74695F] sm:text-sm">
                                 Showing{" "}
-                                <span className="font-medium text-slate-700">
+                                <span className="font-medium text-[#172638]">
                                     {startIndex + 1}
                                 </span>{" "}
                                 to{" "}
-                                <span className="font-medium text-slate-700">
+                                <span className="font-medium text-[#172638]">
                                     {Math.min(
                                         endIndex,
                                         providers.length
                                     )}
                                 </span>{" "}
                                 of{" "}
-                                <span className="font-medium text-slate-700">
+                                <span className="font-medium text-[#172638]">
                                     {providers.length}
                                 </span>{" "}
                                 providers
@@ -883,12 +884,12 @@ function Providers() {
                                         justify-center
                                         rounded-lg
                                         border
-                                        border-slate-200
-                                        bg-white
-                                        text-slate-600
+                                        border-[#E7DCCB]
+                                        bg-[#FFFCF7]
+                                        text-[#51483F]
                                         transition
-                                        hover:border-blue-200
-                                        hover:text-blue-600
+                                        hover:border-[#B85C3B]/50
+                                        hover:text-[#B85C3B]
                                         disabled:cursor-not-allowed
                                         disabled:opacity-40
                                     "
@@ -923,8 +924,8 @@ function Providers() {
                                             ${
                                                 currentPage ===
                                                 page
-                                                    ? "bg-blue-600 text-white"
-                                                    : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-600"
+                                                    ? "bg-[#172638] text-white"
+                                                    : "border border-[#E7DCCB] bg-[#FFFCF7] text-[#51483F] hover:border-[#B85C3B]/50 hover:text-[#B85C3B]"
                                             }
                                         `}
                                     >
@@ -951,12 +952,12 @@ function Providers() {
                                         justify-center
                                         rounded-lg
                                         border
-                                        border-slate-200
-                                        bg-white
-                                        text-slate-600
+                                        border-[#E7DCCB]
+                                        bg-[#FFFCF7]
+                                        text-[#51483F]
                                         transition
-                                        hover:border-blue-200
-                                        hover:text-blue-600
+                                        hover:border-[#B85C3B]/50
+                                        hover:text-[#B85C3B]
                                         disabled:cursor-not-allowed
                                         disabled:opacity-40
                                     "

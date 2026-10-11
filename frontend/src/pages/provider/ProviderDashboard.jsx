@@ -1,39 +1,49 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    ArrowRight,
+    BarChart3,
+    BriefcaseBusiness,
+    CalendarDays,
+    CheckCircle2,
+    ClipboardList,
+    Clock3,
+    MapPin,
+    MessageSquare,
+    Star,
+    UserRound,
+    Wrench,
+    XCircle,
+} from "lucide-react";
 
 import { getMyProvider } from "../../services/providerService";
+import { getProviderServiceRequests } from "../../services/serviceRequestService";
+import { getConversations } from "../../services/messagingService";
+import { getMyProviderEnrolment } from "../../services/providerEnrolmentService";
 
-import {
-    getProviderServiceRequests,
-} from "../../services/serviceRequestService";
-
-import {
-    getConversations,
-} from "../../services/messagingService";
-
-import {
-    getMyProviderEnrolment,
-} from "../../services/providerEnrolmentService";
-
+const statusStyles = {
+    pending: "border-amber-200 bg-amber-50 text-amber-800",
+    accepted: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    completed: "border-blue-200 bg-blue-50 text-blue-800",
+    rejected: "border-red-200 bg-red-50 text-red-800",
+    in_progress: "border-violet-200 bg-violet-50 text-violet-800",
+    cancelled: "border-stone-200 bg-stone-100 text-stone-700",
+};
 
 function ProviderDashboard() {
     const navigate = useNavigate();
-
     const username = localStorage.getItem("username");
 
     const [profile, setProfile] = useState(null);
     const [enrolment, setEnrolment] = useState(null);
     const [requests, setRequests] = useState([]);
     const [conversations, setConversations] = useState([]);
-
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
 
     useEffect(() => {
         loadDashboard();
     }, []);
-
 
     const loadDashboard = async () => {
         try {
@@ -41,35 +51,15 @@ function ProviderDashboard() {
             setError("");
 
             const enrolmentData = await getMyProviderEnrolment();
-
             setEnrolment(enrolmentData);
 
-            /*
-             * No enrolment yet.
-             * Keep the provider on this page so they can
-             * click "Complete Enrolment".
-             */
-            if (!enrolmentData) {
-                return;
-            }
+            if (!enrolmentData) return;
 
-            /*
-             * Enrolment has been submitted and is waiting
-             * for admin approval.
-             *
-             * Do not load the normal provider dashboard.
-             */
             if (enrolmentData.status === "submitted") {
                 navigate("/provider/pending", { replace: true });
                 return;
             }
 
-            /*
-             * Only approved providers should load:
-             * - ProviderProfile
-             * - Service Requests
-             * - Conversations
-             */
             if (enrolmentData.status === "approved") {
                 const [
                     profileData,
@@ -82,36 +72,32 @@ function ProviderDashboard() {
                 ]);
 
                 setProfile(profileData);
-                setRequests(requestsData || []);
-                setConversations(conversationsData || []);
 
-                return;
-            }
+                setRequests(
+                    Array.isArray(requestsData)
+                        ? requestsData
+                        : requestsData?.results || []
+                );
 
-            /*
-             * If the application was rejected, keep the
-             * provider out of the normal provider portal.
-             */
-            if (enrolmentData.status === "rejected") {
+                setConversations(
+                    Array.isArray(conversationsData)
+                        ? conversationsData
+                        : conversationsData?.results || []
+                );
+            } else if (enrolmentData.status === "rejected") {
                 setError(
                     "Your provider enrolment was not approved. Please review your application."
                 );
-
-                return;
             }
-
         } catch (err) {
-            console.error(err);
-
+            console.error("Failed to load provider dashboard:", err);
             setError(
-                err.message ||
-                "Failed to load your provider dashboard."
+                err.message || "Failed to load your provider dashboard."
             );
         } finally {
             setLoading(false);
         }
     };
-
 
     const pendingRequests = requests.filter(
         (request) => request.status === "pending"
@@ -129,81 +115,86 @@ function ProviderDashboard() {
         (request) => request.status === "rejected"
     );
 
-
-    const requestPercentage = (count) => {
-        if (requests.length === 0) {
-            return 0;
-        }
-
-        return Math.round(
-            (count / requests.length) * 100
-        );
-    };
-
-
     const activeRequests =
-        pendingRequests.length +
-        acceptedRequests.length;
-
+        pendingRequests.length + acceptedRequests.length;
 
     const activityPercentage =
         requests.length > 0
-            ? Math.round(
-                  (activeRequests / requests.length) * 100
-              )
+            ? Math.round((activeRequests / requests.length) * 100)
             : 0;
 
+    const requestPercentage = (count) =>
+        requests.length > 0
+            ? Math.round((count / requests.length) * 100)
+            : 0;
 
     const formatDate = (date) => {
-        if (!date) {
-            return "No date";
+        if (!date) return "Not specified";
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return date;
         }
 
-        return new Date(date).toLocaleDateString(
-            "en-KE",
-            {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-            }
-        );
+        return parsedDate.toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
     };
 
+    const getStatusClasses = (status) =>
+        statusStyles[status] ||
+        "border-stone-200 bg-stone-100 text-stone-700";
 
-    const getStatusClasses = (status) => {
-        switch (status) {
-            case "pending":
-                return "border-amber-300/30 bg-amber-400/15 text-amber-100";
+    const goToRequests = () =>
+        navigate("/provider/service-requests");
 
-            case "accepted":
-                return "border-emerald-300/30 bg-emerald-400/15 text-emerald-100";
-
-            case "completed":
-                return "border-blue-300/30 bg-blue-300/20 text-blue-100";
-
-            case "rejected":
-                return "border-red-300/30 bg-red-400/15 text-red-100";
-
-            default:
-                return "border-white/20 bg-white/10 text-white/70";
+    const goToProfile = () => {
+        if (profile?.id) {
+            navigate(`/providers/${profile.id}`);
         }
     };
 
+    const analysisData = [
+        {
+            label: "Pending",
+            value: pendingRequests.length,
+            color: "#C66A4A",
+            lightColor: "bg-[#C66A4A]",
+        },
+        {
+            label: "Accepted",
+            value: acceptedRequests.length,
+            color: "#B89573",
+            lightColor: "bg-[#B89573]",
+        },
+        {
+            label: "Completed",
+            value: completedRequests.length,
+            color: "#647D71",
+            lightColor: "bg-[#647D71]",
+        },
+        {
+            label: "Rejected",
+            value: rejectedRequests.length,
+            color: "#B85C50",
+            lightColor: "bg-[#B85C50]",
+        },
+    ];
+
+    const maximumStatusValue = Math.max(
+        ...analysisData.map((item) => item.value),
+        1
+    );
 
     if (loading) {
         return (
-            <div
-                className="relative flex min-h-screen items-center justify-center overflow-hidden bg-cover bg-center p-6"
-                style={{
-                    backgroundImage: "url('/images/dashboard.jpg')",
-                }}
-            >
-                <div className="absolute inset-0 bg-blue-950/70 backdrop-blur-[2px]" />
-
-                <div className="relative rounded-2xl border border-white/20 bg-white/10 px-8 py-7 text-center shadow-2xl backdrop-blur-2xl">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/20 border-t-white" />
-
-                    <p className="mt-4 text-sm font-medium text-white/80">
+            <div className="flex min-h-screen items-center justify-center bg-[#F4EDE5] p-6">
+                <div className="w-full max-w-sm rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] p-8 text-center shadow-sm">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#D9B99B]/40 border-t-[#C66A4A]" />
+                    <p className="mt-4 text-sm font-medium text-[#536070]">
                         Loading your dashboard...
                     </p>
                 </div>
@@ -211,29 +202,26 @@ function ProviderDashboard() {
         );
     }
 
-
     if (error) {
         return (
-            <div
-                className="relative min-h-screen overflow-hidden bg-cover bg-center p-4 sm:p-6 lg:p-8"
-                style={{
-                    backgroundImage: "url('/images/dashboard.jpg')",
-                }}
-            >
-                <div className="absolute inset-0 bg-blue-950/70" />
+            <div className="flex min-h-screen items-center justify-center bg-[#F4EDE5] p-5 sm:p-8">
+                <div className="w-full max-w-lg rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] p-7 shadow-sm">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                        <XCircle className="h-6 w-6" />
+                    </div>
 
-                <div className="relative rounded-2xl border border-white/20 bg-white/10 p-6 shadow-2xl">
-                    <h2 className="font-semibold text-red-200">
+                    <h2 className="mt-4 text-xl font-semibold text-[#172A46]">
                         Something went wrong
                     </h2>
 
-                    <p className="mt-2 text-sm text-white/70">
+                    <p className="mt-2 text-sm leading-6 text-[#536070]">
                         {error}
                     </p>
 
                     <button
+                        type="button"
                         onClick={loadDashboard}
-                        className="mt-4 rounded-lg border border-white/20 bg-red-500/80 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
+                        className="mt-5 rounded-xl bg-[#C66A4A] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#172A46]"
                     >
                         Try Again
                     </button>
@@ -242,864 +230,537 @@ function ProviderDashboard() {
         );
     }
 
-
-    /*
-     * Provider has not started an enrolment yet.
-     */
     if (!enrolment) {
         return (
-            <div
-                className="relative min-h-screen overflow-hidden bg-cover bg-center p-4 sm:p-6 lg:p-8"
-                style={{
-                    backgroundImage: "url('/images/dashboard.jpg')",
-                }}
-            >
-                <div className="absolute inset-0 bg-blue-950/65" />
-
-                <div className="relative mx-auto max-w-2xl rounded-2xl border border-white/20 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-2xl sm:p-12">
-
-                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-blue-500/20 text-blue-100">
-                        <svg
-                            className="h-8 w-8"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="1.8"
-                                d="M9 12l2 2 4-4m6-1a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
+            <div className="flex min-h-screen items-center justify-center bg-[#F4EDE5] p-5">
+                <div className="w-full max-w-2xl rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] px-6 py-10 text-center shadow-sm sm:px-12 sm:py-14">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#172A46] text-white">
+                        <BriefcaseBusiness className="h-8 w-8" />
                     </div>
 
-                    <p className="mt-6 text-sm font-semibold uppercase tracking-wider text-blue-200">
+                    <p className="mt-6 text-xs font-semibold uppercase tracking-[0.18em] text-[#C66A4A]">
                         Provider Registration
                     </p>
 
-                    <h1 className="mt-2 text-3xl font-bold text-white">
+                    <h1 className="mt-2 text-2xl font-semibold text-[#172A46] sm:text-3xl">
                         Complete Your Enrolment
                     </h1>
 
-                    <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-white/65">
-                        Before you can receive and manage service
-                        requests, you need to complete your provider
-                        enrolment.
+                    <p className="mx-auto mt-4 max-w-lg text-sm leading-6 text-[#536070]">
+                        Before you can receive and manage service requests,
+                        you need to complete your provider enrolment.
                     </p>
 
                     <button
-                        onClick={() =>
-                            navigate("/provider/enrolment")
-                        }
-                        className="mt-7 rounded-lg border border-blue-300/30 bg-blue-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500"
+                        type="button"
+                        onClick={() => navigate("/provider/enrolment")}
+                        className="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-[#C66A4A] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#172A46]"
                     >
                         Complete Enrolment
+                        <ArrowRight className="h-4 w-4" />
                     </button>
                 </div>
             </div>
         );
     }
 
-
     return (
-        <div
-            className="relative min-h-screen overflow-hidden bg-cover bg-center bg-fixed p-3 sm:p-4 md:p-5 lg:p-6"
-            style={{
-                backgroundImage: "url('/images/dashboard.jpg')",
-            }}
-        >
-            <div className="fixed inset-0 -z-0 bg-blue-950/65" />
+        <div className="min-h-screen bg-[#F4EDE5]">
 
-            <div className="fixed -left-32 top-20 -z-0 h-80 w-80 rounded-full " />
-            <div className="fixed -right-32 bottom-10 -z-0 h-96 w-96 rounded-full" />
+            {/* Dashboard hero */}
+            <section
+                className="relative overflow-hidden bg-cover bg-center"
+                style={{
+                    backgroundImage: "url('/images/bg.png')",
+                }}
+            >
+                <div className="absolute inset-0 bg-[#172A46]/85" />
 
-            <div className="relative z-10 mx-auto w-full max-w-[1700px]">
+                <div className="relative z-10 mx-auto max-w-7xl px-5 py-12 sm:px-6 sm:py-16 lg:px-10 lg:py-20">
+                    <div className="max-w-3xl">
+                        {username && (
+                            <p className="mb-5 text-sm font-medium uppercase tracking-[0.2em] text-[#D9B99B]">
+                                Welcome back, {username}
+                            </p>
+                        )}
 
-                {/* Header */}
-                <section className="mb-5">
-                    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-5">
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm font-medium uppercase tracking-[0.25em] text-[#C66A4A]">
+                            Your FixIt Dashboard
+                        </p>
 
-                            <div className="min-w-0">
-                                <p className="text-xs font-bold uppercase tracking-wider text-blue-200">
-                                    Welcome back
-                                </p>
+                        <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                            Manage Your Business
+                            <span className="block text-[#D9B99B]">
+                                In One Place
+                            </span>
+                        </h1>
 
-                                <h1 className="mt-1 truncate text-2xl font-black tracking-tight text-white sm:text-3xl">
-                                    {profile?.business_name ||
-                                        username ||
-                                        "Provider"}
-                                </h1>
+                        <p className="mt-6 max-w-2xl text-base leading-7 text-white/80 sm:text-lg">
+                            Track service requests, connect with customers,
+                            monitor your business activity, and manage your
+                            provider profile — all from one place.
+                        </p>
 
-                                <p className="mt-1 max-w-2xl text-xs text-white/65 sm:text-sm">
-                                    Here is an overview of your FixIt
-                                    business and customer activity.
-                                </p>
-                            </div>
-
+                        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                             <button
-                                onClick={() =>
-                                    navigate(
-                                        "/provider/service-requests"
-                                    )
-                                }
-                                className="w-full rounded-xl border border-blue-300/20 bg-blue-500/70 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 sm:w-auto"
+                                type="button"
+                                onClick={goToRequests}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C66A4A] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[#B85B3E]"
                             >
+                                <ClipboardList className="h-4 w-4" />
                                 View Service Requests
                             </button>
 
-                        </div>
-                    </div>
-                </section>
-
-
-                {/* Statistics */}
-                <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-
-                    <button
-                        onClick={() =>
-                            navigate(
-                                "/provider/service-requests"
-                            )
-                        }
-                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
-                    >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                            Total Requests
-                        </p>
-
-                        <p className="mt-1 text-3xl font-black text-white">
-                            {requests.length}
-                        </p>
-
-                        <div className="mt-2 h-1 w-12 rounded-full bg-blue-400" />
-                    </button>
-
-
-                    <button
-                        onClick={() =>
-                            navigate(
-                                "/provider/service-requests"
-                            )
-                        }
-                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
-                    >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                            Pending
-                        </p>
-
-                        <p className="mt-1 text-3xl font-black text-white">
-                            {pendingRequests.length}
-                        </p>
-
-                        <div className="mt-2 h-1 w-12 rounded-full bg-amber-300" />
-                    </button>
-
-
-                    <button
-                        onClick={() =>
-                            navigate(
-                                "/provider/service-requests"
-                            )
-                        }
-                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
-                    >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                            Accepted
-                        </p>
-
-                        <p className="mt-1 text-3xl font-black text-white">
-                            {acceptedRequests.length}
-                        </p>
-
-                        <div className="mt-2 h-1 w-12 rounded-full bg-emerald-300" />
-                    </button>
-
-
-                    <button
-                        onClick={() =>
-                            navigate("/messages")
-                        }
-                        className="group rounded-2xl border border-white/20 bg-white/10 p-4 text-left shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/30 hover:bg-white/15 hover:shadow-2xl"
-                    >
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
-                            Conversations
-                        </p>
-
-                        <p className="mt-1 text-3xl font-black text-white">
-                            {conversations.length}
-                        </p>
-
-                        <div className="mt-2 h-1 w-12 rounded-full bg-cyan-300" />
-                    </button>
-
-                </section>
-
-
-                {/* Main Dashboard Grid */}
-                <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-4">
-
-                    {/* Request Activity */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl lg:col-span-2">
-
-                        <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-blue-400/20 blur-3xl" />
-
-                        <div className="relative flex items-start justify-between">
-                            <div>
-                                <h2 className="text-sm font-bold text-white sm:text-base">
-                                    Request Activity
-                                </h2>
-
-                                <p className="mt-1 text-[10px] text-white/55 sm:text-xs">
-                                    Current service request breakdown
-                                </p>
-                            </div>
-
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-blue-500/30 text-blue-100">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="1.8"
-                                        d="M4 13h6V4H4v9zm0 7h6v-4H4v4zm10 0h6v-9h-6v9zm0-16v4h6V4h-6z"
-                                    />
-                                </svg>
-                            </div>
-                        </div>
-
-
-                        <div className="relative mt-3 grid items-center gap-4 sm:grid-cols-2">
-
-                            <div className="flex flex-col items-center justify-center">
-                                <div className="relative h-[115px] w-[205px]">
-                                    <svg
-                                        viewBox="0 0 220 125"
-                                        className="h-full w-full"
-                                    >
-                                        <defs>
-                                            <linearGradient
-                                                id="activityGradient"
-                                                x1="0%"
-                                                y1="0%"
-                                                x2="100%"
-                                                y2="0%"
-                                            >
-                                                <stop
-                                                    offset="0%"
-                                                    stopColor="#60a5fa"
-                                                />
-
-                                                <stop
-                                                    offset="50%"
-                                                    stopColor="#38bdf8"
-                                                />
-
-                                                <stop
-                                                    offset="100%"
-                                                    stopColor="#2563eb"
-                                                />
-                                            </linearGradient>
-                                        </defs>
-
-                                        <path
-                                            d="M 20 110 A 90 90 0 0 1 200 110"
-                                            fill="none"
-                                            stroke="rgba(255,255,255,0.15)"
-                                            strokeWidth="18"
-                                            strokeLinecap="round"
-                                        />
-
-                                        <path
-                                            d="M 20 110 A 90 90 0 0 1 200 110"
-                                            fill="none"
-                                            stroke="url(#activityGradient)"
-                                            strokeWidth="18"
-                                            strokeLinecap="round"
-                                            pathLength="100"
-                                            strokeDasharray={`${activityPercentage} 100`}
-                                        />
-                                    </svg>
-
-                                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                                        <p className="text-2xl font-black text-white">
-                                            {activityPercentage}%
-                                        </p>
-
-                                        <p className="text-[9px] font-bold uppercase tracking-wider text-blue-200">
-                                            Active
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <p className="mt-0.5 text-[10px] text-white/55">
-                                    {activeRequests} of{" "}
-                                    {requests.length} requests
-                                </p>
-                            </div>
-
-
-                            <div className="space-y-2">
-
-                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-amber-300" />
-
-                                        <span className="text-[10px] font-medium text-white/70">
-                                            Pending
-                                        </span>
-                                    </div>
-
-                                    <span className="text-[10px] font-bold text-white">
-                                        {requestPercentage(
-                                            pendingRequests.length
-                                        )}
-                                        %
-                                    </span>
-                                </div>
-
-
-                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
-
-                                        <span className="text-[10px] font-medium text-white/70">
-                                            Accepted
-                                        </span>
-                                    </div>
-
-                                    <span className="text-[10px] font-bold text-white">
-                                        {requestPercentage(
-                                            acceptedRequests.length
-                                        )}
-                                        %
-                                    </span>
-                                </div>
-
-
-                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-blue-300" />
-
-                                        <span className="text-[10px] font-medium text-white/70">
-                                            Completed
-                                        </span>
-                                    </div>
-
-                                    <span className="text-[10px] font-bold text-white">
-                                        {requestPercentage(
-                                            completedRequests.length
-                                        )}
-                                        %
-                                    </span>
-                                </div>
-
-
-                                <div className="flex items-center justify-between rounded-lg border border-white/15 bg-white/10 px-3 py-2 backdrop-blur-md">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2 w-2 rounded-full bg-red-300" />
-
-                                        <span className="text-[10px] font-medium text-white/70">
-                                            Rejected
-                                        </span>
-                                    </div>
-
-                                    <span className="text-[10px] font-bold text-white">
-                                        {requestPercentage(
-                                            rejectedRequests.length
-                                        )}
-                                        %
-                                    </span>
-                                </div>
-
-                            </div>
-
-                        </div>
-                    </div>
-
-
-                    {/* Recent Service Requests */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-
-                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-400/20 blur-3xl" />
-
-                        <div className="relative flex items-center justify-between border-b border-white/15 px-3.5 py-3">
-
-                            <div>
-                                <h2 className="text-xs font-bold text-white sm:text-sm">
-                                    Recent Requests
-                                </h2>
-
-                                <p className="mt-0.5 text-[9px] text-white/50">
-                                    Latest customer activity
-                                </p>
-                            </div>
-
                             <button
-                                onClick={() =>
-                                    navigate(
-                                        "/provider/service-requests"
-                                    )
-                                }
-                                className="text-[10px] font-bold text-blue-200 transition hover:text-white"
+                                type="button"
+                                onClick={() => navigate("/messages")}
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-white/10 px-6 py-3.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20"
                             >
-                                View all
+                                <MessageSquare className="h-4 w-4" />
+                                Open Messages
                             </button>
                         </div>
-
-
-                        {requests.length === 0 ? (
-                            <div className="px-3 py-8 text-center">
-                                <p className="text-xs font-semibold text-white">
-                                    No requests yet
-                                </p>
-
-                                <p className="mt-1 text-[10px] text-white/50">
-                                    New requests will appear here.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="relative divide-y divide-white/10">
-                                {requests
-                                    .slice(0, 3)
-                                    .map((request) => (
-                                        <button
-                                            key={request.id}
-                                            onClick={() =>
-                                                navigate(
-                                                    "/provider/service-requests"
-                                                )
-                                            }
-                                            className="w-full px-3.5 py-2.5 text-left transition hover:bg-white/10"
-                                        >
-                                            <div className="flex items-start justify-between gap-2">
-
-                                                <div className="min-w-0">
-                                                    <h3 className="truncate text-[11px] font-bold text-white">
-                                                        {request.service_title}
-                                                    </h3>
-
-                                                    <p className="mt-0.5 truncate text-[9px] text-white/55">
-                                                        {request.customer}
-                                                    </p>
-
-                                                    <p className="mt-0.5 truncate text-[9px] text-white/40">
-                                                        {request.location}
-                                                    </p>
-                                                </div>
-
-                                                <span
-                                                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[8px] font-bold capitalize ${getStatusClasses(
-                                                        request.status
-                                                    )}`}
-                                                >
-                                                    {request.status}
-                                                </span>
-
-                                            </div>
-
-                                            <p className="mt-1 text-[8px] text-white/35">
-                                                {formatDate(
-                                                    request.created_at
-                                                )}
-                                            </p>
-                                        </button>
-                                    ))}
-                            </div>
-                        )}
                     </div>
+                </div>
+            </section>
 
+            {/* Circular request analysis */}
+            <section className="mx-auto max-w-7xl px-5 py-10 sm:px-6 sm:py-12 lg:px-10">
+                <div className="overflow-hidden rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] shadow-sm">
+                    <div className="flex items-center justify-between gap-4 border-b border-[#E8DDD1] px-5 py-5 sm:px-7">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#C66A4A]">
+                                Dashboard Overview
+                            </p>
 
-                    {/* Recent Profile */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 shadow-2xl backdrop-blur-xl">
-
-                        <div className="absolute -right-10 -top-10 h-24 w-24 rounded-full bg-blue-400/20 blur-3xl" />
-
-                        <div className="relative flex items-center justify-between border-b border-white/15 px-3.5 py-3">
-
-                            <div>
-                                <h2 className="text-xs font-bold text-white sm:text-sm">
-                                    Recent Profile
-                                </h2>
-
-                                <p className="mt-0.5 text-[9px] text-white/50">
-                                    Provider information
-                                </p>
-                            </div>
-
-                            <button
-                                onClick={() =>
-                                    profile?.id &&
-                                    navigate(
-                                        `/providers/${profile.id}`
-                                    )
-                                }
-                                className="text-[10px] font-bold text-blue-200 transition hover:text-white"
-                            >
-                                View
-                            </button>
-                        </div>
-
-
-                        <div className="relative space-y-2.5 p-3.5">
-
-                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Business
-                                </p>
-
-                                <p className="mt-0.5 truncate text-[11px] font-bold text-white">
-                                    {profile?.business_name ||
-                                        "Not available"}
-                                </p>
-                            </div>
-
-
-                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Category
-                                </p>
-
-                                <p className="mt-0.5 truncate text-[11px] text-white/70">
-                                    {profile?.service_category ||
-                                        "Not available"}
-                                </p>
-                            </div>
-
-
-                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Location
-                                </p>
-
-                                <p className="mt-0.5 truncate text-[11px] text-white/70">
-                                    {profile?.location ||
-                                        "Not available"}
-                                </p>
-                            </div>
-
-
-                            <div className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-2">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Experience
-                                </p>
-
-                                <p className="mt-0.5 text-[11px] text-white/70">
-                                    {profile?.years_of_experience !==
-                                    undefined
-                                        ? `${profile.years_of_experience} years`
-                                        : "Not available"}
-                                </p>
-                            </div>
-
-
-                            <button
-                                onClick={() =>
-                                    profile?.id &&
-                                    navigate(
-                                        `/providers/${profile.id}`
-                                    )
-                                }
-                                className="w-full rounded-lg border border-blue-300/20 bg-blue-500/70 py-2 text-[10px] font-bold text-white shadow-lg transition hover:bg-blue-500"
-                            >
-                                Manage Profile
-                            </button>
-
-                        </div>
-                    </div>
-
-                </section>
-
-
-                {/* Provider Enrolment + Quick Actions */}
-                <section className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-
-                    {/* Provider Enrolment */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-
-                        <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl" />
-
-                        <div className="relative flex items-center justify-between">
-
-                            <div>
-                                <h2 className="text-sm font-bold text-white">
-                                    Provider Enrolment
-                                </h2>
-
-                                <p className="mt-1 text-[10px] text-white/50">
-                                    Your FixIt provider account
-                                </p>
-                            </div>
-
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-blue-500/30 text-blue-100">
-                                <svg
-                                    className="h-4 w-4"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth="1.8"
-                                        d="M9 12l2 2 4-4m6-1a9 9 0 11-18 0 9 9 0 0118 0z"
-                                    />
-                                </svg>
-                            </div>
-
-                        </div>
-
-
-                        <div className="relative mt-3 grid gap-2 sm:grid-cols-2">
-
-                            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Enrolment
-                                </p>
-
-                                <span className="mt-1 inline-flex rounded-full border border-emerald-300/20 bg-emerald-400/15 px-2 py-1 text-[9px] font-bold capitalize text-emerald-100">
-                                    {enrolment?.status ||
-                                        "Unknown"}
-                                </span>
-                            </div>
-
-
-                            <div className="rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Payment
-                                </p>
-
-                                <span
-                                    className={`mt-1 inline-flex rounded-full border px-2 py-1 text-[9px] font-bold capitalize ${
-                                        enrolment?.payment_status ===
-                                        "paid"
-                                            ? "border-emerald-300/20 bg-emerald-400/15 text-emerald-100"
-                                            : "border-amber-300/20 bg-amber-400/15 text-amber-100"
-                                    }`}
-                                >
-                                    {enrolment?.payment_status ||
-                                        "Unknown"}
-                                </span>
-                            </div>
-
-                        </div>
-
-
-                        {enrolment?.business_name && (
-                            <div className="relative mt-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2.5">
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-blue-200/70">
-                                    Registered Business
-                                </p>
-
-                                <p className="mt-0.5 truncate text-[11px] font-bold text-white">
-                                    {enrolment.business_name}
-                                </p>
-                            </div>
-                        )}
-
-
-                        <button
-                            onClick={() =>
-                                navigate(
-                                    "/provider/enrolment"
-                                )
-                            }
-                            className="relative mt-3 w-full rounded-xl border border-white/10 bg-blue-500/70 py-2 text-[10px] font-bold text-white transition hover:bg-blue-500"
-                        >
-                            View Enrolment
-                        </button>
-
-                    </div>
-
-
-                    {/* Quick Actions */}
-                    <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-
-                        <div className="absolute -left-12 -top-12 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl" />
-
-                        <div className="relative">
-                            <h2 className="text-sm font-bold text-white">
-                                Quick Actions
+                            <h2 className="mt-2 text-xl font-semibold text-[#172A46] sm:text-2xl">
+                                Request Analysis
                             </h2>
 
-                            <p className="mt-1 text-[10px] text-white/50">
-                                Quickly access the areas you use most.
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                Monitor the status of your service requests.
                             </p>
                         </div>
 
-
-                        <div className="relative mt-3 grid grid-cols-2 gap-2">
-
-                            <button
-                                onClick={() =>
-                                    navigate(
-                                        "/provider/service-requests"
-                                    )
-                                }
-                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
-                            >
-                                <div className="flex items-center gap-2">
-
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="1.8"
-                                                d="M9 5h6M9 9h6M9 13h4M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-white">
-                                            Requests
-                                        </h3>
-
-                                        <p className="truncate text-[8px] text-white/50">
-                                            Manage requests
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </button>
-
-
-                            <button
-                                onClick={() =>
-                                    navigate("/messages")
-                                }
-                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
-                            >
-                                <div className="flex items-center gap-2">
-
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="1.8"
-                                                d="M21 11.5a8.5 8.5 0 01-9 8.5 9.2 9.2 0 01-4.5-1.2L3 20l1.2-4.5A8.5 8.5 0 1111.5 20"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-white">
-                                            Messages
-                                        </h3>
-
-                                        <p className="truncate text-[8px] text-white/50">
-                                            Customer messages
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </button>
-
-
-                            <button
-                                onClick={() =>
-                                    profile?.id &&
-                                    navigate(
-                                        `/providers/${profile.id}`
-                                    )
-                                }
-                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
-                            >
-                                <div className="flex items-center gap-2">
-
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="1.8"
-                                                d="M20 21a8 8 0 00-16 0M12 13a4 4 0 100-8 4 4 0 000 8z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-white">
-                                            Profile
-                                        </h3>
-
-                                        <p className="truncate text-[8px] text-white/50">
-                                            View your profile
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </button>
-
-
-                            <button
-                                onClick={() =>
-                                    profile?.id &&
-                                    navigate(
-                                        `/providers/${profile.id}/reviews`
-                                    )
-                                }
-                                className="rounded-xl border border-white/15 bg-white/10 p-2.5 text-left transition hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/15 hover:shadow-lg"
-                            >
-                                <div className="flex items-center gap-2">
-
-                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-blue-300/20 bg-blue-500/20 text-blue-200">
-                                        <svg
-                                            className="h-3.5 w-3.5"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 0"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth="1.8"
-                                                d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3 6.4 20.2l1.1-6.2L3 9.6l6.2-.9L12 3z"
-                                            />
-                                        </svg>
-                                    </div>
-
-                                    <div className="min-w-0">
-                                        <h3 className="truncate text-[10px] font-bold text-white">
-                                            Reviews
-                                        </h3>
-
-                                        <p className="truncate text-[8px] text-white/50">
-                                            Customer feedback
-                                        </p>
-                                    </div>
-
-                                </div>
-                            </button>
-
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#172A46]/5">
+                            <BarChart3 className="h-5 w-5 text-[#172A46]" />
                         </div>
                     </div>
 
-                </section>
+                    <div className="grid grid-cols-1 items-center gap-8 p-5 sm:p-7 md:grid-cols-2 md:gap-10">
 
-            </div>
+                        {/* Circular activity graph */}
+                        <div className="flex flex-col items-center justify-center">
+                            <div className="relative h-56 w-56 sm:h-64 sm:w-64">
+                                <svg
+                                    viewBox="0 0 200 200"
+                                    className="h-full w-full -rotate-90"
+                                    role="img"
+                                    aria-label={`${activityPercentage}% of service requests are pending or accepted`}
+                                >
+                                    <circle
+                                        cx="100"
+                                        cy="100"
+                                        r="78"
+                                        fill="none"
+                                        stroke="#E8DDD1"
+                                        strokeWidth="16"
+                                    />
+
+                                    <circle
+                                        cx="100"
+                                        cy="100"
+                                        r="78"
+                                        fill="none"
+                                        stroke="#C66A4A"
+                                        strokeWidth="16"
+                                        strokeLinecap="round"
+                                        strokeDasharray={`${(activityPercentage / 100) * 490.09} 490.09`}
+                                        className="transition-all duration-700"
+                                    />
+                                </svg>
+
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                    <span className="text-4xl font-semibold tracking-tight text-[#172A46] sm:text-5xl">
+                                        {activityPercentage}%
+                                    </span>
+
+                                    <span className="mt-2 text-sm font-medium text-[#6B7280]">
+                                        Active requests
+                                    </span>
+
+                                    <span className="mt-1 text-xs text-[#8B8178]">
+                                        {activeRequests} of {requests.length} total
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p className="mt-3 max-w-xs text-center text-sm leading-6 text-[#6B7280]">
+                                Percentage of requests that are awaiting action
+                                or have been accepted.
+                            </p>
+                        </div>
+
+                        {/* Request status breakdown */}
+                        <div>
+                            <h3 className="text-base font-semibold text-[#172A46]">
+                                Request Breakdown
+                            </h3>
+
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                See how your requests are distributed.
+                            </p>
+
+                            <div className="mt-6 space-y-5">
+                                {analysisData.map((item) => {
+                                    const percentage = requestPercentage(
+                                        item.value
+                                    );
+
+                                    const barWidth =
+                                        (item.value / maximumStatusValue) * 100;
+
+                                    return (
+                                        <div key={item.label}>
+                                            <div className="mb-2 flex items-center justify-between gap-3">
+                                                <div className="flex items-center gap-2.5">
+                                                    <span
+                                                        className="h-3 w-3 rounded-full"
+                                                        style={{
+                                                            backgroundColor: item.color,
+                                                        }}
+                                                    />
+
+                                                    <span className="text-sm font-medium text-[#536070]">
+                                                        {item.label}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-[#8B8178]">
+                                                        {percentage}%
+                                                    </span>
+
+                                                    <span className="min-w-5 text-right text-sm font-semibold text-[#172A46]">
+                                                        {item.value}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="h-2 overflow-hidden rounded-full bg-[#F0E7DD]">
+                                                <div
+                                                    className="h-full rounded-full transition-all duration-700"
+                                                    style={{
+                                                        width: `${barWidth}%`,
+                                                        backgroundColor: item.color,
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="mt-6 grid grid-cols-2 gap-3 border-t border-[#E8DDD1] pt-5">
+                                <div className="rounded-xl bg-[#F4EDE5] p-4">
+                                    <p className="text-xs text-[#6B7280]">
+                                        Total requests
+                                    </p>
+                                    <p className="mt-1 text-2xl font-semibold text-[#172A46]">
+                                        {requests.length}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl bg-[#F4EDE5] p-4">
+                                    <p className="text-xs text-[#6B7280]">
+                                        Conversations
+                                    </p>
+                                    <p className="mt-1 text-2xl font-semibold text-[#172A46]">
+                                        {conversations.length}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Recent service requests */}
+            <section className="bg-[#FFFDF9] py-8 sm:py-10">
+                <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-10">
+                    <div className="mb-5 flex items-center justify-between gap-4">
+                        <div>
+                            <h2 className="text-xl font-semibold text-[#172A46]">
+                                Recent Requests
+                                <span className="ml-2 text-sm font-normal text-[#8B8178]">
+                                    ({requests.length})
+                                </span>
+                            </h2>
+
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                Keep track of your latest customer requests.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={goToRequests}
+                            className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-[#C66A4A] hover:text-[#172A46]"
+                        >
+                            View all
+                            <ArrowRight className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    {requests.length === 0 ? (
+                        <div className="border-y border-[#E8DDD1] py-6">
+                            <p className="text-sm font-medium text-[#172A46]">
+                                No service requests yet
+                            </p>
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                New customer requests will appear here.
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-[#E8DDD1] border-y border-[#E8DDD1]">
+                            {[...requests]
+                                .sort(
+                                    (a, b) =>
+                                        new Date(b.created_at || 0) -
+                                        new Date(a.created_at || 0)
+                                )
+                                .slice(0, 5)
+                                .map((request) => (
+                                    <button
+                                        key={request.id}
+                                        type="button"
+                                        onClick={goToRequests}
+                                        className="flex w-full flex-col gap-2 py-4 text-left transition hover:bg-[#F4EDE5]/60 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-3"
+                                    >
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                <h3 className="text-sm font-semibold text-[#172A46]">
+                                                    {request.service_title || "Service Request"}
+                                                </h3>
+
+                                                <span
+                                                    className={`rounded-md px-2 py-1 text-xs font-medium capitalize ${getStatusClasses(request.status)}`}
+                                                >
+                                                    {request.status?.replace("_", " ") || "Unknown"}
+                                                </span>
+                                            </div>
+
+                                            <p className="mt-1 text-sm text-[#6B7280]">
+                                                {request.customer || "Customer"}
+                                            </p>
+
+                                            <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#81786F]">
+                                                {request.location && (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        {request.location}
+                                                    </span>
+                                                )}
+
+                                                <span className="inline-flex items-center gap-1">
+                                                    <CalendarDays className="h-3.5 w-3.5" />
+                                                    {formatDate(request.created_at)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <span className="inline-flex shrink-0 items-center gap-1 self-start text-xs font-medium text-[#172A46] sm:self-center">
+                                            View requests
+                                            <ArrowRight className="h-3.5 w-3.5" />
+                                        </span>
+                                    </button>
+                                ))}
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* Provider profile and enrolment */}
+            <section className="mx-auto grid max-w-7xl grid-cols-1 gap-5 px-5 py-10 sm:px-6 lg:grid-cols-2 lg:px-10">
+                <div className="rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] p-5 shadow-sm sm:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#C66A4A]">
+                                Your Business
+                            </p>
+
+                            <h2 className="mt-2 text-xl font-semibold text-[#172A46]">
+                                Provider Profile
+                            </h2>
+
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                Your public provider information.
+                            </p>
+                        </div>
+
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#172A46]/5 text-[#172A46]">
+                            <BriefcaseBusiness className="h-5 w-5" />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 space-y-4">
+                        <div>
+                            <p className="text-xs text-[#81786F]">
+                                Business name
+                            </p>
+                            <p className="mt-1 break-words text-sm font-semibold text-[#172A46]">
+                                {profile?.business_name || "Not available"}
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <p className="text-xs text-[#81786F]">
+                                    Service category
+                                </p>
+                                <p className="mt-1 break-words text-sm font-medium text-[#172A46]">
+                                    {profile?.service_category || "Not available"}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-xs text-[#81786F]">
+                                    Location
+                                </p>
+                                <p className="mt-1 break-words text-sm font-medium text-[#172A46]">
+                                    {profile?.location || "Not available"}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p className="text-xs text-[#81786F]">
+                                Years of experience
+                            </p>
+                            <p className="mt-1 text-sm font-medium text-[#172A46]">
+                                {profile?.years_of_experience != null
+                                    ? `${profile.years_of_experience} years`
+                                    : "Not available"}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={goToProfile}
+                        disabled={!profile?.id}
+                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#D9C2AD] px-5 py-3 text-sm font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:bg-[#F4EDE5] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <UserRound className="h-4 w-4" />
+                        Manage Profile
+                    </button>
+                </div>
+
+                <div className="rounded-2xl border border-[#D9C2AD] bg-[#FFFDF9] p-5 shadow-sm sm:p-6">
+                    <div className="flex items-start justify-between gap-4">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#C66A4A]">
+                                Account Details
+                            </p>
+
+                            <h2 className="mt-2 text-xl font-semibold text-[#172A46]">
+                                Provider Enrolment
+                            </h2>
+
+                            <p className="mt-1 text-sm text-[#6B7280]">
+                                Your registration and payment status.
+                            </p>
+                        </div>
+
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#172A46]/5 text-[#172A46]">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </div>
+                    </div>
+
+                    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="rounded-xl bg-[#F4EDE5] p-4">
+                            <p className="text-xs text-[#81786F]">
+                                Enrolment status
+                            </p>
+                            <p className="mt-2 text-sm font-semibold capitalize text-[#172A46]">
+                                {enrolment?.status || "Unknown"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-xl bg-[#F4EDE5] p-4">
+                            <p className="text-xs text-[#81786F]">
+                                Payment status
+                            </p>
+                            <p
+                                className={`mt-2 text-sm font-semibold capitalize ${
+                                    enrolment?.payment_status === "paid"
+                                        ? "text-emerald-700"
+                                        : "text-[#C66A4A]"
+                                }`}
+                            >
+                                {enrolment?.payment_status || "Unknown"}
+                            </p>
+                        </div>
+                    </div>
+
+                    {enrolment?.business_name && (
+                        <div className="mt-4">
+                            <p className="text-xs text-[#81786F]">
+                                Registered business
+                            </p>
+                            <p className="mt-1 break-words text-sm font-medium text-[#172A46]">
+                                {enrolment.business_name}
+                            </p>
+                        </div>
+                    )}
+
+                    <button
+                        type="button"
+                        onClick={() => navigate("/provider/enrolment")}
+                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#D9C2AD] px-5 py-3 text-sm font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:bg-[#F4EDE5]"
+                    >
+                        View Enrolment
+                        <ArrowRight className="h-4 w-4" />
+                    </button>
+                </div>
+            </section>
+
+            {/* Final call to action */}
+            <section className="bg-[#172A46] py-12 sm:py-16">
+                <div className="mx-auto max-w-5xl px-5 text-center sm:px-6">
+                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#D9B99B]">
+                        Grow With FixIt
+                    </p>
+
+                    <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                        Ready for your next service request?
+                    </h2>
+
+                    <p className="mx-auto mt-4 max-w-2xl leading-7 text-white/75">
+                        Keep your profile updated, respond to customers,
+                        and use your dashboard to stay on top of your work.
+                    </p>
+
+                    <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                        <button
+                            type="button"
+                            onClick={goToRequests}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#C66A4A] px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-[#B85B3E]"
+                        >
+                            Manage Requests
+                            <ArrowRight className="h-4 w-4" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => navigate("/messages")}
+                            className="rounded-xl border border-white/30 bg-white/10 px-7 py-3.5 text-sm font-medium text-white transition hover:bg-white/20"
+                        >
+                            Open Messages
+                        </button>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }

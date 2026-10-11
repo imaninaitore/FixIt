@@ -1,571 +1,1085 @@
+
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  MapPin,
-  MessageSquare,
-  X,
-  XCircle,
+    ArrowLeft,
+    ArrowRight,
+    CalendarDays,
+    CheckCircle2,
+    Clock3,
+    Eye,
+    MapPin,
+    User,
+    X,
+    XCircle,
+    ClipboardList,
+    BriefcaseBusiness,
 } from "lucide-react";
 
-
 import {
-  getProviderServiceRequests,
-  updateServiceRequest,
+    getProviderServiceRequests,
+    updateServiceRequest,
 } from "../../services/serviceRequestService";
 
 function ProviderServiceRequests() {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [updatingId, setUpdatingId] = useState(null);
+    const [serviceRequests, setServiceRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [selectedRequest, setSelectedRequest] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [updatingRequestId, setUpdatingRequestId] = useState(null);
 
-  // Selected request for the details panel
-  const [selectedRequest, setSelectedRequest] = useState(null);
+    const navigate = useNavigate();
+    const requestsPerPage = 5;
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const requestsPerPage = 6;
+    useEffect(() => {
+        loadServiceRequests();
+    }, []);
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
+    async function loadServiceRequests() {
+        try {
+            setLoading(true);
+            setError("");
 
-  async function loadRequests() {
-    try {
-      setLoading(true);
-      setError("");
+            const data = await getProviderServiceRequests();
 
-      const data = await getProviderServiceRequests();
+            const requests = Array.isArray(data)
+                ? data
+                : Array.isArray(data?.results)
+                    ? data.results
+                    : [];
 
-      setRequests(data);
-      setCurrentPage(1);
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err.message ||
-          "Failed to load service requests."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleStatusChange(requestId, status) {
-    try {
-      setUpdatingId(requestId);
-      setError("");
-
-      const updatedRequest = await updateServiceRequest(
-        requestId,
-        { status }
-      );
-
-      setRequests((previousRequests) =>
-        previousRequests.map((request) =>
-          request.id === requestId
-            ? updatedRequest
-            : request
-        )
-      );
-
-      // Also update the request currently being viewed
-      setSelectedRequest((previousRequest) =>
-        previousRequest?.id === requestId
-          ? updatedRequest
-          : previousRequest
-      );
-    } catch (err) {
-      console.error(err);
-
-      setError(
-        err.message ||
-          "Failed to update request."
-      );
-    } finally {
-      setUpdatingId(null);
-    }
-  }
-
-  function getStatusStyles(status) {
-    switch (status) {
-      case "pending":
-        return {
-          icon: Clock3,
-          container:
-            "bg-amber-500/20 text-amber-900 border-amber-300/50 backdrop-blur-sm",
-          label: "Pending",
-        };
-
-      case "accepted":
-        return {
-          icon: CheckCircle2,
-          container:
-            "bg-emerald-500/20 text-emerald-900 border-emerald-300/50 backdrop-blur-sm",
-          label: "Accepted",
-        };
-
-      case "completed":
-        return {
-          icon: CheckCircle2,
-          container:
-            "bg-blue-500/20 text-blue-900 border-blue-300/50 backdrop-blur-sm",
-          label: "Completed",
-        };
-
-      case "rejected":
-        return {
-          icon: XCircle,
-          container:
-            "bg-red-500/20 text-red-900 border-red-300/50 backdrop-blur-sm",
-          label: "Rejected",
-        };
-
-      default:
-        return {
-          icon: Clock3,
-          container:
-            "bg-slate-500/20 text-slate-800 border-slate-300/50 backdrop-blur-sm",
-          label: status,
-        };
-    }
-  }
-
-  function formatDate(date) {
-    if (!date) {
-      return "Not specified";
+            setServiceRequests(requests);
+        } catch (err) {
+            console.error(err);
+            setError("Failed to load your service requests.");
+        } finally {
+            setLoading(false);
+        }
     }
 
-    const parsedDate = new Date(date);
+    async function handleUpdateStatus(request, status) {
+        if (updatingRequestId !== null) return;
 
-    if (Number.isNaN(parsedDate.getTime())) {
-      return date;
+        try {
+            setUpdatingRequestId(request.id);
+            setError("");
+
+            const updatedRequest = await updateServiceRequest(
+                request.id,
+                { status }
+            );
+
+            setServiceRequests((previousRequests) =>
+                previousRequests.map((item) =>
+                    item.id === request.id
+                        ? { ...item, ...updatedRequest, status }
+                        : item
+                )
+            );
+
+            setSelectedRequest((previousRequest) =>
+                previousRequest?.id === request.id
+                    ? { ...previousRequest, ...updatedRequest, status }
+                    : previousRequest
+            );
+        } catch (err) {
+            console.error(err);
+            setError(
+                err.message || "Unable to update this service request."
+            );
+        } finally {
+            setUpdatingRequestId(null);
+        }
     }
 
-    return parsedDate.toLocaleDateString("en-KE", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  }
+    function getStatusStyles(status) {
+        switch (status) {
+            case "pending":
+                return {
+                    icon: Clock3,
+                    container:
+                        "bg-[#D9B99B]/30 text-[#8A5A42] border-[#D9B99B]",
+                    label: "Pending",
+                };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(
-    requests.length / requestsPerPage
-  );
+            case "accepted":
+                return {
+                    icon: CheckCircle2,
+                    container:
+                        "bg-[#E8DED2] text-[#365B4A] border-[#C9D8CE]",
+                    label: "Accepted",
+                };
 
-  const startIndex =
-    (currentPage - 1) * requestsPerPage;
+            case "in_progress":
+                return {
+                    icon: Clock3,
+                    container:
+                        "bg-[#D9B99B]/25 text-[#7A573F] border-[#D9B99B]",
+                    label: "In Progress",
+                };
 
-  const currentRequests = requests.slice(
-    startIndex,
-    startIndex + requestsPerPage
-  );
+            case "completed":
+                return {
+                    icon: CheckCircle2,
+                    container:
+                        "bg-[#E8DED2] text-[#365B4A] border-[#C9D8CE]",
+                    label: "Completed",
+                };
 
-  function goToPage(page) {
-    if (page < 1 || page > totalPages) {
-      return;
+            case "rejected":
+                return {
+                    icon: XCircle,
+                    container:
+                        "bg-[#F4E1DC] text-[#9B4930] border-[#E2B8AB]",
+                    label: "Rejected",
+                };
+
+            case "cancelled":
+                return {
+                    icon: XCircle,
+                    container:
+                        "bg-[#F4EDE5] text-[#6B7280] border-[#D9B99B]",
+                    label: "Cancelled",
+                };
+
+            default:
+                return {
+                    icon: Clock3,
+                    container:
+                        "bg-[#F4EDE5] text-[#536070] border-[#D9B99B]",
+                    label: status
+                        ? status.replaceAll("_", " ")
+                        : "Unknown",
+                };
+        }
     }
 
-    setCurrentPage(page);
+    function formatDate(date) {
+        if (!date) return "—";
 
-    // Keep the user at the request list
-    window.scrollTo({
-      top: 350,
-      behavior: "smooth",
-    });
-  }
+        const parsedDate = new Date(date);
 
-  return (
-    <div className="relative min-h-screen bg-slate-900 text-slate-900">
-      {/* Clear background image (No Blur) */}
-      <div 
-        className="fixed inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url('/images/dashboard2.jpg')` }}
-      />
-      {/* Optional faint overlay to increase text contrast over clear background */}
-      <div className="fixed inset-0 z-0 bg-black/20" />
+        if (Number.isNaN(parsedDate.getTime())) return "—";
 
-      <div className="relative z-10 flex min-h-screen flex-col">
+        return parsedDate.toLocaleDateString("en-KE", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
+    }
 
-        {/* Hero Section with Glass styling */}
-        <section className="relative overflow-hidden mx-auto mt-6 w-full max-w-4xl rounded-3xl border border-white/20 bg-slate-900/60 backdrop-blur-md px-6 py-10 shadow-2xl">
-          <div className="relative mx-auto max-w-2xl text-center sm:text-left">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-300">
-              Provider Portal
-            </p>
+    function openRequest(request) {
+        setSelectedRequest(request);
+    }
 
-            <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-              Service <span className="text-blue-400">Requests</span>
-            </h1>
+    function closeRequest() {
+        setSelectedRequest(null);
+    }
 
-            <p className="mt-4 max-w-xl text-sm leading-6 text-slate-200 sm:text-base sm:leading-7">
-              Review customer requests, view their details, and manage requests assigned to you.
-            </p>
-          </div>
-        </section>
+    function handleFilterChange(status) {
+        setStatusFilter(status);
+        setCurrentPage(1);
+    }
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-7 sm:px-6 sm:py-10 lg:px-8">
-          {/* Error */}
-          {error && (
-            <div className="mb-6 rounded-2xl border border-red-200/60 bg-white/80 p-5 shadow-lg backdrop-blur-md">
-              <h2 className="font-semibold text-red-800">
-                Unable to complete the request
-              </h2>
+    function handlePageChange(page) {
+        setCurrentPage(page);
 
-              <p className="mt-2 text-sm text-red-700">{error}</p>
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    }
 
-              <button
-                onClick={loadRequests}
-                className="mt-4 rounded-lg bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 shadow-md"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
+    const pendingCount = serviceRequests.filter(
+        (request) => request.status === "pending"
+    ).length;
 
-          {/* Loading */}
-          {loading && (
-            <div className="flex min-h-[300px] items-center justify-center rounded-2xl border border-white/30 bg-white/60 shadow-xl backdrop-blur-md">
-              <div className="text-center">
-                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                <p className="mt-4 text-sm font-medium text-slate-700">
-                  Loading service requests...
-                </p>
-              </div>
-            </div>
-          )}
+    const acceptedCount = serviceRequests.filter(
+        (request) => request.status === "accepted"
+    ).length;
 
-          {/* Empty state */}
-          {!loading && requests.length === 0 && !error && (
-            <div className="relative overflow-hidden rounded-2xl border border-white/30 bg-white/60 px-5 py-16 text-center shadow-xl backdrop-blur-md">
-              <div className="relative">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-lg">
-                  <MessageSquare className="h-7 w-7" />
-                </div>
+    const completedCount = serviceRequests.filter(
+        (request) => request.status === "completed"
+    ).length;
 
-                <h2 className="mt-6 text-xl font-bold text-slate-900 sm:text-2xl">
-                  No service requests yet
-                </h2>
+    const filteredRequests =
+        statusFilter === "all"
+            ? serviceRequests
+            : serviceRequests.filter(
+                  (request) => request.status === statusFilter
+              );
 
-                <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
-                  Service requests sent to you by customers will appear here.
-                </p>
-              </div>
-            </div>
-          )}
+    const totalPages = Math.ceil(
+        filteredRequests.length / requestsPerPage
+    );
 
-          {/* Request list */}
-          {!loading && requests.length > 0 && (
-            <div>
-              {/* List header */}
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-bold text-white drop-shadow-sm">
-                    Customer Requests
-                  </h2>
+    const startIndex = (currentPage - 1) * requestsPerPage;
 
-                  <p className="text-sm text-slate-200">
-                    Showing {startIndex + 1}–
-                    {Math.min(
-                      startIndex + requestsPerPage,
-                      requests.length
-                    )}{" "}
-                    of {requests.length} requests
-                  </p>
-                </div>
-              </div>
+    const currentRequests = filteredRequests.slice(
+        startIndex,
+        startIndex + requestsPerPage
+    );
 
-              {/* Glass Card Container */}
-              <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70 shadow-2xl backdrop-blur-md">
-                {currentRequests.map((request, index) => {
-                  const status = getStatusStyles(request.status);
-                  const StatusIcon = status.icon;
+   
+    useEffect(() => {
+        if (totalPages === 0 && currentPage !== 1) {
+            setCurrentPage(1);
+        } else if (totalPages > 0 && currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
 
-                  return (
-                    <button
-                      key={request.id}
-                      type="button"
-                      onClick={() => setSelectedRequest(request)}
-                      className={`group w-full text-left transition hover:bg-white/50 ${
-                        index !== currentRequests.length - 1
-                          ? "border-b border-slate-200/60"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-5">
-                        {/* Icon */}
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-md transition group-hover:scale-105">
-                          <MessageSquare className="h-5 w-5" />
+    const statusCards = [
+        {
+            key: "pending",
+            title: "Pending Requests",
+            count: pendingCount,
+            description: "Awaiting your response",
+            icon: Clock3,
+            iconStyle: "bg-[#D9B99B]/30 text-[#8A5A42]",
+        },
+        {
+            key: "accepted",
+            title: "Accepted Requests",
+            count: acceptedCount,
+            description: "Work you've accepted",
+            icon: CheckCircle2,
+            iconStyle: "bg-[#E8DED2] text-[#365B4A]",
+        },
+        {
+            key: "completed",
+            title: "Completed Requests",
+            count: completedCount,
+            description: "Successfully completed",
+            icon: ClipboardList,
+            iconStyle: "bg-[#E8DED2] text-[#365B4A]",
+        },
+    ];
+
+    return (
+        <div className="min-h-screen bg-[#F4EDE5]">
+            {/* Hero */}
+
+            <section className="relative overflow-hidden bg-[#172A46]">
+                <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#C66A4A]/20 blur-3xl" />
+
+                <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-[#D9B99B]/10 blur-3xl" />
+
+                <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+                  
+                    <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
+                        <div className="max-w-2xl">
+                            <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                                Service{" "}
+                                <span className="text-[#D9B99B]">
+                                    Requests
+                                </span>
+                            </h1>
+
+                            <p className="mt-4 max-w-xl text-sm leading-7 text-[#E8DED2]/80 sm:text-base">
+                                Manage customer requests, review service
+                                details, and keep track of the work you
+                                have accepted.
+                            </p>
                         </div>
-
-                        {/* Main information */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                            <h3 className="truncate text-sm font-bold text-slate-900 sm:text-base">
-                              {request.service_title}
-                            </h3>
-
-                            <span
-                              className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.container}`}
-                            >
-                              <StatusIcon className="h-3 w-3" />
-                              {status.label}
-                            </span>
-                          </div>
-
-                          <p className="mt-1 truncate text-xs text-slate-600 sm:text-sm">
-                            {request.description}
-                          </p>
-                        </div>
-
-                        {/* Request metadata */}
-                        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-slate-600 sm:justify-end">
-                          <span className="flex items-center gap-1.5">
-                            <MessageSquare className="h-3.5 w-3.5 text-blue-600" />
-                            {request.customer}
-                          </span>
-
-                          <span className="flex items-center gap-1.5">
-                            <MapPin className="h-3.5 w-3.5 text-blue-600" />
-                            {request.location}
-                          </span>
-
-                          <span className="flex items-center gap-1.5">
-                            <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
-                            {formatDate(request.preferred_date)}
-                          </span>
-                        </div>
-
-                        {/* View indicator */}
-                        <div className="hidden shrink-0 text-xs font-semibold text-blue-700 sm:block">
-                          View 
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Glass Pagination Card */}
-              {totalPages > 1 && (
-                <div className="mt-6 flex flex-col items-center justify-between gap-4 rounded-2xl border border-white/40 bg-white/70 p-4 shadow-xl backdrop-blur-md sm:flex-row">
-                  <p className="text-xs font-medium text-slate-700">
-                    Page{" "}
-                    <span className="font-bold text-slate-900">
-                      {currentPage}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-bold text-slate-900">
-                      {totalPages}
-                    </span>
-                  </p>
-
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => goToPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="rounded-lg border border-slate-300/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 shadow-sm"
-                    >
-                      Previous
-                    </button>
-
-                    <div className="flex items-center gap-1">
-                      {Array.from(
-                        { length: totalPages },
-                        (_, index) => index + 1
-                      ).map((page) => (
-                        <button
-                          key={page}
-                          type="button"
-                          onClick={() => goToPage(page)}
-                          className={`h-9 min-w-9 rounded-lg px-2 text-xs font-semibold transition shadow-sm ${
-                            currentPage === page
-                              ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white"
-                              : "border border-slate-300/80 bg-white/80 text-slate-700 hover:bg-white hover:text-blue-600"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      ))}
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => goToPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="rounded-lg border border-slate-300/80 bg-white/80 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40 shadow-sm"
-                    >
-                      Next
-                    </button>
-                  </div>
                 </div>
-              )}
-            </div>
-          )}
-        </main>
-      </div>
+            </section>
 
-      {/* Request details modal */}
-      {selectedRequest && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md"
-          onClick={() => setSelectedRequest(null)}
-        >
-          <div
-            className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-white/30 bg-white/80 shadow-2xl backdrop-blur-lg"
-            onClick={(event) => event.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#071426] via-[#0d2b50] to-[#1769aa] px-5 py-6 sm:px-7">
-              <button
-                type="button"
-                onClick={() => setSelectedRequest(null)}
-                className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-                aria-label="Close request details"
-              >
-                <X className="h-5 w-5" />
-              </button>
+            {/* Main Content */}
 
-              <div className="relative flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/10 text-blue-200 backdrop-blur-sm">
-                  <MessageSquare className="h-6 w-6" />
+            <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+                {/* Loading */}
+
+                {loading && (
+                    <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
+                        <div className="text-center">
+                            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#D9B99B] border-t-[#C66A4A]" />
+
+                            <p className="mt-4 text-sm text-[#6B7280]">
+                                Loading your service requests...
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Error */}
+
+                {!loading && error && (
+                    <div className="rounded-2xl border border-[#E2B8AB] bg-[#FFFDF9] p-6 shadow-sm sm:p-7">
+                        <h2 className="font-semibold text-[#172A46]">
+                            Unable to load service requests
+                        </h2>
+
+                        <p className="mt-2 text-sm text-[#9B4930]">
+                            {error}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={loadServiceRequests}
+                            className="mt-5 rounded-lg bg-[#C66A4A] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#A95338]"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                )}
+
+                {/* No Requests */}
+
+                {!loading &&
+                    !error &&
+                    serviceRequests.length === 0 && (
+                        <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-16 text-center shadow-sm">
+                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#172A46] text-white">
+                                <ClipboardList className="h-6 w-6" />
+                            </div>
+
+                            <h2 className="mt-5 text-xl font-bold text-[#172A46] sm:text-2xl">
+                                No service requests yet
+                            </h2>
+
+                            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6B7280]">
+                                Customer requests assigned to you will
+                                appear here. You can review each request
+                                and respond when one arrives.
+                            </p>
+
+                          
+                        </div>
+                    )}
+
+                {/* Overview and Filters */}
+
+                {!loading && !error && serviceRequests.length > 0 && (
+                    <div className="mb-8 space-y-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <h2 className="text-lg font-bold text-[#172A46]">
+                                    Request Overview
+                                </h2>
+
+                                <p className="mt-1 text-sm text-[#6B7280]">
+                                    Select a category to filter your requests.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => handleFilterChange("all")}
+                                aria-pressed={statusFilter === "all"}
+                                className={`inline-flex w-fit items-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-[#C66A4A] focus:ring-offset-2 ${
+                                    statusFilter === "all"
+                                        ? "bg-[#172A46] text-white"
+                                        : "border border-[#D9B99B] bg-[#FFFDF9] text-[#536070] hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                }`}
+                            >
+                                <ClipboardList className="h-4 w-4" />
+                                All Requests
+                                <span
+                                    className={`rounded-full px-2 py-0.5 text-[10px] ${
+                                        statusFilter === "all"
+                                            ? "bg-white/15 text-white"
+                                            : "bg-[#F4EDE5] text-[#172A46]"
+                                    }`}
+                                >
+                                    {serviceRequests.length}
+                                </span>
+                            </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {statusCards.map((card) => {
+                                const CardIcon = card.icon;
+                                const isActive = statusFilter === card.key;
+
+                                return (
+                                    <button
+                                        key={card.key}
+                                        type="button"
+                                        onClick={() =>
+                                            handleFilterChange(card.key)
+                                        }
+                                        aria-pressed={isActive}
+                                        className={`group relative overflow-hidden rounded-2xl border p-5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#C66A4A] focus:ring-offset-2 ${
+                                            isActive
+                                                ? "border-[#C66A4A] bg-[#172A46] shadow-md"
+                                                : "border-[#D9B99B] bg-[#FFFDF9] hover:border-[#C66A4A]"
+                                        }`}
+                                    >
+                                        {isActive && (
+                                            <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#C66A4A]/15 blur-xl" />
+                                        )}
+
+                                        <div className="relative flex items-start justify-between gap-3">
+                                            <div>
+                                                <p
+                                                    className={`text-sm font-medium ${
+                                                        isActive
+                                                            ? "text-[#E8DED2]"
+                                                            : "text-[#6B7280]"
+                                                    }`}
+                                                >
+                                                    {card.title}
+                                                </p>
+
+                                                <p
+                                                    className={`mt-3 text-3xl font-bold ${
+                                                        isActive
+                                                            ? "text-white"
+                                                            : "text-[#172A46]"
+                                                    }`}
+                                                >
+                                                    {card.count}
+                                                </p>
+                                            </div>
+
+                                            <div
+                                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition ${
+                                                    isActive
+                                                        ? "bg-[#C66A4A] text-white"
+                                                        : `${card.iconStyle} group-hover:bg-[#C66A4A] group-hover:text-white`
+                                                }`}
+                                            >
+                                                <CardIcon className="h-5 w-5" />
+                                            </div>
+                                        </div>
+
+                                        <div
+                                            className={`relative mt-5 flex items-center justify-between border-t pt-3 ${
+                                                isActive
+                                                    ? "border-white/15"
+                                                    : "border-[#E8DED2]"
+                                            }`}
+                                        >
+                                            <span
+                                                className={`text-xs ${
+                                                    isActive
+                                                        ? "text-[#E8DED2]"
+                                                        : "text-[#6B7280]"
+                                                }`}
+                                            >
+                                                {card.description}
+                                            </span>
+
+                                            <ArrowRight
+                                                className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
+                                                    isActive
+                                                        ? "text-[#D9B99B]"
+                                                        : "text-[#C66A4A]"
+                                                }`}
+                                            />
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Filtered Request List */}
+
+                {!loading && !error && serviceRequests.length > 0 && (
+                    <div>
+                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                            <div>
+                                <h2 className="text-lg font-semibold text-[#172A46]">
+                                    {statusFilter === "all"
+                                        ? "All Assigned Requests"
+                                        : `${statusFilter
+                                              .replaceAll("_", " ")
+                                              .replace(/^./, (letter) =>
+                                                  letter.toUpperCase()
+                                              )} Requests`}
+                                </h2>
+
+                                <p className="mt-1 text-sm text-[#6B7280]">
+                                    Showing {filteredRequests.length}{" "}
+                                    {filteredRequests.length === 1
+                                        ? "request"
+                                        : "requests"}
+                                    {statusFilter === "all"
+                                        ? " assigned to you"
+                                        : ` with ${statusFilter.replaceAll(
+                                              "_",
+                                              " "
+                                          )} status`}
+                                </p>
+                            </div>
+
+                            {totalPages > 0 && (
+                                <p className="text-xs text-[#6B7280]">
+                                    Page {currentPage} of {totalPages}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Empty Filter State */}
+
+                        {filteredRequests.length === 0 ? (
+                            <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-12 text-center shadow-sm">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#172A46] text-white">
+                                    <ClipboardList className="h-5 w-5" />
+                                </div>
+
+                                <h3 className="mt-4 font-semibold capitalize text-[#172A46]">
+                                    No {statusFilter.replaceAll("_", " ")}{" "}
+                                    requests
+                                </h3>
+
+                                <p className="mt-2 text-sm text-[#6B7280]">
+                                    There are no requests in this category
+                                    yet.
+                                </p>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        handleFilterChange("all")
+                                    }
+                                    className="mt-5 rounded-lg bg-[#C66A4A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A95338]"
+                                >
+                                    Show All Requests
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Request List */}
+
+                                <div className="overflow-hidden rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
+                                    {/* Desktop Header */}
+
+                                    <div className="hidden border-b border-[#E8DED2] bg-[#F4EDE5] px-5 py-3 md:grid md:grid-cols-[1.6fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                            Service
+                                        </p>
+
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                            Customer
+                                        </p>
+
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                            Date
+                                        </p>
+
+                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
+                                            Status
+                                        </p>
+
+                                        <span />
+                                    </div>
+
+                                    {currentRequests.map((request) => {
+                                        const status = getStatusStyles(
+                                            request.status
+                                        );
+                                        const StatusIcon = status.icon;
+
+                                        return (
+                                            <article
+                                                key={request.id}
+                                                className="border-b border-[#E8DED2] last:border-b-0"
+                                            >
+                                                {/* Desktop Row */}
+
+                                                <div className="hidden px-5 py-4 md:grid md:grid-cols-[1.6fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
+                                                    <div className="flex min-w-0 items-center gap-3">
+                                                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white">
+                                                            <BriefcaseBusiness className="h-4 w-4" />
+                                                        </div>
+
+                                                        <div className="min-w-0">
+                                                            <p className="truncate text-sm font-semibold text-[#172A46]">
+                                                                {request.service_title ||
+                                                                    "Service request"}
+                                                            </p>
+
+                                                            <p className="mt-0.5 text-xs text-[#6B7280]">
+                                                                Request #
+                                                                {request.id}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="truncate text-sm text-[#536070]">
+                                                        {request.customer ||
+                                                            request.customer_name ||
+                                                            "Customer"}
+                                                    </p>
+
+                                                    <p className="text-sm text-[#536070]">
+                                                        {formatDate(
+                                                            request.preferred_date
+                                                        )}
+                                                    </p>
+
+                                                    <span
+                                                        className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.container}`}
+                                                    >
+                                                        <StatusIcon className="h-3 w-3" />
+                                                        {status.label}
+                                                    </span>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openRequest(request)
+                                                        }
+                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5" />
+                                                        View
+                                                    </button>
+                                                </div>
+
+                                                {/* Mobile Row */}
+
+                                                <div className="p-4 md:hidden">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex min-w-0 items-start gap-3">
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white">
+                                                                <BriefcaseBusiness className="h-4 w-4" />
+                                                            </div>
+
+                                                            <div className="min-w-0">
+                                                                <h3 className="text-sm font-semibold text-[#172A46]">
+                                                                    {request.service_title ||
+                                                                        "Service request"}
+                                                                </h3>
+
+                                                                <p className="mt-1 text-xs text-[#6B7280]">
+                                                                    Request #
+                                                                    {request.id}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <span
+                                                            className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${status.container}`}
+                                                        >
+                                                            <StatusIcon className="h-3 w-3" />
+                                                            {status.label}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="mt-4 grid grid-cols-2 gap-3">
+                                                        <div className="min-w-0">
+                                                            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                                                Customer
+                                                            </p>
+
+                                                            <p className="mt-1 truncate text-xs font-medium text-[#536070]">
+                                                                {request.customer ||
+                                                                    request.customer_name ||
+                                                                    "Customer"}
+                                                            </p>
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+                                                                Preferred Date
+                                                            </p>
+
+                                                            <p className="mt-1 text-xs font-medium text-[#536070]">
+                                                                {formatDate(
+                                                                    request.preferred_date
+                                                                )}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {request.status ===
+                                                        "pending" && (
+                                                        <div className="mt-4 grid grid-cols-2 gap-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleUpdateStatus(
+                                                                        request,
+                                                                        "accepted"
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    updatingRequestId !==
+                                                                    null
+                                                                }
+                                                                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#172A46] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                Accept
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleUpdateStatus(
+                                                                        request,
+                                                                        "rejected"
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    updatingRequestId !==
+                                                                    null
+                                                                }
+                                                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-3 py-2.5 text-xs font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
+                                                            >
+                                                                <XCircle className="h-3.5 w-3.5" />
+                                                                Reject
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openRequest(request)
+                                                        }
+                                                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#D9B99B] px-3 py-2.5 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                    >
+                                                        <Eye className="h-3.5 w-3.5" />
+                                                        View Request
+                                                    </button>
+                                                </div>
+
+                                                {/* Desktop Actions */}
+
+                                                {request.status ===
+                                                    "pending" && (
+                                                    <div className="hidden border-t border-[#E8DED2]/70 bg-[#F4EDE5]/40 px-5 py-3 md:flex md:items-center md:justify-end md:gap-2">
+                                                        <span className="mr-auto text-xs text-[#6B7280]">
+                                                            This request is
+                                                            awaiting your
+                                                            response.
+                                                        </span>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleUpdateStatus(
+                                                                    request,
+                                                                    "rejected"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                updatingRequestId !==
+                                                                null
+                                                            }
+                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            <XCircle className="h-3.5 w-3.5" />
+                                                            Reject
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleUpdateStatus(
+                                                                    request,
+                                                                    "accepted"
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                updatingRequestId !==
+                                                                null
+                                                            }
+                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#172A46] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
+                                                        >
+                                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                                            Accept Request
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </article>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Pagination */}
+
+                                {totalPages > 1 && (
+                                    <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="text-xs text-[#6B7280]">
+                                            Showing {startIndex + 1}–
+                                            {Math.min(
+                                                startIndex + requestsPerPage,
+                                                filteredRequests.length
+                                            )}{" "}
+                                            of {filteredRequests.length}
+                                        </p>
+
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handlePageChange(
+                                                        currentPage - 1
+                                                    )
+                                                }
+                                                disabled={currentPage === 1}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                <ArrowLeft className="h-3.5 w-3.5" />
+                                                Previous
+                                            </button>
+
+                                            <div className="flex items-center gap-1">
+                                                {Array.from(
+                                                    { length: totalPages },
+                                                    (_, index) => index + 1
+                                                ).map((page) => (
+                                                    <button
+                                                        type="button"
+                                                        key={page}
+                                                        onClick={() =>
+                                                            handlePageChange(
+                                                                page
+                                                            )
+                                                        }
+                                                        aria-current={
+                                                            currentPage === page
+                                                                ? "page"
+                                                                : undefined
+                                                        }
+                                                        className={`h-8 min-w-8 rounded-lg px-2 text-xs font-semibold transition ${
+                                                            currentPage === page
+                                                                ? "bg-[#172A46] text-white"
+                                                                : "border border-[#D9B99B] bg-[#FFFDF9] text-[#536070] hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                                                        }`}
+                                                    >
+                                                        {page}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handlePageChange(
+                                                        currentPage + 1
+                                                    )
+                                                }
+                                                disabled={
+                                                    currentPage === totalPages
+                                                }
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
+                                            >
+                                                Next
+                                                <ArrowRight className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                )}
+            </main>
+
+            {/* Request Details Modal */}
+
+            {selectedRequest && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-[#172A46]/60 p-4 backdrop-blur-sm"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            closeRequest();
+                        }
+                    }}
+                >
+                    <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-2xl">
+                        {/* Modal Header */}
+
+                        <div className="sticky top-0 z-10 flex items-start justify-between border-b border-[#E8DED2] bg-[#FFFDF9] px-5 py-4 sm:px-6">
+                            <div className="min-w-0 pr-4">
+                                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C66A4A]">
+                                    Service Request #{selectedRequest.id}
+                                </p>
+
+                                <h2 className="mt-1 text-xl font-bold text-[#172A46]">
+                                    {selectedRequest.service_title ||
+                                        "Service Request"}
+                                </h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={closeRequest}
+                                aria-label="Close request details"
+                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#D9B99B] text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+
+                        <div className="space-y-6 p-5 sm:p-6">
+                            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#F4EDE5] p-4">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                                        Current Status
+                                    </p>
+
+                                    <div className="mt-2">
+                                        {(() => {
+                                            const status = getStatusStyles(
+                                                selectedRequest.status
+                                            );
+                                            const StatusIcon = status.icon;
+
+                                            return (
+                                                <span
+                                                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${status.container}`}
+                                                >
+                                                    <StatusIcon className="h-3.5 w-3.5" />
+                                                    {status.label}
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+
+                            <div>
+                                <h3 className="text-sm font-semibold text-[#172A46]">
+                                    Request Description
+                                </h3>
+
+                                <p className="mt-2 whitespace-pre-wrap rounded-xl border border-[#E8DED2] bg-white p-4 text-sm leading-7 text-[#536070]">
+                                    {selectedRequest.description ||
+                                        "No description provided."}
+                                </p>
+                            </div>
+
+                            {/* Details */}
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+                                    <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                                            Customer
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {selectedRequest.customer ||
+                                            selectedRequest.customer_name ||
+                                            "Customer"}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                                            Location
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {selectedRequest.location ||
+                                            "Not provided"}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+                                    <div className="flex items-center gap-2">
+                                        <CalendarDays className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                                            Preferred Date
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {formatDate(
+                                            selectedRequest.preferred_date
+                                        )}
+                                    </p>
+                                </div>
+
+                                <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
+                                    <div className="flex items-center gap-2">
+                                        <Clock3 className="h-4 w-4 text-[#C66A4A]" />
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
+                                            Request Created
+                                        </p>
+                                    </div>
+
+                                    <p className="mt-2 text-sm font-semibold text-[#172A46]">
+                                        {formatDate(
+                                            selectedRequest.created_at
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {selectedRequest.updated_at && (
+                                <p className="text-xs text-[#9CA3AF]">
+                                    Last updated{" "}
+                                    {formatDate(selectedRequest.updated_at)}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+
+                        <div className="flex flex-col gap-3 border-t border-[#E8DED2] bg-[#F4EDE5]/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                            <button
+                                type="button"
+                                onClick={closeRequest}
+                                className="rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-5 py-2.5 text-sm font-medium text-[#536070] transition hover:border-[#172A46] hover:text-[#172A46]"
+                            >
+                                Close
+                            </button>
+
+                            {selectedRequest.status === "pending" && (
+                                <div className="flex flex-col gap-2 sm:flex-row">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                selectedRequest,
+                                                "rejected"
+                                            )
+                                        }
+                                        disabled={updatingRequestId !== null}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-4 py-2.5 text-sm font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        Reject Request
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleUpdateStatus(
+                                                selectedRequest,
+                                                "accepted"
+                                            )
+                                        }
+                                        disabled={updatingRequestId !== null}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#172A46] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        Accept Request
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
-
-                <div className="pr-8">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-blue-300">
-                    Service Request
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-bold text-white sm:text-2xl">
-                    {selectedRequest.service_title}
-                  </h2>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal content */}
-            <div className="p-5 sm:p-7">
-              {/* Status */}
-              {(() => {
-                const status = getStatusStyles(selectedRequest.status);
-                const StatusIcon = status.icon;
-
-                return (
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      Request Status
-                    </span>
-
-                    <span
-                      className={`inline-flex w-fit items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold ${status.container}`}
-                    >
-                      <StatusIcon className="h-3.5 w-3.5" />
-                      {status.label}
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {/* Description */}
-              <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Request Description
-                </p>
-
-                <div className="mt-2 rounded-xl border border-slate-200/80 bg-white/60 p-4">
-                  <p className="text-sm leading-7 text-slate-800">
-                    {selectedRequest.description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Details grid */}
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-slate-200/80 bg-white/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-blue-600" />
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Customer
-                    </p>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {selectedRequest.customer || "Not provided"}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-slate-200/80 bg-white/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-blue-600" />
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Location
-                    </p>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {selectedRequest.location || "Not provided"}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-slate-200/80 bg-white/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-blue-600" />
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Preferred Date
-                    </p>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {formatDate(selectedRequest.preferred_date)}
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-slate-200/80 bg-white/60 p-4">
-                  <div className="flex items-center gap-2">
-                    <Clock3 className="h-4 w-4 text-blue-600" />
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Request ID
-                    </p>
-                  </div>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    #{selectedRequest.id}
-                  </p>
-                </div>
-              </div>
-
-              {/* Actions */}
-              {selectedRequest.status === "pending" && (
-                <div className="mt-7 flex flex-col gap-3 border-t border-slate-200/80 pt-5 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange(selectedRequest.id, "rejected")
-                    }
-                    disabled={updatingId === selectedRequest.id}
-                    className="rounded-xl border border-red-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm"
-                  >
-                    Reject
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleStatusChange(selectedRequest.id, "accepted")
-                    }
-                    disabled={updatingId === selectedRequest.id}
-                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 shadow-md"
-                  >
-                    Accept Request
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
 export default ProviderServiceRequests;

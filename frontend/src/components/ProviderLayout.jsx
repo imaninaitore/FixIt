@@ -23,25 +23,18 @@ function ProviderLayout({ children }) {
 
     const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
         return (
-            localStorage.getItem(
-                "providerSidebarCollapsed"
-            ) === "true"
+            localStorage.getItem("providerSidebarCollapsed") === "true"
         );
     });
 
-    const [providerStateLoading, setProviderStateLoading] =
-        useState(true);
+    const [providerStateLoading, setProviderStateLoading] = useState(true);
 
     useEffect(() => {
         loadProviderData();
     }, []);
 
     useEffect(() => {
-        if (providerStateLoading) {
-            return;
-        }
-
-        if (enrolment?.status !== "approved") {
+        if (providerStateLoading || enrolment?.status !== "approved") {
             return;
         }
 
@@ -60,14 +53,8 @@ function ProviderLayout({ children }) {
         }
 
         /*
-         * No enrolment yet.
-         *
-         * The dashboard is allowed to render so that
-         * ProviderDashboard can show the "Provider Enrolment
-         * Required" message.
-         *
-         * Other provider portal pages should send the user
-         * to the enrolment page.
+         * Allow the dashboard to show the enrolment-required
+         * state when no enrolment exists.
          */
         if (!enrolment) {
             if (
@@ -83,8 +70,7 @@ function ProviderLayout({ children }) {
         }
 
         /*
-         * Submitted applications are not allowed inside
-         * the provider portal.
+         * Submitted applications go to the pending approval page.
          */
         if (enrolment.status === "submitted") {
             if (location.pathname !== "/provider/pending") {
@@ -97,8 +83,7 @@ function ProviderLayout({ children }) {
         }
 
         /*
-         * Rejected applications must return to the
-         * enrolment page.
+         * Rejected applications return to enrolment.
          */
         if (enrolment.status === "rejected") {
             if (location.pathname !== "/provider/enrolment") {
@@ -111,8 +96,7 @@ function ProviderLayout({ children }) {
         }
 
         /*
-         * Draft applications should remain in the
-         * enrolment process.
+         * Draft applications remain in the enrolment process.
          */
         if (enrolment.status === "draft") {
             if (location.pathname !== "/provider/enrolment") {
@@ -120,8 +104,6 @@ function ProviderLayout({ children }) {
                     replace: true,
                 });
             }
-
-            return;
         }
     }, [
         providerStateLoading,
@@ -130,110 +112,91 @@ function ProviderLayout({ children }) {
         navigate,
     ]);
 
-    const loadProviderData = async () => {
-        try {
-            setProviderStateLoading(true);
+   
+const loadProviderData = async () => {
+    setProviderStateLoading(true);
 
-            const enrolmentData =
-                await getMyProviderEnrolment();
+    let enrolmentData;
 
-            setEnrolment(enrolmentData);
+    try {
+        enrolmentData = await getMyProviderEnrolment();
+        setEnrolment(enrolmentData);
+    } catch (error) {
+        console.error("Failed to load provider enrolment:", error);
 
-            /*
-             * No enrolment exists.
-             */
-            if (!enrolmentData) {
-                setProfile(null);
-                setPendingCount(0);
-                setMessageCount(0);
-                return;
-            }
+        // Keep enrolment errors separate from profile and request errors.
+        // Do not assume the provider has no enrolment when the request fails.
+        setProviderStateLoading(false);
+        return;
+    }
 
-            /*
-             * Application submitted.
-             *
-             * Do NOT load:
-             * - provider profile
-             * - service requests
-             * - conversations
-             */
-            if (enrolmentData.status === "submitted") {
-                setProfile(null);
-                setPendingCount(0);
-                setMessageCount(0);
-                return;
-            }
+    if (!enrolmentData) {
+        setProfile(null);
+        setPendingCount(0);
+        setMessageCount(0);
+        setProviderStateLoading(false);
+        return;
+    }
 
-            /*
-             * Application rejected.
-             */
-            if (enrolmentData.status === "rejected") {
-                setProfile(null);
-                setPendingCount(0);
-                setMessageCount(0);
-                return;
-            }
+    if (enrolmentData.status !== "approved") {
+        setProfile(null);
+        setPendingCount(0);
+        setMessageCount(0);
+        setProviderStateLoading(false);
+        return;
+    }
 
-            /*
-             * Application still in draft.
-             */
-            if (enrolmentData.status === "draft") {
-                setProfile(null);
-                setPendingCount(0);
-                setMessageCount(0);
-                return;
-            }
+    try {
+        const [profileResult, requestsResult] = await Promise.allSettled([
+            getMyProvider(),
+            getProviderServiceRequests(),
+        ]);
 
-            /*
-             * Only approved providers can load the
-             * normal provider portal data.
-             */
-            if (enrolmentData.status === "approved") {
-                const [
-                    profileData,
-                    requestsData,
-                ] = await Promise.all([
-                    getMyProvider(),
-                    getProviderServiceRequests(),
-                ]);
-
-                setProfile(profileData);
-
-                const pending = (
-                    requestsData || []
-                ).filter(
-                    (request) =>
-                        request.status === "pending"
-                );
-
-                setPendingCount(pending.length);
-            }
-        } catch (error) {
+        if (profileResult.status === "fulfilled") {
+            setProfile(profileResult.value);
+        } else {
             console.error(
-                "Failed to load provider account:",
-                error
+                "Failed to load provider profile:",
+                profileResult.reason
             );
-
-            setEnrolment(null);
             setProfile(null);
-            setPendingCount(0);
-            setMessageCount(0);
-        } finally {
-            setProviderStateLoading(false);
         }
-    };
+
+        if (requestsResult.status === "fulfilled") {
+            const requestsData = requestsResult.value;
+
+            const requests = Array.isArray(requestsData)
+                ? requestsData
+                : requestsData?.results || [];
+
+            setPendingCount(
+                requests.filter(
+                    (request) => request.status === "pending"
+                ).length
+            );
+        } else {
+            console.error(
+                "Failed to load provider service requests:",
+                requestsResult.reason
+            );
+            setPendingCount(0);
+        }
+    } finally {
+        setProviderStateLoading(false);
+    }
+};
 
     const loadMessageCount = async () => {
         try {
-            const conversations =
-                await getConversations();
+            const conversations = await getConversations();
 
-            const totalUnread = (
-                conversations || []
-            ).reduce(
+            const items = Array.isArray(conversations)
+                ? conversations
+                : conversations?.results || [];
+
+            const totalUnread = items.reduce(
                 (total, conversation) =>
-                    total +
-                    (conversation.unread_count || 0),
+                    total + (conversation.unread_count || 0),
                 0
             );
 
@@ -280,10 +243,7 @@ function ProviderLayout({ children }) {
 
     const isActive = (path) => {
         if (path === "/provider-dashboard") {
-            return (
-                location.pathname ===
-                "/provider-dashboard"
-            );
+            return location.pathname === "/provider-dashboard";
         }
 
         return location.pathname.startsWith(path);
@@ -293,25 +253,26 @@ function ProviderLayout({ children }) {
         ? `/providers/${profile.id}/reviews`
         : "/provider-dashboard";
 
-    const sidebarWidth = sidebarCollapsed
-        ? "md:w-20"
-        : "md:w-64";
+    const sidebarWidth = sidebarCollapsed ? "md:w-20" : "md:w-64";
+    const mainMargin = sidebarCollapsed ? "md:ml-20" : "md:ml-64";
 
-    const mainMargin = sidebarCollapsed
-        ? "md:ml-20"
-        : "md:ml-64";
+    const activeLinkClasses =
+        "bg-[#C66A4A] text-white shadow-sm shadow-black/10";
+
+    const inactiveLinkClasses =
+        "text-[#D7DCE5] hover:bg-white/10 hover:text-white";
 
     /*
-     * Don't briefly show the provider portal while we
-     * determine the provider's enrolment state.
+     * Avoid briefly displaying the portal before the enrolment
+     * status has been determined.
      */
     if (providerStateLoading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-950">
+            <div className="flex min-h-screen items-center justify-center bg-[#172A46]">
                 <div className="text-center">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/10 border-t-blue-500" />
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-white/15 border-t-[#C66A4A]" />
 
-                    <p className="mt-4 text-sm text-slate-400">
+                    <p className="mt-4 text-sm text-[#D9B99B]">
                         Checking your provider account...
                     </p>
                 </div>
@@ -319,18 +280,10 @@ function ProviderLayout({ children }) {
         );
     }
 
-    /*
-     * Submitted applications belong on the dedicated
-     * pending approval page.
-     */
     if (enrolment?.status === "submitted") {
         return null;
     }
 
-    /*
-     * Rejected and draft applications belong on the
-     * enrolment page.
-     */
     if (
         enrolment?.status === "rejected" ||
         enrolment?.status === "draft"
@@ -338,14 +291,6 @@ function ProviderLayout({ children }) {
         return null;
     }
 
-    /*
-     * No enrolment:
-     *
-     * Allow ProviderDashboard to show its enrolment
-     * required state.
-     *
-     * Other pages are redirected by the effect above.
-     */
     if (
         !enrolment &&
         location.pathname !== "/provider-dashboard" &&
@@ -355,16 +300,15 @@ function ProviderLayout({ children }) {
     }
 
     return (
-        <div className="min-h-screen bg-slate-100">
+        <div className="min-h-screen bg-[#F4EDE5]">
             {/* Mobile overlay */}
 
             {mobileMenuOpen && (
                 <button
+                    type="button"
                     aria-label="Close sidebar"
-                    onClick={() =>
-                        setMobileMenuOpen(false)
-                    }
-                    className="fixed inset-0 z-40 bg-slate-950/50 md:hidden"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="fixed inset-0 z-40 bg-[#172A46]/65 backdrop-blur-sm md:hidden"
                 />
             )}
 
@@ -379,8 +323,12 @@ function ProviderLayout({ children }) {
                     flex
                     w-64
                     flex-col
-                    bg-slate-950
+                    border-r
+                    border-white/10
+                    bg-[#172A46]
                     text-white
+                    shadow-xl
+                    shadow-[#172A46]/10
                     transition-all
                     duration-300
                     md:translate-x-0
@@ -396,6 +344,7 @@ function ProviderLayout({ children }) {
 
                 <div
                     className={`
+                        relative
                         flex
                         h-20
                         shrink-0
@@ -410,25 +359,24 @@ function ProviderLayout({ children }) {
                     `}
                 >
                     <button
-                        onClick={() =>
-                            goTo("/provider-dashboard")
-                        }
+                        type="button"
+                        onClick={() => goTo("/provider-dashboard")}
                         className="text-left"
                     >
                         {sidebarCollapsed ? (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-lg font-bold">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#C66A4A] text-lg font-bold text-white shadow-md shadow-black/10">
                                 F
                             </div>
                         ) : (
                             <>
-                                <h1 className="text-2xl font-bold tracking-tight">
+                                <h1 className="text-2xl font-bold tracking-tight text-white">
                                     Fix
-                                    <span className="text-blue-500">
+                                    <span className="text-[#D9B99B]">
                                         It
                                     </span>
                                 </h1>
 
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs tracking-wide text-[#D9B99B]">
                                     Provider Portal
                                 </p>
                             </>
@@ -438,6 +386,7 @@ function ProviderLayout({ children }) {
                     {/* Desktop collapse button */}
 
                     <button
+                        type="button"
                         onClick={toggleSidebar}
                         aria-label={
                             sidebarCollapsed
@@ -453,14 +402,14 @@ function ProviderLayout({ children }) {
                             hidden
                             rounded-lg
                             p-2
-                            text-slate-400
+                            text-[#D9B99B]
                             transition
                             hover:bg-white/10
                             hover:text-white
                             md:block
                             ${
                                 sidebarCollapsed
-                                    ? "absolute right-[-14px] top-6 bg-slate-950"
+                                    ? "absolute right-[-14px] top-6 bg-[#172A46] shadow-md"
                                     : "ml-auto"
                             }
                         `}
@@ -492,10 +441,10 @@ function ProviderLayout({ children }) {
                     {/* Mobile close button */}
 
                     <button
-                        onClick={() =>
-                            setMobileMenuOpen(false)
-                        }
-                        className="ml-auto rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white md:hidden"
+                        type="button"
+                        onClick={() => setMobileMenuOpen(false)}
+                        aria-label="Close sidebar"
+                        className="ml-auto rounded-lg p-2 text-[#D9B99B] transition hover:bg-white/10 hover:text-white md:hidden"
                     >
                         <svg
                             className="h-5 w-5"
@@ -517,7 +466,7 @@ function ProviderLayout({ children }) {
 
                 <div className="flex-1 overflow-y-auto px-3 py-6">
                     {!sidebarCollapsed && (
-                        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9B99B]/75">
                             Main Menu
                         </p>
                     )}
@@ -526,36 +475,30 @@ function ProviderLayout({ children }) {
                         {/* Dashboard */}
 
                         <button
-                            onClick={() =>
-                                goTo(
-                                    "/provider-dashboard"
-                                )
-                            }
+                            type="button"
+                            onClick={() => goTo("/provider-dashboard")}
                             title={
-                                sidebarCollapsed
-                                    ? "Dashboard"
-                                    : undefined
+                                sidebarCollapsed ? "Dashboard" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    isActive(
-                                        "/provider-dashboard"
-                                    )
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    isActive("/provider-dashboard")
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -573,18 +516,15 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>Dashboard</span>
-                            )}
+                            {!sidebarCollapsed && <span>Dashboard</span>}
                         </button>
 
                         {/* Service Requests */}
 
                         <button
+                            type="button"
                             onClick={() =>
-                                goTo(
-                                    "/provider/service-requests"
-                                )
+                                goTo("/provider/service-requests")
                             }
                             title={
                                 sidebarCollapsed
@@ -595,22 +535,21 @@ function ProviderLayout({ children }) {
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    isActive(
-                                        "/provider/service-requests"
-                                    )
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    isActive("/provider/service-requests")
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -629,9 +568,7 @@ function ProviderLayout({ children }) {
                             </svg>
 
                             {!sidebarCollapsed && (
-                                <span>
-                                    Service Requests
-                                </span>
+                                <span>Service Requests</span>
                             )}
 
                             {pendingCount > 0 && (
@@ -648,7 +585,7 @@ function ProviderLayout({ children }) {
                                         font-bold
                                         ${
                                             sidebarCollapsed
-                                                ? "absolute ml-7 mt-[-18px] bg-blue-600 text-white"
+                                                ? "absolute ml-7 mt-[-18px] bg-[#C66A4A] text-white"
                                                 : "ml-auto"
                                         }
                                         ${
@@ -656,14 +593,14 @@ function ProviderLayout({ children }) {
                                             isActive(
                                                 "/provider/service-requests"
                                             )
-                                                ? "bg-white text-blue-600"
+                                                ? "bg-white text-[#172A46]"
                                                 : !sidebarCollapsed
-                                                  ? "bg-blue-600 text-white"
+                                                  ? "bg-[#D9B99B] text-[#172A46]"
                                                   : ""
                                         }
                                     `}
                                 >
-                                    {pendingCount}
+                                    {pendingCount > 99 ? "99+" : pendingCount}
                                 </span>
                             )}
                         </button>
@@ -671,23 +608,21 @@ function ProviderLayout({ children }) {
                         {/* Messages */}
 
                         <button
-                            onClick={() =>
-                                goTo("/messages")
-                            }
+                            type="button"
+                            onClick={() => goTo("/messages")}
                             title={
-                                sidebarCollapsed
-                                    ? "Messages"
-                                    : undefined
+                                sidebarCollapsed ? "Messages" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
@@ -695,8 +630,8 @@ function ProviderLayout({ children }) {
                                 }
                                 ${
                                     isActive("/messages")
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -714,9 +649,7 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>Messages</span>
-                            )}
+                            {!sidebarCollapsed && <span>Messages</span>}
 
                             {messageCount > 0 && (
                                 <span
@@ -727,29 +660,25 @@ function ProviderLayout({ children }) {
                                         items-center
                                         justify-center
                                         rounded-full
-                                        bg-blue-600
                                         px-1.5
                                         text-[10px]
                                         font-bold
-                                        text-white
                                         ${
                                             sidebarCollapsed
-                                                ? "absolute ml-7 mt-[-18px]"
+                                                ? "absolute ml-7 mt-[-18px] bg-[#C66A4A] text-white"
                                                 : "ml-auto"
                                         }
                                         ${
                                             !sidebarCollapsed &&
-                                            isActive(
-                                                "/messages"
-                                            )
-                                                ? "bg-white text-blue-600"
-                                                : ""
+                                            isActive("/messages")
+                                                ? "bg-white text-[#172A46]"
+                                                : !sidebarCollapsed
+                                                  ? "bg-[#D9B99B] text-[#172A46]"
+                                                  : ""
                                         }
                                     `}
                                 >
-                                    {messageCount > 99
-                                        ? "99+"
-                                        : messageCount}
+                                    {messageCount > 99 ? "99+" : messageCount}
                                 </span>
                             )}
                         </button>
@@ -757,33 +686,30 @@ function ProviderLayout({ children }) {
                         {/* My Profile */}
 
                         <button
-                            onClick={() =>
-                                goTo("/provider/profile")
-                            }
+                            type="button"
+                            onClick={() => goTo("/provider/profile")}
                             title={
-                                sidebarCollapsed
-                                    ? "My Profile"
-                                    : undefined
+                                sidebarCollapsed ? "My Profile" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    location.pathname ===
-                                    "/provider/profile"
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    location.pathname === "/provider/profile"
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -801,42 +727,36 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>My Profile</span>
-                            )}
+                            {!sidebarCollapsed && <span>My Profile</span>}
                         </button>
 
                         {/* Reviews */}
 
                         <button
-                            onClick={() =>
-                                goTo(reviewsPath)
-                            }
+                            type="button"
+                            onClick={() => goTo(reviewsPath)}
                             title={
-                                sidebarCollapsed
-                                    ? "Reviews"
-                                    : undefined
+                                sidebarCollapsed ? "Reviews" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    location.pathname.includes(
-                                        "/reviews"
-                                    )
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    location.pathname.includes("/reviews")
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -854,42 +774,36 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>Reviews</span>
-                            )}
+                            {!sidebarCollapsed && <span>Reviews</span>}
                         </button>
 
                         {/* Enrolment */}
 
                         <button
-                            onClick={() =>
-                                goTo("/provider/enrolment")
-                            }
+                            type="button"
+                            onClick={() => goTo("/provider/enrolment")}
                             title={
-                                sidebarCollapsed
-                                    ? "Enrolment"
-                                    : undefined
+                                sidebarCollapsed ? "Enrolment" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                transition
+                                transition-all
+                                duration-200
                                 ${
                                     sidebarCollapsed
                                         ? "justify-center px-2"
                                         : "gap-3 px-3"
                                 }
                                 ${
-                                    isActive(
-                                        "/provider/enrolment"
-                                    )
-                                        ? "bg-blue-600 text-white"
-                                        : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                    isActive("/provider/enrolment")
+                                        ? activeLinkClasses
+                                        : inactiveLinkClasses
                                 }
                             `}
                         >
@@ -907,39 +821,37 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>Enrolment</span>
-                            )}
+                            {!sidebarCollapsed && <span>Enrolment</span>}
                         </button>
                     </nav>
 
                     {/* General */}
 
                     {!sidebarCollapsed && (
-                        <p className="mb-3 mt-10 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                        <p className="mb-3 mt-10 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9B99B]/75">
                             General
                         </p>
                     )}
 
                     <nav className="mt-8">
                         <button
+                            type="button"
                             onClick={() => goTo("/")}
                             title={
-                                sidebarCollapsed
-                                    ? "Back to Home"
-                                    : undefined
+                                sidebarCollapsed ? "Back to Home" : undefined
                             }
                             className={`
                                 flex
                                 w-full
                                 items-center
-                                rounded-lg
+                                rounded-xl
                                 py-3
                                 text-sm
                                 font-medium
-                                text-slate-400
-                                transition
-                                hover:bg-white/5
+                                text-[#D7DCE5]
+                                transition-all
+                                duration-200
+                                hover:bg-white/10
                                 hover:text-white
                                 ${
                                     sidebarCollapsed
@@ -962,9 +874,7 @@ function ProviderLayout({ children }) {
                                 />
                             </svg>
 
-                            {!sidebarCollapsed && (
-                                <span>Back to Home</span>
-                            )}
+                            {!sidebarCollapsed && <span>Back to Home</span>}
                         </button>
                     </nav>
                 </div>
@@ -977,8 +887,10 @@ function ProviderLayout({ children }) {
                             mb-3
                             flex
                             items-center
-                            rounded-lg
-                            bg-white/5
+                            rounded-xl
+                            border
+                            border-white/5
+                            bg-white/[0.06]
                             p-3
                             ${
                                 sidebarCollapsed
@@ -987,7 +899,7 @@ function ProviderLayout({ children }) {
                             }
                         `}
                     >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D9B99B] text-sm font-semibold text-[#172A46]">
                             {(
                                 profile?.business_name ||
                                 username ||
@@ -1005,7 +917,7 @@ function ProviderLayout({ children }) {
                                         "Provider"}
                                 </p>
 
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-[#D9B99B]">
                                     Service Provider
                                 </p>
                             </div>
@@ -1013,24 +925,22 @@ function ProviderLayout({ children }) {
                     </div>
 
                     <button
+                        type="button"
                         onClick={handleLogout}
-                        title={
-                            sidebarCollapsed
-                                ? "Logout"
-                                : undefined
-                        }
+                        title={sidebarCollapsed ? "Logout" : undefined}
                         className={`
                             flex
                             w-full
                             items-center
-                            rounded-lg
+                            rounded-xl
                             py-3
                             text-sm
                             font-medium
-                            text-slate-400
-                            transition
-                            hover:bg-red-500/10
-                            hover:text-red-400
+                            text-[#D7DCE5]
+                            transition-all
+                            duration-200
+                            hover:bg-[#C66A4A]/15
+                            hover:text-[#E9A58D]
                             ${
                                 sidebarCollapsed
                                     ? "justify-center px-2"
@@ -1052,9 +962,7 @@ function ProviderLayout({ children }) {
                             />
                         </svg>
 
-                        {!sidebarCollapsed && (
-                            <span>Logout</span>
-                        )}
+                        {!sidebarCollapsed && <span>Logout</span>}
                     </button>
                 </div>
             </aside>
@@ -1071,15 +979,15 @@ function ProviderLayout({ children }) {
             >
                 {/* Top bar */}
 
-                <header className="sticky top-0 z-30 h-16 border-b border-slate-200 bg-white/95 backdrop-blur">
+                <header className="sticky top-0 z-30 h-16 border-b border-[#D9B99B]/50 bg-[#FFFDF9]/95 backdrop-blur-md">
                     <div className="flex h-full items-center justify-between px-5 sm:px-8">
                         {/* Mobile menu */}
 
                         <button
-                            onClick={() =>
-                                setMobileMenuOpen(true)
-                            }
-                            className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+                            type="button"
+                            aria-label="Open sidebar"
+                            onClick={() => setMobileMenuOpen(true)}
+                            className="rounded-lg p-2 text-[#172A46] transition hover:bg-[#F4EDE5] md:hidden"
                         >
                             <svg
                                 className="h-6 w-6"
@@ -1097,11 +1005,11 @@ function ProviderLayout({ children }) {
                         </button>
 
                         <div className="hidden md:block">
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-[#536070]">
                                 FixIt Provider Portal
                             </p>
 
-                            <p className="text-sm font-semibold text-slate-800">
+                            <p className="text-sm font-semibold text-[#172A46]">
                                 {profile?.business_name ||
                                     "Provider Dashboard"}
                             </p>
@@ -1111,10 +1019,10 @@ function ProviderLayout({ children }) {
 
                         <div className="ml-auto flex items-center gap-4">
                             <button
-                                onClick={() =>
-                                    goTo("/messages")
-                                }
-                                className="relative rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+                                type="button"
+                                aria-label="Open messages"
+                                onClick={() => goTo("/messages")}
+                                className="relative rounded-xl p-2 text-[#536070] transition hover:bg-[#F4EDE5] hover:text-[#172A46]"
                             >
                                 <svg
                                     className="h-5 w-5"
@@ -1131,7 +1039,7 @@ function ProviderLayout({ children }) {
                                 </svg>
 
                                 {messageCount > 0 && (
-                                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[9px] font-bold text-white">
+                                    <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C66A4A] px-1 text-[9px] font-bold text-white ring-2 ring-[#FFFDF9]">
                                         {messageCount > 99
                                             ? "99+"
                                             : messageCount}
@@ -1139,10 +1047,10 @@ function ProviderLayout({ children }) {
                                 )}
                             </button>
 
-                            <div className="h-8 w-px bg-slate-200" />
+                            <div className="h-8 w-px bg-[#D9B99B]/70" />
 
                             <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#D9B99B] bg-[#F4EDE5] text-sm font-semibold text-[#172A46]">
                                     {(
                                         profile?.business_name ||
                                         username ||
@@ -1153,13 +1061,13 @@ function ProviderLayout({ children }) {
                                 </div>
 
                                 <div className="hidden sm:block">
-                                    <p className="max-w-48 truncate text-sm font-semibold text-slate-800">
+                                    <p className="max-w-48 truncate text-sm font-semibold text-[#172A46]">
                                         {profile?.business_name ||
                                             username ||
                                             "Provider"}
                                     </p>
 
-                                    <p className="text-xs text-slate-400">
+                                    <p className="text-xs text-[#536070]">
                                         Provider
                                     </p>
                                 </div>

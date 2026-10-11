@@ -521,10 +521,7 @@ function ProviderProfile() {
 
                                 <button
                                     onClick={() =>
-                                        navigate(
-                                            `/service-requests/create?provider=${provider.user}`
-                                        )
-                                    }
+                                    navigate(`/service-requests/create?provider=${provider.id}`)}
                                     className="
                                         mt-5
                                         w-full
