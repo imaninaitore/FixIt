@@ -16,11 +16,13 @@ class ProviderProfile(models.Model):
     location = models.CharField(max_length=150)
     years_of_experience = models.PositiveIntegerField(default=0)
     phone_number = models.CharField(max_length=20, blank=True)
+
     profile_image = models.ImageField(
         upload_to="provider_profiles/",
         blank=True,
         null=True
     )
+
     is_available = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,6 +40,7 @@ class ProviderEnrolment(models.Model):
         ("submitted", "Submitted"),
         ("approved", "Approved"),
         ("rejected", "Rejected"),
+        ("withdrawn", "Withdrawn"),
     ]
 
     PAYMENT_STATUS_CHOICES = [
@@ -53,18 +56,34 @@ class ProviderEnrolment(models.Model):
         related_name="provider_enrolment"
     )
 
+    # Business and service information
     business_name = models.CharField(max_length=255)
     service_category = models.CharField(max_length=100)
     description = models.TextField()
     location = models.CharField(max_length=255)
     years_of_experience = models.PositiveIntegerField()
 
+    # Provider contact information
+    phone_number = models.CharField(max_length=13)
+
+    # Referee information
+    referee_name = models.CharField(max_length=150)
+    referee_email = models.EmailField()
+    referee_phone = models.CharField(max_length=13)
+
+    # Professional qualification document
+    qualification_document = models.FileField(
+        upload_to="provider_qualifications/"
+    )
+
+    # Application status
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default="draft"
     )
 
+    # Payment information
     payment_status = models.CharField(
         max_length=20,
         choices=PAYMENT_STATUS_CHOICES,
@@ -82,13 +101,8 @@ class ProviderEnrolment(models.Model):
         null=True
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.business_name} - {self.provider.username}"
