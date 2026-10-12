@@ -222,23 +222,7 @@ function About() {
             transition-transform
             duration-700
             hover:scale-[1.03]
-        "
-    >
-        <div className="absolute inset-0 bg-gradient-to-t from-[#172A46]/85 via-[#172A46]/10 to-transparent" />
-
-        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#D9B99B]">
-                FixIt
-            </p>
-
-            <h3 className="mt-2 max-w-md text-xl font-semibold leading-tight text-white sm:text-2xl">
-                Local skills. Meaningful connections.
-            </h3>
-
-            <p className="mt-3 max-w-md text-sm leading-6 text-white/80">
-                Bringing people who need a service closer to the people who provide it.
-            </p>
-        </div>
+        " >
     </ImagePanel>
 </Reveal>
                     </div>
@@ -252,7 +236,7 @@ function About() {
                         <ImagePanel
                             src="/images/skills.jpg"
                             alt="A professional carrying out a service for a customer"
-                            className="min-h-[260px] aspect-[4/3] sm:min-h-[340px] transition-transform duration-500 hover:scale-105"
+                            className=" w-full min-w-0 aspect-[4/3] min-h-[220px] sm:min-h-[280px] md:aspect-[5/4] md:min-h-[320px] lg:aspect-[4/3] lg:min-h-[360px] transition-transform duration-500 hover:scale-[1.02]"
                         >
                             <div className="absolute inset-0 bg-gradient-to-t from-[#172A46]/40 to-transparent" />
                         </ImagePanel>
