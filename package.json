@@ -3,5 +3,8 @@
     "@tailwindcss/vite": "^4.3.3",
     "react-router-dom": "^7.18.4",
     "tailwindcss": "^4.3.3"
+  },
+  "optionalDependencies": {
+    "@lightningcss/linux-x64-gnu": "npm:null@*"
   }
 }
