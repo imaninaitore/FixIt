@@ -1,323 +1,436 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    ArrowLeft,
-    ArrowRight,
     Users,
-    RefreshCw,
+    Search,
+    ChevronLeft,
     ChevronRight,
+    Eye,
+    CalendarDays,
+    Mail,
 } from "lucide-react";
 
 import { getAdminUsers } from "../../services/adminService";
 
 const PAGE_SIZE = 10;
 
-function AdminUsers() {
+function formatDate(date) {
+    if (!date) return "—";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+        return "—";
+    }
+
+    return parsedDate.toLocaleDateString("en-KE", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+    });
+}
+
+function getDisplayName(user) {
+    const fullName = [user.first_name, user.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+    return fullName || user.full_name || user.username || "Unnamed user";
+}
+
+function getRole(user) {
+    if (user.is_superuser) return "Superadmin";
+    if (user.is_staff) return "Admin";
+
+    return (
+        user.account_type ||
+        user.role ||
+        user.user_type ||
+        "Customer"
+    );
+}
+
+function getStatus(user) {
+    if (user.is_active === false) return "Inactive";
+    return "Active";
+}
+
+function getRoleStyles(role) {
+    const normalizedRole = String(role).toLowerCase();
+
+    if (normalizedRole.includes("superadmin")) {
+        return "bg-[#172A46] text-white";
+    }
+
+    if (normalizedRole.includes("admin")) {
+        return "bg-[#F2D8CC] text-[#8D422D]";
+    }
+
+    if (normalizedRole.includes("provider")) {
+        return "bg-[#E8EAF0] text-[#344766]";
+    }
+
+    return "bg-[#F8F5F0] text-[#66594E]";
+}
+
+export default function AdminUsers() {
     const navigate = useNavigate();
 
     const [users, setUsers] = useState([]);
     const [count, setCount] = useState(0);
-    const [currentPage, setCurrentPage] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
+        let isMounted = true;
+
+        async function loadUsers() {
+            try {
+                setLoading(true);
+                setError("");
+
+                const data = await getAdminUsers();
+
+                if (!isMounted) return;
+
+                const fetchedUsers = Array.isArray(data)
+                    ? data
+                    : data?.users || [];
+
+                setUsers(fetchedUsers);
+                setCount(
+                    Array.isArray(data)
+                        ? data.length
+                        : data?.count ?? fetchedUsers.length
+                );
+            } catch (err) {
+                if (!isMounted) return;
+
+                setError(
+                    err?.message ||
+                        "Unable to load users. Please try again."
+                );
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
+        }
+
         loadUsers();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
-    async function loadUsers() {
-        try {
-            setLoading(true);
-            setError("");
+    const filteredUsers = users.filter((user) => {
+        const query = search.trim().toLowerCase();
 
-            const data = await getAdminUsers();
+        if (!query) return true;
 
-            setUsers(data.users || []);
-            setCount(data.count || 0);
-            setCurrentPage(1);
-        } catch (err) {
-            setError(err.message || "Unable to load users. Please try again.");
-        } finally {
-            setLoading(false);
-        }
-    }
+        return [
+            user.username,
+            user.first_name,
+            user.last_name,
+            user.full_name,
+            user.email,
+            user.account_type,
+            user.role,
+            user.user_type,
+        ]
+            .filter(Boolean)
+            .some((value) =>
+                String(value).toLowerCase().includes(query)
+            );
+    });
 
-    function formatDate(date) {
-        if (!date) return "Not available";
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredUsers.length / PAGE_SIZE)
+    );
 
-        const parsedDate = new Date(date);
+    const safePage = Math.min(currentPage, totalPages);
 
-        if (Number.isNaN(parsedDate.getTime())) {
-            return "Not available";
-        }
-
-        return parsedDate.toLocaleDateString();
-    }
-
-    const totalPages = Math.ceil(users.length / PAGE_SIZE);
-    const safePage = Math.min(currentPage, Math.max(totalPages, 1));
     const startIndex = (safePage - 1) * PAGE_SIZE;
-    const displayedUsers = users.slice(
+
+    const paginatedUsers = filteredUsers.slice(
         startIndex,
         startIndex + PAGE_SIZE
     );
 
-    function getDisplayName(user) {
-        const fullName = `${user.first_name || ""} ${
-            user.last_name || ""
-        }`.trim();
+    const firstUser = filteredUsers.length ? startIndex + 1 : 0;
+    const lastUser = Math.min(
+        startIndex + PAGE_SIZE,
+        filteredUsers.length
+    );
 
-        return fullName || "No name provided";
-    }
-
-    if (loading) {
-        return (
-            <div className="min-h-[60vh] flex items-center justify-center px-4">
-                <div className="text-center">
-                    <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-[#F2D8CC] border-t-[#C66A4A]" />
-                    <p className="mt-4 text-sm text-[#172A46]/70">
-                        Loading users...
-                    </p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="mx-auto max-w-xl px-4 py-12 sm:px-6">
-                <div className="rounded-2xl border border-[#E8D9CE] bg-white p-6 shadow-sm sm:p-8">
-                    <h1 className="text-xl font-semibold text-[#172A46]">
-                        Unable to load users
-                    </h1>
-
-                    <p className="mt-2 break-words text-sm leading-6 text-[#172A46]/70">
-                        {error}
-                    </p>
-
-                    <button
-                        onClick={loadUsers}
-                        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#172A46] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#243B5C] focus:outline-none focus:ring-2 focus:ring-[#C66A4A] focus:ring-offset-2"
-                    >
-                        <RefreshCw size={16} />
-                        Try again
-                    </button>
-                </div>
-            </div>
-        );
+    function handleSearchChange(value) {
+        setSearch(value);
+        setCurrentPage(1);
     }
 
     return (
-        <div className="min-h-screen bg-[#F8F5F0] text-[#172A46]">
-            <header className="border-b border-[#E8D9CE] bg-[#FFFDF9]">
-                <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-                    <button
-                        onClick={() => navigate("/admin/dashboard")}
-                        className="inline-flex items-center gap-2 text-sm font-medium text-[#172A46]/70 transition hover:text-[#C66A4A]"
-                    >
-                        <ArrowLeft size={16} />
-                        Back to dashboard
-                    </button>
-
-                    <div className="mt-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C66A4A]">
-                                Administration
-                            </p>
-
-                            <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-                                User accounts
-                            </h1>
-
-                            <p className="mt-2 max-w-xl text-sm leading-6 text-[#172A46]/65 sm:text-base">
-                                View registered users and manage their account details.
-                            </p>
+        <div className="min-h-screen bg-[linear-gradient(135deg,#FFFDF9_0%,#F2D8CC_35%,#C66A4A_65%,#172A46_100%)] px-3 py-5 text-[#172A46] sm:px-5 sm:py-7 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+                <header className="mb-5 flex flex-col justify-between gap-4 rounded-2xl border border-white/50 bg-[#FFFDF9]/75 p-4 shadow-sm backdrop-blur-md sm:flex-row sm:items-center sm:p-5">
+                    <div>
+                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#A85237]">
+                            <Users size={15} />
+                            User management
                         </div>
 
-                        <div className="flex w-fit items-center gap-3 rounded-xl border border-[#E8D9CE] bg-white px-4 py-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F2D8CC]/60">
-                                <Users size={20} className="text-[#C66A4A]" />
-                            </div>
+                        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                            Users
+                        </h1>
 
-                            <div>
-                                <p className="text-xs text-[#172A46]/60">
-                                    Total users
-                                </p>
-                                <p className="text-xl font-bold tabular-nums">
-                                    {count}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-                <section className="overflow-hidden rounded-2xl border border-[#E8D9CE] bg-white shadow-sm">
-                    <div className="flex flex-col gap-1 border-b border-[#E8D9CE] px-4 py-4 sm:px-6">
-                        <h2 className="text-base font-semibold sm:text-lg">
-                            All users
-                        </h2>
-
-                        <p className="text-sm text-[#172A46]/60">
-                            Select a user to view their full account details.
+                        <p className="mt-1 text-sm text-[#66594E]">
+                            Manage and review registered FixIt users.
                         </p>
                     </div>
 
-                    {users.length === 0 ? (
-                        <div className="px-5 py-14 text-center sm:px-8">
-                            <Users
-                                size={30}
-                                className="mx-auto text-[#C66A4A]/70"
+                    <div className="flex w-fit items-center gap-3 rounded-xl border border-[#F2D8CC] bg-white/80 px-4 py-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F2D8CC] text-[#A85237]">
+                            <Users size={19} />
+                        </div>
+
+                        <div>
+                            <p className="text-xs font-medium text-[#75685E]">
+                                Total users
+                            </p>
+                            <p className="text-xl font-bold leading-tight">
+                                {count}
+                            </p>
+                        </div>
+                    </div>
+                </header>
+
+                <section className="overflow-hidden rounded-2xl border border-white/70 bg-[#FFFDF9]/95 shadow-xl shadow-[#172A46]/10 backdrop-blur-md">
+                    <div className="flex flex-col gap-3 border-b border-[#EAE2DA] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                        <div>
+                            <h2 className="text-base font-bold">
+                                Registered users
+                            </h2>
+                            <p className="mt-0.5 text-xs text-[#75685E]">
+                                {filteredUsers.length}{" "}
+                                {filteredUsers.length === 1
+                                    ? "user"
+                                    : "users"}{" "}
+                                found
+                            </p>
+                        </div>
+
+                        <div className="relative w-full sm:max-w-xs">
+                            <Search
+                                size={16}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8B8178]"
                             />
 
-                            <h3 className="mt-4 font-semibold">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(event) =>
+                                    handleSearchChange(event.target.value)
+                                }
+                                placeholder="Search users..."
+                                className="w-full rounded-lg border border-[#E5D9CF] bg-white py-2 pl-9 pr-3 text-sm outline-none transition placeholder:text-[#A39A91] focus:border-[#C66A4A] focus:ring-2 focus:ring-[#C66A4A]/15"
+                            />
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <div className="flex min-h-56 flex-col items-center justify-center gap-3 px-4 py-12">
+                            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#F2D8CC] border-t-[#C66A4A]" />
+                            <p className="text-sm text-[#75685E]">
+                                Loading users...
+                            </p>
+                        </div>
+                    ) : error ? (
+                        <div className="px-5 py-12 text-center">
+                            <p className="text-sm font-medium text-red-700">
+                                {error}
+                            </p>
+                        </div>
+                    ) : filteredUsers.length === 0 ? (
+                        <div className="flex min-h-52 flex-col items-center justify-center px-5 py-12 text-center">
+                            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F2D8CC]/60 text-[#A85237]">
+                                <Users size={22} />
+                            </div>
+
+                            <h3 className="text-sm font-semibold">
                                 No users found
                             </h3>
 
-                            <p className="mt-2 text-sm text-[#172A46]/60">
-                                There are currently no user accounts to display.
+                            <p className="mt-1 text-xs text-[#75685E]">
+                                Try another search term.
                             </p>
                         </div>
                     ) : (
                         <>
-                            <div className="divide-y divide-[#F0E8E0]">
-                                {displayedUsers.map((user) => (
-                                    <div
-                                        key={user.id}
-                                        className="flex flex-col gap-4 px-4 py-4 transition hover:bg-[#F8F5F0]/70 sm:px-6 sm:py-5 md:flex-row md:items-center md:justify-between"
-                                    >
-                                        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#F2D8CC]/60 text-sm font-semibold text-[#172A46]">
-                                                {(user.username || "?")
-                                                    .charAt(0)
-                                                    .toUpperCase()}
-                                            </div>
+                            <div className="divide-y divide-[#EEE6DF]">
+                                {paginatedUsers.map((user) => {
+                                    const role = getRole(user);
+                                    const status = getStatus(user);
+                                    const displayName =
+                                        getDisplayName(user);
 
-                                            <div className="min-w-0 flex-1">
-                                                <p className="break-words font-semibold text-[#172A46]">
-                                                    {user.username || "Unknown user"}
-                                                </p>
+                                    return (
+                                        <div
+                                            key={user.id}
+                                            className="flex flex-col gap-3 px-4 py-3 transition hover:bg-[#F8F5F0]/80 sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                                        >
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F2D8CC] text-sm font-bold text-[#8D422D]">
+                                                    {String(
+                                                        user.username ||
+                                                            displayName
+                                                    )
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
 
-                                                <p className="mt-0.5 break-words text-sm text-[#172A46]/65">
-                                                    {getDisplayName(user)}
-                                                </p>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                                        <p className="truncate text-sm font-semibold text-[#172A46]">
+                                                            {user.username ||
+                                                                displayName}
+                                                        </p>
 
-                                                <p className="mt-1 break-all text-sm text-[#172A46]/60">
-                                                    {user.email || "No email provided"}
-                                                </p>
+                                                        <span
+                                                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${getRoleStyles(role)}`}
+                                                        >
+                                                            {role}
+                                                        </span>
 
-                                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                                                            user.is_staff
-                                                                ? "bg-[#F2D8CC]/70 text-[#8D452F]"
-                                                                : "bg-[#F3F0EA] text-[#172A46]/75"
-                                                        }`}
-                                                    >
-                                                        {user.is_staff
-                                                            ? "Admin / Staff"
-                                                            : "User"}
-                                                    </span>
+                                                        <span
+                                                            className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                                                status ===
+                                                                "Active"
+                                                                    ? "bg-[#E5F2E8] text-[#286640]"
+                                                                    : "bg-[#FCE8E6] text-[#A33A32]"
+                                                            }`}
+                                                        >
+                                                            {status}
+                                                        </span>
+                                                    </div>
 
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                                                            user.is_active
-                                                                ? "bg-[#E8F0E9] text-[#356344]"
-                                                                : "bg-[#FBE9E6] text-[#9A3F32]"
-                                                        }`}
-                                                    >
-                                                        {user.is_active
-                                                            ? "Active"
-                                                            : "Inactive"}
-                                                    </span>
+                                                    <div className="mt-1 flex flex-col gap-x-4 gap-y-1 text-xs text-[#75685E] sm:flex-row sm:flex-wrap">
+                                                        <span className="flex min-w-0 items-center gap-1.5">
+                                                            <Users
+                                                                size={13}
+                                                                className="shrink-0"
+                                                            />
+                                                            <span className="truncate">
+                                                                {displayName}
+                                                            </span>
+                                                        </span>
+
+                                                        <span className="flex min-w-0 items-center gap-1.5">
+                                                            <Mail
+                                                                size={13}
+                                                                className="shrink-0"
+                                                            />
+                                                            <span className="truncate">
+                                                                {user.email ||
+                                                                    "No email"}
+                                                            </span>
+                                                        </span>
+
+                                                        <span className="flex items-center gap-1.5">
+                                                            <CalendarDays
+                                                                size={13}
+                                                                className="shrink-0"
+                                                            />
+                                                            Joined{" "}
+                                                            {formatDate(
+                                                                user.date_joined ||
+                                                                    user.created_at
+                                                            )}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex items-center justify-between gap-4 border-t border-[#F0E8E0] pt-3 md:min-w-[190px] md:justify-end md:border-0 md:pt-0">
-                                            <div className="md:text-right">
-                                                <p className="text-xs text-[#172A46]/55">
-                                                    Date joined
-                                                </p>
-                                                <p className="mt-1 text-sm font-medium">
-                                                    {formatDate(user.date_joined)}
-                                                </p>
+                                            <div className="flex shrink-0 justify-end sm:pl-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/admin/users/${user.id}`
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E5D9CF] bg-white px-3 py-1.5 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:bg-[#F2D8CC]/50"
+                                                >
+                                                    <Eye size={14} />
+                                                    View
+                                                </button>
                                             </div>
-
-                                            <button
-                                                onClick={() =>
-                                                    navigate(`/admin/users/${user.id}`)
-                                                }
-                                                aria-label={`View ${user.username || "user"} details`}
-                                                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-[#E8D9CE] px-3 py-2 text-sm font-medium text-[#172A46] transition hover:border-[#C66A4A] hover:bg-[#F2D8CC]/30 focus:outline-none focus:ring-2 focus:ring-[#C66A4A] focus:ring-offset-2"
-                                            >
-                                                View
-                                                <ChevronRight size={16} />
-                                            </button>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
-                            <div className="flex flex-col gap-4 border-t border-[#E8D9CE] bg-[#FFFDF9] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                                <p className="text-sm text-[#172A46]/65">
+                            <div className="flex flex-col gap-3 border-t border-[#EAE2DA] bg-white/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                                <p className="text-xs text-[#75685E]">
                                     Showing{" "}
                                     <span className="font-semibold text-[#172A46]">
-                                        {startIndex + 1}–{Math.min(
-                                            startIndex + PAGE_SIZE,
-                                            users.length
-                                        )}
+                                        {firstUser}–{lastUser}
                                     </span>{" "}
                                     of{" "}
                                     <span className="font-semibold text-[#172A46]">
-                                        {users.length}
+                                        {filteredUsers.length}
                                     </span>{" "}
-                                    loaded users
+                                    users
                                 </p>
 
                                 <div className="flex items-center justify-between gap-3 sm:justify-end">
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage((page) =>
-                                                Math.max(1, page - 1)
-                                            )
-                                        }
-                                        disabled={safePage <= 1}
-                                        className="inline-flex items-center gap-2 rounded-lg border border-[#E8D9CE] bg-white px-3 py-2 text-sm font-medium transition hover:border-[#C66A4A] hover:bg-[#F8F5F0] disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        <ArrowLeft size={16} />
-                                        Previous
-                                    </button>
-
-                                    <span className="whitespace-nowrap text-sm text-[#172A46]/70">
-                                        Page {safePage} of {Math.max(totalPages, 1)}
+                                    <span className="text-xs text-[#75685E]">
+                                        Page {safePage} of {totalPages}
                                     </span>
 
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage((page) =>
-                                                Math.min(
-                                                    Math.max(totalPages, 1),
-                                                    page + 1
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setCurrentPage((page) =>
+                                                    Math.max(1, page - 1)
                                                 )
-                                            )
-                                        }
-                                        disabled={safePage >= totalPages}
-                                        className="inline-flex items-center gap-2 rounded-lg border border-[#E8D9CE] bg-white px-3 py-2 text-sm font-medium transition hover:border-[#C66A4A] hover:bg-[#F8F5F0] disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        Next
-                                        <ArrowRight size={16} />
-                                    </button>
+                                            }
+                                            disabled={safePage === 1}
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5D9CF] bg-white px-2.5 text-xs font-medium transition hover:bg-[#F8F5F0] disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            <ChevronLeft size={15} />
+                                            Previous
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setCurrentPage((page) =>
+                                                    Math.min(
+                                                        totalPages,
+                                                        page + 1
+                                                    )
+                                                )
+                                            }
+                                            disabled={
+                                                safePage === totalPages
+                                            }
+                                            className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#172A46] bg-[#172A46] px-2.5 text-xs font-medium text-white transition hover:bg-[#263D5E] disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            Next
+                                            <ChevronRight size={15} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </>
                     )}
                 </section>
-            </main>
+            </div>
         </div>
     );
 }
-
-export default AdminUsers;

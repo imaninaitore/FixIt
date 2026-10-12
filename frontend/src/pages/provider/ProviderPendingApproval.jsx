@@ -269,12 +269,6 @@ function ProviderPendingApproval() {
                         {/* Actions */}
 
                         <div className="mt-4 flex flex-col gap-2.5 sm:flex-row sm:justify-center">
-                            <button
-                                onClick={loadEnrolment}
-                                className="w-full rounded-lg border border-white/20 bg-white/10 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-white/15 sm:w-auto sm:min-w-32"
-                            >
-                                Check Status
-                            </button>
 
                             <button
                                 onClick={() => navigate("/")}

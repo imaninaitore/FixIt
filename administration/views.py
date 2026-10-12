@@ -12,6 +12,9 @@ from service_requests.models import ServiceRequest
 from payments.models import Payment
 from django.db.models import Sum
 
+from django.db import transaction
+from django.utils import timezone
+
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def admin_users(request):
@@ -199,16 +202,33 @@ def admin_enrolment_detail(request, enrolment_id):
         status=status.HTTP_200_OK,
     )
 
+# PATCH /api/admin/enrolments/<id>/approve/
 @api_view(["PATCH"])
 @permission_classes([IsAdminUser])
 def admin_approve_enrolment(request, enrolment_id):
     enrolment = get_object_or_404(
         ProviderEnrolment,
-        id=enrolment_id
+        id=enrolment_id,
     )
 
+    completed_payment_exists = Payment.objects.filter(
+        enrolment=enrolment,
+        status="completed",
+    ).exists()
+
+    if not completed_payment_exists:
+        return Response(
+            {
+                "error": (
+                    "This enrolment cannot be approved until its "
+                    "payment has been verified and approved."
+                )
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
     enrolment.status = "approved"
-    enrolment.save()
+    enrolment.save(update_fields=["status", "updated_at"])
 
     return Response(
         {
@@ -217,9 +237,8 @@ def admin_approve_enrolment(request, enrolment_id):
             "provider": enrolment.provider.username,
             "status": enrolment.status,
         },
-        status=status.HTTP_200_OK
+        status=status.HTTP_200_OK,
     )
-
 
 # PATCH /api/admin/enrolments/<id>/reject/
 @api_view(["PATCH"])
@@ -299,6 +318,103 @@ def admin_payments(request):
             "payments": payment_data,
         },
         status=status.HTTP_200_OK
+    )
+
+
+# POST /api/admin/payments/<payment_id>/approve/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def admin_approve_payment(request, payment_id):
+    with transaction.atomic():
+        payment = get_object_or_404(
+            Payment.objects.select_for_update().select_related("enrolment"),
+            id=payment_id,
+        )
+
+        if payment.status == "completed":
+            return Response(
+                {"message": "This payment has already been approved."},
+                status=status.HTTP_200_OK,
+            )
+
+        if payment.status != "pending":
+            return Response(
+                {
+                    "error": (
+                        "Only pending payments can be approved."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payment.status = "completed"
+        payment.save(update_fields=["status", "updated_at"])
+
+        enrolment = payment.enrolment
+        enrolment.payment_status = "paid"
+
+        if not enrolment.paid_at:
+            enrolment.paid_at = timezone.now()
+
+        enrolment.save(
+            update_fields=[
+                "payment_status",
+                "paid_at",
+                "updated_at",
+            ]
+        )
+
+    return Response(
+        {
+            "message": "Payment approved successfully.",
+            "payment": {
+                "id": payment.id,
+                "status": payment.status,
+                "transaction_code": payment.transaction_code,
+            },
+            "enrolment": {
+                "id": enrolment.id,
+                "payment_status": enrolment.payment_status,
+                "status": enrolment.status,
+            },
+        },
+        status=status.HTTP_200_OK,
+    )
+
+
+# POST /api/admin/payments/<payment_id>/reject/
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def admin_reject_payment(request, payment_id):
+    with transaction.atomic():
+        payment = get_object_or_404(
+            Payment.objects.select_for_update(),
+            id=payment_id,
+        )
+
+        if payment.status != "pending":
+            return Response(
+                {
+                    "error": (
+                        "Only pending payments can be rejected."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        payment.status = "failed"
+        payment.save(update_fields=["status", "updated_at"])
+
+    return Response(
+        {
+            "message": "Payment rejected successfully.",
+            "payment": {
+                "id": payment.id,
+                "status": payment.status,
+                "transaction_code": payment.transaction_code,
+            },
+        },
+        status=status.HTTP_200_OK,
     )
 
 # GET /api/admin/reports/
