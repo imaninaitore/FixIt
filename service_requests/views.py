@@ -1,3 +1,4 @@
+
 from django.shortcuts import get_object_or_404
 
 from rest_framework.decorators import api_view, permission_classes
@@ -16,127 +17,124 @@ from accounts.models import Account
 def service_requests_list(request):
     # GET: View requests belonging to the logged-in customer.
     if request.method == "GET":
-        # Filter requests so the customer only sees their own.
         requests = ServiceRequest.objects.filter(
             customer=request.user
         ).order_by("-created_at")
 
-        # Convert the request objects into JSON.
         serializer = ServiceRequestSerializer(
             requests,
             many=True
         )
 
-        # Return the customer's requests.
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
         )
 
     # POST: Create a new service request.
-    if request.method == "POST":
-        # Pass the submitted data to the serializer.
-        serializer = ServiceRequestSerializer(
-            data=request.data,
+    serializer = ServiceRequestSerializer(
+        data=request.data,
+        context={"request": request}
+    )
+
+    if serializer.is_valid():
+        service_request = serializer.save()
+
+        response_serializer = ServiceRequestSerializer(
+            service_request,
             context={"request": request}
         )
 
-        # Check whether the submitted data is valid.
-        if serializer.is_valid():
-            # Save the request.
-            # The serializer assigns the logged-in user as customer.
-            service_request = serializer.save()
-
-            # Serialize the saved request so it can be returned as JSON.
-            response_serializer = ServiceRequestSerializer(
-                service_request,
-                context={"request": request}
-            )
-
-            # Return the newly created request.
-            return Response(
-                response_serializer.data,
-                status=status.HTTP_201_CREATED
-            )
-
-        # Return validation errors if the data is invalid.
         return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
+            response_serializer.data,
+            status=status.HTTP_201_CREATED
         )
+
+    return Response(
+        serializer.errors,
+        status=status.HTTP_400_BAD_REQUEST
+    )
+
 
 @api_view(["GET", "PATCH", "DELETE"])
 @permission_classes([IsAuthenticated])
 def service_request_detail(request, request_id):
-    # Find the request using its ID.
-    # Return 404 if the request does not exist.
     service_request = get_object_or_404(
         ServiceRequest,
         id=request_id
     )
 
-    # GET: View one service request.
+    # GET: Only the customer or assigned provider can view the request.
     if request.method == "GET":
-        # Only the customer or assigned provider can view it.
         if (
             request.user != service_request.customer
             and request.user != service_request.provider
         ):
             return Response(
-                {"error": "You do not have permission to view this request."},
+                {
+                    "error": (
+                        "You do not have permission to view this request."
+                    )
+                },
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        serializer = ServiceRequestSerializer(service_request)
+        serializer = ServiceRequestSerializer(
+            service_request,
+            context={"request": request}
+        )
 
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
         )
 
-    # PATCH: Update a service request.
+    # PATCH: Update the request.
     if request.method == "PATCH":
 
-        # Provider update
+        # Provider update: providers can only accept or reject
+        # pending requests through this endpoint.
         if request.user == service_request.provider:
-
-            # Providers are only allowed to change the status.
             submitted_fields = set(request.data.keys())
 
             if submitted_fields != {"status"}:
                 return Response(
                     {
-                        "error": "Providers can only update the request status."
+                        "error": (
+                            "Providers can only update the request status."
+                        )
                     },
                     status=status.HTTP_403_FORBIDDEN
                 )
 
             new_status = request.data.get("status")
 
-            # Providers can only accept or reject pending requests.
             if new_status not in ["accepted", "rejected"]:
                 return Response(
                     {
-                        "error": "Providers can only change a pending request to accepted or rejected."
+                        "error": (
+                            "Providers can only accept or reject "
+                            "pending requests."
+                        )
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Only pending requests can be accepted or rejected.
             if service_request.status != "pending":
                 return Response(
                     {
-                        "error": "Only pending requests can be accepted or rejected.",
+                        "error": (
+                            "Only pending requests can be accepted "
+                            "or rejected."
+                        ),
                         "current_status": service_request.status
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Update the status.
             service_request.status = new_status
             service_request.save()
 
-            # Return the updated request.
             serializer = ServiceRequestSerializer(
                 service_request,
                 context={"request": request}
@@ -147,18 +145,42 @@ def service_request_detail(request, request_id):
                 status=status.HTTP_200_OK
             )
 
-        # Customer update
+        # Customer update.
         if request.user == service_request.customer:
 
-            # Prevent updates to finished or rejected requests.
-            if service_request.status in [
-                "completed",
-                "rejected",
-                "cancelled"
-            ]:
+            # Request details can only be edited while pending.
+            if service_request.status != "pending":
                 return Response(
                     {
-                        "error": "This request can no longer be updated."
+                        "error": (
+                            "Only pending requests can be edited. "
+                            "Accepted requests can no longer be edited."
+                        ),
+                        "current_status": service_request.status
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Customers may edit request details, but not ownership,
+            # status, timestamps, or other protected fields.
+            allowed_fields = {
+                "provider_id",
+                "service_title",
+                "description",
+                "location",
+                "preferred_date",
+            }
+
+            submitted_fields = set(request.data.keys())
+            forbidden_fields = submitted_fields - allowed_fields
+
+            if forbidden_fields:
+                return Response(
+                    {
+                        "error": (
+                            "You cannot update these fields: "
+                            + ", ".join(sorted(forbidden_fields))
+                        )
                     },
                     status=status.HTTP_400_BAD_REQUEST
                 )
@@ -173,11 +195,13 @@ def service_request_detail(request, request_id):
             if serializer.is_valid():
                 updated_request = serializer.save()
 
+                response_serializer = ServiceRequestSerializer(
+                    updated_request,
+                    context={"request": request}
+                )
+
                 return Response(
-                    ServiceRequestSerializer(
-                        updated_request,
-                        context={"request": request}
-                    ).data,
+                    response_serializer.data,
                     status=status.HTTP_200_OK
                 )
 
@@ -186,40 +210,44 @@ def service_request_detail(request, request_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Someone who is neither the customer nor the assigned
-        # provider cannot update the request.
         return Response(
             {
-                "error": "You do not have permission to update this request."
+                "error": (
+                    "You do not have permission to update this request."
+                )
             },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # DELETE: Cancel a service request.
+    # DELETE: Preserve the existing cancellation behaviour.
     if request.method == "DELETE":
 
-        # Only the customer who created the request can cancel it.
         if request.user != service_request.customer:
             return Response(
-                {"error": "Only the customer can cancel this request."},
+                {
+                    "error": "Only the customer can cancel this request."
+                },
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Do not allow completed requests to be cancelled.
         if service_request.status == "completed":
             return Response(
-                {"error": "A completed request cannot be cancelled."},
+                {
+                    "error": "A completed request cannot be cancelled."
+                },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Mark the request as cancelled instead of deleting it.
         service_request.status = "cancelled"
         service_request.save()
 
         return Response(
-            {"message": "Service request cancelled successfully."},
+            {
+                "message": "Service request cancelled successfully."
+            },
             status=status.HTTP_200_OK
         )
+
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -233,25 +261,26 @@ def provider_service_requests(request):
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # Only users with the provider account type can access this endpoint.
     if account.account_type != "provider":
         return Response(
-            {"error": "Only service providers can view assigned requests."},
+            {
+                "error": (
+                    "Only service providers can view assigned requests."
+                )
+            },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Get only requests assigned to the logged-in provider.
     requests = ServiceRequest.objects.filter(
         provider=request.user
     ).order_by("-created_at")
 
-    # Convert the request objects into JSON.
     serializer = ServiceRequestSerializer(
         requests,
-        many=True
+        many=True,
+        context={"request": request}
     )
 
-    # Return the provider's assigned requests.
     return Response(
         serializer.data,
         status=status.HTTP_200_OK
@@ -261,20 +290,21 @@ def provider_service_requests(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def accept_service_request(request, request_id):
-    # Find the service request or return a 404 error.
     service_request = get_object_or_404(
         ServiceRequest,
         id=request_id
     )
 
-    # Only the provider assigned to this request can accept it.
     if request.user != service_request.provider:
         return Response(
-            {"error": "Only the assigned provider can accept this request."},
+            {
+                "error": (
+                    "Only the assigned provider can accept this request."
+                )
+            },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # A request can only be accepted while it is pending.
     if service_request.status != "pending":
         return Response(
             {
@@ -284,12 +314,13 @@ def accept_service_request(request, request_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Change the request status to accepted.
     service_request.status = "accepted"
     service_request.save()
 
-    # Return the updated request.
-    serializer = ServiceRequestSerializer(service_request)
+    serializer = ServiceRequestSerializer(
+        service_request,
+        context={"request": request}
+    )
 
     return Response(
         {
@@ -303,20 +334,21 @@ def accept_service_request(request, request_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def reject_service_request(request, request_id):
-    # Find the service request or return a 404 error.
     service_request = get_object_or_404(
         ServiceRequest,
         id=request_id
     )
 
-    # Only the provider assigned to this request can reject it.
     if request.user != service_request.provider:
         return Response(
-            {"error": "Only the assigned provider can reject this request."},
+            {
+                "error": (
+                    "Only the assigned provider can reject this request."
+                )
+            },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # A request can only be rejected while it is pending.
     if service_request.status != "pending":
         return Response(
             {
@@ -326,12 +358,13 @@ def reject_service_request(request, request_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Change the request status to rejected.
     service_request.status = "rejected"
     service_request.save()
 
-    # Return the updated request.
-    serializer = ServiceRequestSerializer(service_request)
+    serializer = ServiceRequestSerializer(
+        service_request,
+        context={"request": request}
+    )
 
     return Response(
         {
@@ -345,80 +378,60 @@ def reject_service_request(request, request_id):
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_service_request_status(request, request_id):
-    # Find the service request or return a 404 error.
     service_request = get_object_or_404(
         ServiceRequest,
         id=request_id
     )
 
-    # Only the assigned provider can update the request status.
+    # Only the assigned provider can start the service.
     if request.user != service_request.provider:
         return Response(
             {
-                "error": "Only the assigned provider can update this request."
+                "error": (
+                    "Only the assigned provider can update this request."
+                )
             },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Get the new status from the request body.
     new_status = request.data.get("status")
 
-    # Make sure a status was provided.
     if not new_status:
         return Response(
+            {"error": "The status field is required."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Providers may start work, but only customers can confirm completion.
+    if new_status != "in_progress":
+        return Response(
             {
-                "error": "The status field is required."
+                "error": (
+                    "Providers can only move accepted requests "
+                    "to in_progress. Customers must confirm completion."
+                )
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # These are the statuses that providers are allowed to set.
-    allowed_statuses = [
-        "in_progress",
-        "completed"
-    ]
-
-    # Reject statuses that are not allowed through this endpoint.
-    if new_status not in allowed_statuses:
+    if service_request.status != "accepted":
         return Response(
             {
-                "error": "Invalid status. Use 'in_progress' or 'completed'."
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # A provider can only start working after accepting the request.
-    if (
-        new_status == "in_progress"
-        and service_request.status != "accepted"
-    ):
-        return Response(
-            {
-                "error": "Only accepted requests can be moved to in_progress.",
+                "error": (
+                    "Only accepted requests can be moved to in_progress."
+                ),
                 "current_status": service_request.status
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # A provider can only mark a request completed after work has started.
-    if (
-        new_status == "completed"
-        and service_request.status != "in_progress"
-    ):
-        return Response(
-            {
-                "error": "Only in-progress requests can be marked as completed.",
-                "current_status": service_request.status
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Update and save the new status.
-    service_request.status = new_status
+    service_request.status = "in_progress"
     service_request.save()
 
-    # Return the updated service request.
-    serializer = ServiceRequestSerializer(service_request)
+    serializer = ServiceRequestSerializer(
+        service_request,
+        context={"request": request}
+    )
 
     return Response(
         {
@@ -432,41 +445,49 @@ def update_service_request_status(request, request_id):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def complete_service_request(request, request_id):
-    # Find the service request or return a 404 error.
     service_request = get_object_or_404(
         ServiceRequest,
         id=request_id
     )
 
-    # Only the assigned provider can mark the request as completed.
-    if request.user != service_request.provider:
+    # Only the customer who created the request can confirm completion.
+    if request.user != service_request.customer:
         return Response(
             {
-                "error": "Only the assigned provider can complete this request."
+                "error": (
+                    "Only the customer who owns this request "
+                    "can confirm completion."
+                )
             },
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Only an in-progress request can be completed.
-    if service_request.status != "in_progress":
+    # Customers can complete requests that are accepted or in progress.
+    if service_request.status not in ["accepted", "in_progress"]:
         return Response(
             {
-                "error": "Only in-progress requests can be completed.",
+                "error": (
+                    "Only accepted or in-progress requests "
+                    "can be marked as completed."
+                ),
                 "current_status": service_request.status
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Change the request status to completed.
     service_request.status = "completed"
     service_request.save()
 
-    # Return the updated request.
-    serializer = ServiceRequestSerializer(service_request)
+    serializer = ServiceRequestSerializer(
+        service_request,
+        context={"request": request}
+    )
 
     return Response(
         {
-            "message": "Service request marked as completed successfully.",
+            "message": (
+                "Service request marked as completed successfully."
+            ),
             "request": serializer.data
         },
         status=status.HTTP_200_OK
