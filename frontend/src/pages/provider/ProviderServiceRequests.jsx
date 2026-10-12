@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
     ArrowRight,
@@ -14,11 +13,13 @@ import {
     XCircle,
     ClipboardList,
     BriefcaseBusiness,
+    Play,
 } from "lucide-react";
 
 import {
     getProviderServiceRequests,
     updateServiceRequest,
+    updateProviderServiceRequestStatus,
 } from "../../services/serviceRequestService";
 
 function ProviderServiceRequests() {
@@ -30,7 +31,6 @@ function ProviderServiceRequests() {
     const [statusFilter, setStatusFilter] = useState("all");
     const [updatingRequestId, setUpdatingRequestId] = useState(null);
 
-    const navigate = useNavigate();
     const requestsPerPage = 5;
 
     useEffect(() => {
@@ -47,41 +47,58 @@ function ProviderServiceRequests() {
             const requests = Array.isArray(data)
                 ? data
                 : Array.isArray(data?.results)
-                    ? data.results
-                    : [];
+                  ? data.results
+                  : [];
 
             setServiceRequests(requests);
         } catch (err) {
             console.error(err);
-            setError("Failed to load your service requests.");
+            setError(
+                err.message || "Failed to load your service requests."
+            );
         } finally {
             setLoading(false);
         }
     }
 
-    async function handleUpdateStatus(request, status) {
+    async function handleUpdateStatus(request, newStatus) {
         if (updatingRequestId !== null) return;
 
         try {
             setUpdatingRequestId(request.id);
             setError("");
 
-            const updatedRequest = await updateServiceRequest(
-                request.id,
-                { status }
-            );
+            let result;
+
+            if (newStatus === "in_progress") {
+                // Use the dedicated provider status endpoint to start work.
+                result = await updateProviderServiceRequestStatus(
+                    request.id,
+                    "in_progress"
+                );
+            } else {
+                // Accepting and rejecting pending requests use the existing endpoint.
+                result = await updateServiceRequest(
+                    request.id,
+                    { status: newStatus }
+                );
+            }
+
+            // The status endpoint returns { message, request }, while
+            // the detail endpoint returns the serialized request directly.
+            const updatedRequest = result.request || result;
 
             setServiceRequests((previousRequests) =>
                 previousRequests.map((item) =>
                     item.id === request.id
-                        ? { ...item, ...updatedRequest, status }
+                        ? { ...item, ...updatedRequest }
                         : item
                 )
             );
 
             setSelectedRequest((previousRequest) =>
                 previousRequest?.id === request.id
-                    ? { ...previousRequest, ...updatedRequest, status }
+                    ? { ...previousRequest, ...updatedRequest }
                     : previousRequest
             );
         } catch (err) {
@@ -222,7 +239,6 @@ function ProviderServiceRequests() {
         startIndex + requestsPerPage
     );
 
-   
     useEffect(() => {
         if (totalPages === 0 && currentPage !== 1) {
             setCurrentPage(1);
@@ -258,17 +274,79 @@ function ProviderServiceRequests() {
         },
     ];
 
+    function renderRequestActions(request, location = "list") {
+        if (request.status === "pending") {
+            return (
+                <div
+                    className={
+                        location === "modal"
+                            ? "flex flex-col gap-2 sm:flex-row"
+                            : "flex gap-2"
+                    }
+                >
+                    <button
+                        type="button"
+                        onClick={() =>
+                            handleUpdateStatus(request, "rejected")
+                        }
+                        disabled={updatingRequestId !== null}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <XCircle className="h-3.5 w-3.5" />
+                        Reject
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            handleUpdateStatus(request, "accepted")
+                        }
+                        disabled={updatingRequestId !== null}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#172A46] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        Accept Request
+                    </button>
+                </div>
+            );
+        }
+
+        if (request.status === "accepted") {
+            return (
+                <button
+                    type="button"
+                    onClick={() =>
+                        handleUpdateStatus(request, "in_progress")
+                    }
+                    disabled={updatingRequestId !== null}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#C66A4A] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#A95338] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <Play className="h-3.5 w-3.5" />
+                    {updatingRequestId === request.id
+                        ? "Starting..."
+                        : "Start Work"}
+                </button>
+            );
+        }
+
+        if (request.status === "in_progress") {
+            return (
+                <p className="text-xs font-medium text-[#7A573F]">
+                    Work in progress — the customer confirms completion.
+                </p>
+            );
+        }
+
+        return null;
+    }
+
     return (
         <div className="min-h-screen bg-[#F4EDE5]">
-            {/* Hero */}
-
             <section className="relative overflow-hidden bg-[#172A46]">
                 <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-[#C66A4A]/20 blur-3xl" />
-
                 <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-[#D9B99B]/10 blur-3xl" />
 
                 <div className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-                  
                     <div className="flex flex-col gap-7 md:flex-row md:items-end md:justify-between">
                         <div className="max-w-2xl">
                             <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
@@ -288,16 +366,11 @@ function ProviderServiceRequests() {
                 </div>
             </section>
 
-            {/* Main Content */}
-
             <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-                {/* Loading */}
-
                 {loading && (
                     <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
                         <div className="text-center">
                             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-[#D9B99B] border-t-[#C66A4A]" />
-
                             <p className="mt-4 text-sm text-[#6B7280]">
                                 Loading your service requests...
                             </p>
@@ -305,12 +378,10 @@ function ProviderServiceRequests() {
                     </div>
                 )}
 
-                {/* Error */}
-
                 {!loading && error && (
                     <div className="rounded-2xl border border-[#E2B8AB] bg-[#FFFDF9] p-6 shadow-sm sm:p-7">
                         <h2 className="font-semibold text-[#172A46]">
-                            Unable to load service requests
+                            Unable to load or update service requests
                         </h2>
 
                         <p className="mt-2 text-sm text-[#9B4930]">
@@ -327,31 +398,23 @@ function ProviderServiceRequests() {
                     </div>
                 )}
 
-                {/* No Requests */}
-
-                {!loading &&
-                    !error &&
-                    serviceRequests.length === 0 && (
-                        <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-16 text-center shadow-sm">
-                            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#172A46] text-white">
-                                <ClipboardList className="h-6 w-6" />
-                            </div>
-
-                            <h2 className="mt-5 text-xl font-bold text-[#172A46] sm:text-2xl">
-                                No service requests yet
-                            </h2>
-
-                            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6B7280]">
-                                Customer requests assigned to you will
-                                appear here. You can review each request
-                                and respond when one arrives.
-                            </p>
-
-                          
+                {!loading && !error && serviceRequests.length === 0 && (
+                    <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-16 text-center shadow-sm">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#172A46] text-white">
+                            <ClipboardList className="h-6 w-6" />
                         </div>
-                    )}
 
-                {/* Overview and Filters */}
+                        <h2 className="mt-5 text-xl font-bold text-[#172A46] sm:text-2xl">
+                            No service requests yet
+                        </h2>
+
+                        <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#6B7280]">
+                            Customer requests assigned to you will appear
+                            here. You can review each request and respond
+                            when one arrives.
+                        </p>
+                    </div>
+                )}
 
                 {!loading && !error && serviceRequests.length > 0 && (
                     <div className="mb-8 space-y-4">
@@ -360,7 +423,6 @@ function ProviderServiceRequests() {
                                 <h2 className="text-lg font-bold text-[#172A46]">
                                     Request Overview
                                 </h2>
-
                                 <p className="mt-1 text-sm text-[#6B7280]">
                                     Select a category to filter your requests.
                                 </p>
@@ -424,7 +486,6 @@ function ProviderServiceRequests() {
                                                 >
                                                     {card.title}
                                                 </p>
-
                                                 <p
                                                     className={`mt-3 text-3xl font-bold ${
                                                         isActive
@@ -463,7 +524,6 @@ function ProviderServiceRequests() {
                                             >
                                                 {card.description}
                                             </span>
-
                                             <ArrowRight
                                                 className={`h-4 w-4 transition-transform group-hover:translate-x-1 ${
                                                     isActive
@@ -479,8 +539,6 @@ function ProviderServiceRequests() {
                     </div>
                 )}
 
-                {/* Filtered Request List */}
-
                 {!loading && !error && serviceRequests.length > 0 && (
                     <div>
                         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -494,7 +552,6 @@ function ProviderServiceRequests() {
                                                   letter.toUpperCase()
                                               )} Requests`}
                                 </h2>
-
                                 <p className="mt-1 text-sm text-[#6B7280]">
                                     Showing {filteredRequests.length}{" "}
                                     {filteredRequests.length === 1
@@ -516,29 +573,21 @@ function ProviderServiceRequests() {
                             )}
                         </div>
 
-                        {/* Empty Filter State */}
-
                         {filteredRequests.length === 0 ? (
                             <div className="rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] px-6 py-12 text-center shadow-sm">
                                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-[#172A46] text-white">
                                     <ClipboardList className="h-5 w-5" />
                                 </div>
-
                                 <h3 className="mt-4 font-semibold capitalize text-[#172A46]">
                                     No {statusFilter.replaceAll("_", " ")}{" "}
                                     requests
                                 </h3>
-
                                 <p className="mt-2 text-sm text-[#6B7280]">
-                                    There are no requests in this category
-                                    yet.
+                                    There are no requests in this category yet.
                                 </p>
-
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        handleFilterChange("all")
-                                    }
+                                    onClick={() => handleFilterChange("all")}
                                     className="mt-5 rounded-lg bg-[#C66A4A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A95338]"
                                 >
                                     Show All Requests
@@ -546,28 +595,18 @@ function ProviderServiceRequests() {
                             </div>
                         ) : (
                             <>
-                                {/* Request List */}
-
                                 <div className="overflow-hidden rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-sm">
-                                    {/* Desktop Header */}
-
                                     <div className="hidden border-b border-[#E8DED2] bg-[#F4EDE5] px-5 py-3 md:grid md:grid-cols-[1.6fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
-                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
-                                            Service
-                                        </p>
-
-                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
-                                            Customer
-                                        </p>
-
-                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
-                                            Date
-                                        </p>
-
-                                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]">
-                                            Status
-                                        </p>
-
+                                        {["Service", "Customer", "Date", "Status"].map(
+                                            (heading) => (
+                                                <p
+                                                    key={heading}
+                                                    className="text-[11px] font-semibold uppercase tracking-wider text-[#536070]"
+                                                >
+                                                    {heading}
+                                                </p>
+                                            )
+                                        )}
                                         <span />
                                     </div>
 
@@ -582,23 +621,18 @@ function ProviderServiceRequests() {
                                                 key={request.id}
                                                 className="border-b border-[#E8DED2] last:border-b-0"
                                             >
-                                                {/* Desktop Row */}
-
                                                 <div className="hidden px-5 py-4 md:grid md:grid-cols-[1.6fr_1.1fr_1fr_1fr_auto] md:items-center md:gap-4">
                                                     <div className="flex min-w-0 items-center gap-3">
                                                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white">
                                                             <BriefcaseBusiness className="h-4 w-4" />
                                                         </div>
-
                                                         <div className="min-w-0">
                                                             <p className="truncate text-sm font-semibold text-[#172A46]">
                                                                 {request.service_title ||
                                                                     "Service request"}
                                                             </p>
-
                                                             <p className="mt-0.5 text-xs text-[#6B7280]">
-                                                                Request #
-                                                                {request.id}
+                                                                Request #{request.id}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -608,25 +642,18 @@ function ProviderServiceRequests() {
                                                             request.customer_name ||
                                                             "Customer"}
                                                     </p>
-
                                                     <p className="text-sm text-[#536070]">
-                                                        {formatDate(
-                                                            request.preferred_date
-                                                        )}
+                                                        {formatDate(request.preferred_date)}
                                                     </p>
-
                                                     <span
                                                         className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${status.container}`}
                                                     >
                                                         <StatusIcon className="h-3 w-3" />
                                                         {status.label}
                                                     </span>
-
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            openRequest(request)
-                                                        }
+                                                        onClick={() => openRequest(request)}
                                                         className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
                                                     >
                                                         <Eye className="h-3.5 w-3.5" />
@@ -634,28 +661,22 @@ function ProviderServiceRequests() {
                                                     </button>
                                                 </div>
 
-                                                {/* Mobile Row */}
-
                                                 <div className="p-4 md:hidden">
                                                     <div className="flex items-start justify-between gap-3">
                                                         <div className="flex min-w-0 items-start gap-3">
                                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#172A46] text-white">
                                                                 <BriefcaseBusiness className="h-4 w-4" />
                                                             </div>
-
                                                             <div className="min-w-0">
                                                                 <h3 className="text-sm font-semibold text-[#172A46]">
                                                                     {request.service_title ||
                                                                         "Service request"}
                                                                 </h3>
-
                                                                 <p className="mt-1 text-xs text-[#6B7280]">
-                                                                    Request #
-                                                                    {request.id}
+                                                                    Request #{request.id}
                                                                 </p>
                                                             </div>
                                                         </div>
-
                                                         <span
                                                             className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold ${status.container}`}
                                                         >
@@ -669,73 +690,43 @@ function ProviderServiceRequests() {
                                                             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                                                                 Customer
                                                             </p>
-
                                                             <p className="mt-1 truncate text-xs font-medium text-[#536070]">
                                                                 {request.customer ||
                                                                     request.customer_name ||
                                                                     "Customer"}
                                                             </p>
                                                         </div>
-
                                                         <div>
                                                             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                                                                 Preferred Date
                                                             </p>
-
                                                             <p className="mt-1 text-xs font-medium text-[#536070]">
-                                                                {formatDate(
-                                                                    request.preferred_date
-                                                                )}
+                                                                {formatDate(request.preferred_date)}
                                                             </p>
                                                         </div>
                                                     </div>
 
-                                                    {request.status ===
-                                                        "pending" && (
-                                                        <div className="mt-4 grid grid-cols-2 gap-2">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    handleUpdateStatus(
-                                                                        request,
-                                                                        "accepted"
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    updatingRequestId !==
-                                                                    null
-                                                                }
-                                                                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#172A46] px-3 py-2.5 text-xs font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
-                                                            >
-                                                                <CheckCircle2 className="h-3.5 w-3.5" />
-                                                                Accept
-                                                            </button>
+                                                    {request.status === "pending" && (
+                                                        <div className="mt-4 flex flex-wrap gap-2">
+                                                            {renderRequestActions(request)}
+                                                        </div>
+                                                    )}
 
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    handleUpdateStatus(
-                                                                        request,
-                                                                        "rejected"
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    updatingRequestId !==
-                                                                    null
-                                                                }
-                                                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-3 py-2.5 text-xs font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
-                                                            >
-                                                                <XCircle className="h-3.5 w-3.5" />
-                                                                Reject
-                                                            </button>
+                                                    {request.status === "accepted" && (
+                                                        <div className="mt-4">
+                                                            {renderRequestActions(request)}
+                                                        </div>
+                                                    )}
+
+                                                    {request.status === "in_progress" && (
+                                                        <div className="mt-4">
+                                                            {renderRequestActions(request)}
                                                         </div>
                                                     )}
 
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            openRequest(request)
-                                                        }
+                                                        onClick={() => openRequest(request)}
                                                         className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-[#D9B99B] px-3 py-2.5 text-xs font-semibold text-[#172A46] transition hover:border-[#C66A4A] hover:text-[#C66A4A]"
                                                     >
                                                         <Eye className="h-3.5 w-3.5" />
@@ -743,60 +734,24 @@ function ProviderServiceRequests() {
                                                     </button>
                                                 </div>
 
-                                                {/* Desktop Actions */}
-
-                                                {request.status ===
-                                                    "pending" && (
-                                                    <div className="hidden border-t border-[#E8DED2]/70 bg-[#F4EDE5]/40 px-5 py-3 md:flex md:items-center md:justify-end md:gap-2">
-                                                        <span className="mr-auto text-xs text-[#6B7280]">
-                                                            This request is
-                                                            awaiting your
-                                                            response.
+                                                {(request.status === "pending" ||
+                                                    request.status === "accepted" ||
+                                                    request.status === "in_progress") && (
+                                                    <div className="hidden border-t border-[#E8DED2]/70 bg-[#F4EDE5]/40 px-5 py-3 md:flex md:items-center md:justify-between md:gap-3">
+                                                        <span className="text-xs text-[#6B7280]">
+                                                            {request.status === "pending"
+                                                                ? "This request is awaiting your response."
+                                                                : request.status === "accepted"
+                                                                  ? "Ready to begin the service?"
+                                                                  : "The customer will confirm completion."}
                                                         </span>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleUpdateStatus(
-                                                                    request,
-                                                                    "rejected"
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                updatingRequestId !==
-                                                                null
-                                                            }
-                                                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-3 py-2 text-xs font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
-                                                        >
-                                                            <XCircle className="h-3.5 w-3.5" />
-                                                            Reject
-                                                        </button>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                handleUpdateStatus(
-                                                                    request,
-                                                                    "accepted"
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                updatingRequestId !==
-                                                                null
-                                                            }
-                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#172A46] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
-                                                        >
-                                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                                            Accept Request
-                                                        </button>
+                                                        {renderRequestActions(request)}
                                                     </div>
                                                 )}
                                             </article>
                                         );
                                     })}
                                 </div>
-
-                                {/* Pagination */}
 
                                 {totalPages > 1 && (
                                     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -813,9 +768,7 @@ function ProviderServiceRequests() {
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    handlePageChange(
-                                                        currentPage - 1
-                                                    )
+                                                    handlePageChange(currentPage - 1)
                                                 }
                                                 disabled={currentPage === 1}
                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
@@ -833,9 +786,7 @@ function ProviderServiceRequests() {
                                                         type="button"
                                                         key={page}
                                                         onClick={() =>
-                                                            handlePageChange(
-                                                                page
-                                                            )
+                                                            handlePageChange(page)
                                                         }
                                                         aria-current={
                                                             currentPage === page
@@ -856,13 +807,9 @@ function ProviderServiceRequests() {
                                             <button
                                                 type="button"
                                                 onClick={() =>
-                                                    handlePageChange(
-                                                        currentPage + 1
-                                                    )
+                                                    handlePageChange(currentPage + 1)
                                                 }
-                                                disabled={
-                                                    currentPage === totalPages
-                                                }
+                                                disabled={currentPage === totalPages}
                                                 className="inline-flex items-center gap-1.5 rounded-lg border border-[#D9B99B] bg-[#FFFDF9] px-3 py-2 text-xs font-medium text-[#536070] transition hover:border-[#C66A4A] hover:text-[#C66A4A] disabled:cursor-not-allowed disabled:opacity-40"
                                             >
                                                 Next
@@ -877,8 +824,6 @@ function ProviderServiceRequests() {
                 )}
             </main>
 
-            {/* Request Details Modal */}
-
             {selectedRequest && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-[#172A46]/60 p-4 backdrop-blur-sm"
@@ -889,14 +834,11 @@ function ProviderServiceRequests() {
                     }}
                 >
                     <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#D9B99B] bg-[#FFFDF9] shadow-2xl">
-                        {/* Modal Header */}
-
                         <div className="sticky top-0 z-10 flex items-start justify-between border-b border-[#E8DED2] bg-[#FFFDF9] px-5 py-4 sm:px-6">
                             <div className="min-w-0 pr-4">
                                 <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C66A4A]">
                                     Service Request #{selectedRequest.id}
                                 </p>
-
                                 <h2 className="mt-1 text-xl font-bold text-[#172A46]">
                                     {selectedRequest.service_title ||
                                         "Service Request"}
@@ -913,15 +855,12 @@ function ProviderServiceRequests() {
                             </button>
                         </div>
 
-                        {/* Modal Content */}
-
                         <div className="space-y-6 p-5 sm:p-6">
                             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-[#F4EDE5] p-4">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                                         Current Status
                                     </p>
-
                                     <div className="mt-2">
                                         {(() => {
                                             const status = getStatusStyles(
@@ -942,31 +881,24 @@ function ProviderServiceRequests() {
                                 </div>
                             </div>
 
-                            {/* Description */}
-
                             <div>
                                 <h3 className="text-sm font-semibold text-[#172A46]">
                                     Request Description
                                 </h3>
-
                                 <p className="mt-2 whitespace-pre-wrap rounded-xl border border-[#E8DED2] bg-white p-4 text-sm leading-7 text-[#536070]">
                                     {selectedRequest.description ||
                                         "No description provided."}
                                 </p>
                             </div>
 
-                            {/* Details */}
-
                             <div className="grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
                                     <div className="flex items-center gap-2">
                                         <User className="h-4 w-4 text-[#C66A4A]" />
-
                                         <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                                             Customer
                                         </p>
                                     </div>
-
                                     <p className="mt-2 text-sm font-semibold text-[#172A46]">
                                         {selectedRequest.customer ||
                                             selectedRequest.customer_name ||
@@ -977,47 +909,36 @@ function ProviderServiceRequests() {
                                 <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
                                     <div className="flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-[#C66A4A]" />
-
                                         <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                                             Location
                                         </p>
                                     </div>
-
                                     <p className="mt-2 text-sm font-semibold text-[#172A46]">
-                                        {selectedRequest.location ||
-                                            "Not provided"}
+                                        {selectedRequest.location || "Not provided"}
                                     </p>
                                 </div>
 
                                 <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
                                     <div className="flex items-center gap-2">
                                         <CalendarDays className="h-4 w-4 text-[#C66A4A]" />
-
                                         <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                                             Preferred Date
                                         </p>
                                     </div>
-
                                     <p className="mt-2 text-sm font-semibold text-[#172A46]">
-                                        {formatDate(
-                                            selectedRequest.preferred_date
-                                        )}
+                                        {formatDate(selectedRequest.preferred_date)}
                                     </p>
                                 </div>
 
                                 <div className="rounded-xl border border-[#E8DED2] bg-white p-4">
                                     <div className="flex items-center gap-2">
                                         <Clock3 className="h-4 w-4 text-[#C66A4A]" />
-
                                         <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                                             Request Created
                                         </p>
                                     </div>
-
                                     <p className="mt-2 text-sm font-semibold text-[#172A46]">
-                                        {formatDate(
-                                            selectedRequest.created_at
-                                        )}
+                                        {formatDate(selectedRequest.created_at)}
                                     </p>
                                 </div>
                             </div>
@@ -1030,8 +951,6 @@ function ProviderServiceRequests() {
                             )}
                         </div>
 
-                        {/* Modal Footer */}
-
                         <div className="flex flex-col gap-3 border-t border-[#E8DED2] bg-[#F4EDE5]/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                             <button
                                 type="button"
@@ -1041,39 +960,7 @@ function ProviderServiceRequests() {
                                 Close
                             </button>
 
-                            {selectedRequest.status === "pending" && (
-                                <div className="flex flex-col gap-2 sm:flex-row">
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleUpdateStatus(
-                                                selectedRequest,
-                                                "rejected"
-                                            )
-                                        }
-                                        disabled={updatingRequestId !== null}
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#E2B8AB] bg-[#FFFDF9] px-4 py-2.5 text-sm font-semibold text-[#9B4930] transition hover:bg-[#F4E1DC] disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <XCircle className="h-4 w-4" />
-                                        Reject Request
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleUpdateStatus(
-                                                selectedRequest,
-                                                "accepted"
-                                            )
-                                        }
-                                        disabled={updatingRequestId !== null}
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#172A46] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#263F61] disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        <CheckCircle2 className="h-4 w-4" />
-                                        Accept Request
-                                    </button>
-                                </div>
-                            )}
+                            {renderRequestActions(selectedRequest, "modal")}
                         </div>
                     </div>
                 </div>
