@@ -9,6 +9,10 @@ import {
     UserRound,
     CreditCard,
     ShieldCheck,
+    CheckCircle2,
+    XCircle,
+    AlertCircle,
+    X,
 } from "lucide-react";
 
 import {
@@ -27,15 +31,15 @@ function AdminEnrolmentDetails() {
     const [actionLoading, setActionLoading] = useState(false);
     const [documentLoading, setDocumentLoading] = useState(false);
     const [error, setError] = useState("");
-    const [actionMessage, setActionMessage] = useState("");
+    const [confirmAction, setConfirmAction] = useState(null);
 
     useEffect(() => {
         loadEnrolment();
     }, [enrolmentId]);
 
-    async function loadEnrolment() {
+    async function loadEnrolment(showLoading = true) {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             setError("");
 
             const data = await getAdminEnrolment(enrolmentId);
@@ -43,63 +47,84 @@ function AdminEnrolmentDetails() {
         } catch (err) {
             setError(err.message || "Unable to load enrolment.");
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     }
 
-    async function handleApprove() {
-        if (
-            !window.confirm(
-                "Are you sure you want to approve this provider enrolment?"
-            )
-        ) {
-            return;
-        }
+    function requestConfirmation(action) {
+        setConfirmAction({
+            type: "confirm",
+            action,
+            message:
+                action === "approve"
+                    ? "Are you sure you want to approve this provider enrolment?"
+                    : "Are you sure you want to reject this provider enrolment?",
+        });
+    }
 
+    async function handleApprove() {
         try {
             setActionLoading(true);
             setError("");
-            setActionMessage("");
 
             const data = await approveEnrolment(enrolmentId);
 
-            setActionMessage(
-                data.message || "Provider enrolment approved successfully."
-            );
+            setConfirmAction({
+                type: "success",
+                action: "approve",
+                message:
+                    data.message ||
+                    "Provider enrolment approved successfully.",
+            });
 
-            await loadEnrolment();
+            await loadEnrolment(false);
         } catch (err) {
-            setError(err.message || "Failed to approve enrolment.");
+            setConfirmAction({
+                type: "error",
+                action: "approve",
+                message:
+                    err.message || "Failed to approve enrolment.",
+            });
         } finally {
             setActionLoading(false);
         }
     }
 
     async function handleReject() {
-        if (
-            !window.confirm(
-                "Are you sure you want to reject this provider enrolment?"
-            )
-        ) {
-            return;
-        }
-
         try {
             setActionLoading(true);
             setError("");
-            setActionMessage("");
 
             const data = await rejectEnrolment(enrolmentId);
 
-            setActionMessage(
-                data.message || "Provider enrolment rejected successfully."
-            );
+            setConfirmAction({
+                type: "success",
+                action: "reject",
+                message:
+                    data.message ||
+                    "Provider enrolment rejected successfully.",
+            });
 
-            await loadEnrolment();
+            await loadEnrolment(false);
         } catch (err) {
-            setError(err.message || "Failed to reject enrolment.");
+            setConfirmAction({
+                type: "error",
+                action: "reject",
+                message:
+                    err.message || "Failed to reject enrolment.",
+            });
         } finally {
             setActionLoading(false);
+        }
+    }
+
+    async function confirmDecision() {
+        if (!confirmAction || actionLoading) return;
+
+        if (confirmAction.action === "approve") {
+            await handleApprove();
+        } else {
+            await handleReject();
         }
     }
 
@@ -111,7 +136,8 @@ function AdminEnrolmentDetails() {
             await downloadQualificationDocument(enrolmentId);
         } catch (err) {
             setError(
-                err.message || "Failed to download qualification document."
+                err.message ||
+                    "Failed to download qualification document."
             );
         } finally {
             setDocumentLoading(false);
@@ -122,9 +148,12 @@ function AdminEnrolmentDetails() {
         const styles = {
             approved: "bg-green-100 text-green-700",
             rejected: "bg-red-100 text-red-700",
-            submitted: "bg-yellow-100 text-yellow-800",
+            submitted: "bg-[#F2D8CC] text-[#9A4B32]",
             draft: "bg-gray-100 text-gray-700",
             withdrawn: "bg-gray-100 text-gray-700",
+            pending: "bg-amber-100 text-amber-700",
+            completed: "bg-green-100 text-green-700",
+            failed: "bg-red-100 text-red-700",
         };
 
         return styles[status] || "bg-gray-100 text-gray-700";
@@ -173,7 +202,7 @@ function AdminEnrolmentDetails() {
     function Detail({ label, value }) {
         return (
             <div className="min-w-0">
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
                     {label}
                 </p>
                 <p className="mt-1 break-words text-sm font-medium text-gray-900">
@@ -185,34 +214,36 @@ function AdminEnrolmentDetails() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-50">
-                <p className="text-sm text-gray-500">
-                    Loading enrolment...
-                </p>
+            <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#172A46] via-[#D9C2AD] to-[#F2D8CC] px-4">
+                <div className="rounded-xl bg-[#FFFDF9] px-6 py-5 text-center shadow-sm">
+                    <p className="text-sm text-gray-600">
+                        Loading enrolment...
+                    </p>
+                </div>
             </div>
         );
     }
 
     if (error && !enrolment) {
         return (
-            <div className="min-h-screen bg-gray-50 px-6 py-10">
+            <div className="min-h-screen bg-gradient-to-br from-[#172A46] via-[#D9C2AD] to-[#F2D8CC] px-4 py-8 sm:px-6">
                 <div className="mx-auto max-w-3xl">
                     <button
                         onClick={() => navigate("/admin/enrolments")}
-                        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#17324D] hover:text-[#C66A4A]"
+                        className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-[#172A46] transition hover:text-[#C66A4A]"
                     >
                         <ArrowLeft size={16} />
                         Back to Enrolments
                     </button>
 
-                    <div className="rounded-xl border border-red-200 bg-red-50 p-6">
+                    <div className="rounded-xl border border-red-200 bg-[#FFFDF9] p-5 shadow-sm sm:p-6">
                         <h2 className="font-semibold text-red-800">
                             Unable to load enrolment
                         </h2>
                         <p className="mt-2 text-sm text-red-700">{error}</p>
                         <button
-                            onClick={loadEnrolment}
-                            className="mt-4 rounded-lg bg-[#17324D] px-4 py-2 text-sm font-medium text-white"
+                            onClick={() => loadEnrolment()}
+                            className="mt-4 rounded-lg bg-[#172A46] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#244866]"
                         >
                             Try Again
                         </button>
@@ -229,30 +260,31 @@ function AdminEnrolmentDetails() {
         : [];
 
     return (
-        <div className="min-h-screen bg-[#F8F5F0]">
-            <header className="bg-[#17324D] text-white">
-                <div className="mx-auto max-w-7xl px-6 py-6">
+        <div className="min-h-screen bg-gradient-to-br from-[#172A46] via-[#D9C2AD] to-[#F2D8CC]">
+            {/* Header */}
+            <header className="bg-gradient-to-r from-[#172A46] to-[#35435B] text-white shadow-md">
+                <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
                     <button
                         onClick={() => navigate("/admin/enrolments")}
-                        className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-300 transition hover:text-white"
+                        className="mb-3 inline-flex items-center gap-2 text-xs font-medium text-slate-300 transition hover:text-white sm:text-sm"
                     >
                         <ArrowLeft size={16} />
                         Back to Enrolments
                     </button>
 
-                    <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                        <div>
-                            <h1 className="text-2xl font-bold">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                            <h1 className="text-xl font-bold sm:text-2xl">
                                 Provider Enrolment #{enrolment.id}
                             </h1>
-                            <p className="mt-1 text-sm text-slate-300">
+                            <p className="mt-1 text-xs text-slate-300 sm:text-sm">
                                 Review the provider's application, documents,
                                 and payment information.
                             </p>
                         </div>
 
                         <span
-                            className={`inline-flex w-fit rounded-full px-4 py-2 text-sm font-semibold capitalize ${getStatusStyle(
+                            className={`inline-flex w-fit rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${getStatusStyle(
                                 enrolment.status
                             )}`}
                         >
@@ -262,37 +294,40 @@ function AdminEnrolmentDetails() {
                 </div>
             </header>
 
-            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                {actionMessage && (
-                    <div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-sm font-medium text-green-800">
-                        {actionMessage}
-                    </div>
-                )}
-
+            <main className="mx-auto max-w-7xl px-3 py-5 sm:px-6 sm:py-7 lg:px-8">
                 {error && (
-                    <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-                        {error}
+                    <div className="mb-4 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                        <AlertCircle size={18} className="mt-0.5 shrink-0" />
+                        <span>{error}</span>
+                        <button
+                            onClick={() => setError("")}
+                            className="ml-auto text-red-700 hover:text-red-900"
+                            aria-label="Dismiss error"
+                        >
+                            <X size={16} />
+                        </button>
                     </div>
                 )}
 
-                <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-                    <div className="space-y-6 lg:col-span-2">
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
+                <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3 lg:gap-5">
+                    <div className="min-w-0 space-y-4 lg:col-span-2">
+                        {/* Business Information */}
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
                             <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#17324D]">
-                                    <Building2 size={20} />
+                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#172A46]">
+                                    <Building2 size={19} />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-[#17324D]">
+                                    <h2 className="text-base font-semibold text-[#172A46] sm:text-lg">
                                         Business Information
                                     </h2>
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-xs text-gray-500 sm:text-sm">
                                         Details submitted by the applicant
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                            <div className="mt-5 grid gap-x-5 gap-y-4 sm:grid-cols-2">
                                 <Detail
                                     label="Business Name"
                                     value={enrolment.business_name}
@@ -340,8 +375,8 @@ function AdminEnrolmentDetails() {
                                 />
                             </div>
 
-                            <div className="mt-6 border-t border-gray-100 pt-5">
-                                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                            <div className="mt-5 border-t border-gray-100 pt-4">
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 sm:text-xs">
                                     Service Description
                                 </p>
                                 <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-gray-700">
@@ -350,22 +385,23 @@ function AdminEnrolmentDetails() {
                             </div>
                         </section>
 
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
+                        {/* Referee Information */}
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
                             <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#17324D]">
-                                    <UserRound size={20} />
+                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#172A46]">
+                                    <UserRound size={19} />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-[#17324D]">
+                                    <h2 className="text-base font-semibold text-[#172A46] sm:text-lg">
                                         Referee Information
                                     </h2>
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-xs text-gray-500 sm:text-sm">
                                         Contact details for reference checks
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                            <div className="mt-5 grid gap-4 sm:grid-cols-2">
                                 <Detail
                                     label="Referee Name"
                                     value={enrolment.referee_name}
@@ -381,19 +417,19 @@ function AdminEnrolmentDetails() {
                             </div>
                         </section>
 
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
-                            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                        {/* Qualification Document */}
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center gap-3">
-                                    <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#17324D]">
-                                        <FileText size={20} />
+                                    <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#172A46]">
+                                        <FileText size={19} />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-semibold text-[#17324D]">
+                                        <h2 className="text-base font-semibold text-[#172A46] sm:text-lg">
                                             Qualification Document
                                         </h2>
-                                        <p className="text-sm text-gray-500">
-                                            Professional certificate or qualification
-                                            evidence
+                                        <p className="text-xs text-gray-500 sm:text-sm">
+                                            Professional certificate or qualification evidence
                                         </p>
                                     </div>
                                 </div>
@@ -402,9 +438,9 @@ function AdminEnrolmentDetails() {
                                     <button
                                         onClick={handleDownloadDocument}
                                         disabled={documentLoading}
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#17324D] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#244866] disabled:opacity-60"
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#172A46] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#244866] disabled:opacity-60 sm:text-sm"
                                     >
-                                        <Download size={16} />
+                                        <Download size={15} />
                                         {documentLoading
                                             ? "Downloading..."
                                             : "Download Document"}
@@ -412,14 +448,15 @@ function AdminEnrolmentDetails() {
                                 )}
                             </div>
 
-                            <div className="mt-5 rounded-lg bg-gray-50 p-4">
+                            <div className="mt-4 rounded-lg bg-[#F4EDE5] p-3">
                                 <p className="break-all text-sm font-medium text-gray-800">
                                     {displayValue(
                                         enrolment.qualification_document
                                     )}
                                 </p>
+
                                 {!enrolment.has_qualification_document && (
-                                    <p className="mt-2 text-sm text-red-600">
+                                    <p className="mt-1 text-xs text-red-600 sm:text-sm">
                                         No qualification document is available
                                         for this application.
                                     </p>
@@ -427,23 +464,23 @@ function AdminEnrolmentDetails() {
                             </div>
                         </section>
 
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
+                        {/* Payment Information */}
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
                             <div className="flex items-center gap-3">
-                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#17324D]">
-                                    <CreditCard size={20} />
+                                <div className="rounded-lg bg-[#F2D8CC] p-2 text-[#172A46]">
+                                    <CreditCard size={19} />
                                 </div>
                                 <div>
-                                    <h2 className="text-lg font-semibold text-[#17324D]">
+                                    <h2 className="text-base font-semibold text-[#172A46] sm:text-lg">
                                         Payment Information
                                     </h2>
-                                    <p className="text-sm text-gray-500">
-                                        Payment records associated with this
-                                        application
+                                    <p className="text-xs text-gray-500 sm:text-sm">
+                                        Payment records for this application
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                            <div className="mt-5 grid gap-4 sm:grid-cols-2">
                                 <Detail
                                     label="Enrolment Payment Status"
                                     value={enrolment.payment_status}
@@ -459,50 +496,51 @@ function AdminEnrolmentDetails() {
                             </div>
 
                             {payments.length === 0 ? (
-                                <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
+                                <div className="mt-4 rounded-lg bg-[#F4EDE5] p-3 text-sm text-gray-600">
                                     No payment records were returned for this
                                     application.
                                 </div>
                             ) : (
-                                <div className="mt-6 overflow-x-auto">
-                                    <table className="w-full min-w-[650px] text-left text-sm">
-                                        <thead>
-                                            <tr className="border-b border-gray-200 text-xs uppercase tracking-wide text-gray-500">
-                                                <th className="px-3 py-3">Transaction</th>
-                                                <th className="px-3 py-3">Amount</th>
-                                                <th className="px-3 py-3">Phone</th>
-                                                <th className="px-3 py-3">Payment Date</th>
-                                                <th className="px-3 py-3">Status</th>
+                                <div className="mt-4 overflow-x-auto rounded-lg border border-gray-100">
+                                    <table className="w-full min-w-[600px] text-left text-sm">
+                                        <thead className="bg-[#F4EDE5]">
+                                            <tr className="text-[10px] uppercase tracking-wide text-[#172A46] sm:text-xs">
+                                                <th className="px-3 py-2.5">Transaction</th>
+                                                <th className="px-3 py-2.5">Amount</th>
+                                                <th className="px-3 py-2.5">Phone</th>
+                                                <th className="px-3 py-2.5">Payment Date</th>
+                                                <th className="px-3 py-2.5">Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="divide-y divide-gray-100">
                                             {payments.map((payment) => (
-                                                <tr
-                                                    key={payment.id}
-                                                    className="border-b border-gray-100 last:border-0"
-                                                >
-                                                    <td className="px-3 py-4">
+                                                <tr key={payment.id}>
+                                                    <td className="px-3 py-3">
                                                         <p className="font-medium text-gray-900">
-                                                            {payment.transaction_code}
+                                                            {displayValue(
+                                                                payment.transaction_code
+                                                            )}
                                                         </p>
-                                                        <p className="mt-1 text-xs text-gray-500">
-                                                            {payment.plan}
+                                                        <p className="mt-0.5 text-xs text-gray-500">
+                                                            {displayValue(payment.plan)}
                                                         </p>
                                                     </td>
-                                                    <td className="px-3 py-4 text-gray-800">
-                                                        KES {payment.amount}
+                                                    <td className="whitespace-nowrap px-3 py-3 text-gray-800">
+                                                        KES {displayValue(payment.amount)}
                                                     </td>
-                                                    <td className="px-3 py-4 text-gray-700">
+                                                    <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                                                         {displayValue(payment.phone_number)}
                                                     </td>
-                                                    <td className="px-3 py-4 text-gray-700">
+                                                    <td className="whitespace-nowrap px-3 py-3 text-gray-700">
                                                         {formatDate(payment.payment_date)}
                                                     </td>
-                                                    <td className="px-3 py-4">
+                                                    <td className="whitespace-nowrap px-3 py-3">
                                                         <span
-                                                            className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ${getStatusStyle(payment.status)}`}
+                                                            className={`inline-flex rounded-full px-2 py-1 text-[10px] font-semibold capitalize sm:text-xs ${getStatusStyle(
+                                                                payment.status
+                                                            )}`}
                                                         >
-                                                            {payment.status}
+                                                            {displayValue(payment.status)}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -514,11 +552,15 @@ function AdminEnrolmentDetails() {
                         </section>
                     </div>
 
-                    <aside className="space-y-6">
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
+                    {/* Review sidebar */}
+                    <aside className="min-w-0 space-y-4 lg:sticky lg:top-5">
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
                             <div className="flex items-center gap-3">
-                                <ShieldCheck size={22} className="text-[#C66A4A]" />
-                                <h2 className="text-lg font-semibold text-[#17324D]">
+                                <ShieldCheck
+                                    size={21}
+                                    className="shrink-0 text-[#C66A4A]"
+                                />
+                                <h2 className="text-base font-semibold text-[#172A46] sm:text-lg">
                                     Review Decision
                                 </h2>
                             </div>
@@ -530,33 +572,33 @@ function AdminEnrolmentDetails() {
                             </p>
 
                             {enrolment.status === "submitted" ? (
-                                <div className="mt-6 space-y-3">
+                                <div className="mt-5 space-y-2">
                                     <button
-                                        onClick={handleApprove}
+                                        onClick={() =>
+                                            requestConfirmation("approve")
+                                        }
                                         disabled={actionLoading}
-                                        className="w-full rounded-lg bg-[#17324D] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#244866] disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="w-full rounded-lg bg-[#172A46] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#244866] disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        {actionLoading
-                                            ? "Processing..."
-                                            : "Approve Enrolment"}
+                                        Approve Enrolment
                                     </button>
 
                                     <button
-                                        onClick={handleReject}
+                                        onClick={() =>
+                                            requestConfirmation("reject")
+                                        }
                                         disabled={actionLoading}
-                                        className="w-full rounded-lg border border-red-300 bg-white px-5 py-3 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="w-full rounded-lg border border-red-300 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        {actionLoading
-                                            ? "Processing..."
-                                            : "Reject Enrolment"}
+                                        Reject Enrolment
                                     </button>
                                 </div>
                             ) : (
-                                <div className="mt-6 rounded-lg bg-gray-50 p-4">
-                                    <p className="text-sm font-medium capitalize text-gray-800">
+                                <div className="mt-5 rounded-lg bg-[#F4EDE5] p-3">
+                                    <p className="text-sm font-medium capitalize text-[#172A46]">
                                         Application {enrolment.status || "processed"}
                                     </p>
-                                    <p className="mt-1 text-sm text-gray-500">
+                                    <p className="mt-1 text-xs leading-5 text-gray-600 sm:text-sm">
                                         No review action is available for this
                                         application status.
                                     </p>
@@ -564,21 +606,21 @@ function AdminEnrolmentDetails() {
                             )}
                         </section>
 
-                        <section className="rounded-xl border border-[#E7D8C5] bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-[#17324D]">
+                        <section className="rounded-xl border border-[#E7D8C5] bg-[#FFFDF9]/95 p-4 shadow-sm backdrop-blur-sm sm:p-5">
+                            <h2 className="text-base font-semibold text-[#172A46]">
                                 Navigation
                             </h2>
 
                             <button
                                 onClick={() => navigate("/admin/enrolments")}
-                                className="mt-4 w-full rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                                className="mt-3 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-[#F4EDE5]"
                             >
                                 Back to All Enrolments
                             </button>
 
                             <button
                                 onClick={() => navigate("/admin/dashboard")}
-                                className="mt-3 w-full rounded-lg border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                                className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-[#F4EDE5]"
                             >
                                 Admin Dashboard
                             </button>
@@ -586,6 +628,124 @@ function AdminEnrolmentDetails() {
                     </aside>
                 </div>
             </main>
+
+            {/* Confirmation and result modal */}
+            {confirmAction && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#172A46]/60 px-4 py-6 backdrop-blur-sm"
+                    onClick={() => {
+                        if (!actionLoading) setConfirmAction(null);
+                    }}
+                >
+                    <div
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="enrolment-modal-title"
+                        className="my-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#E7D8C5] bg-[#FFFDF9] shadow-2xl"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="h-1.5 bg-gradient-to-r from-[#172A46] via-[#C66A4A] to-[#F2D8CC]" />
+
+                        <div className="p-5 sm:p-6">
+                            <div
+                                className={`mb-4 flex h-11 w-11 items-center justify-center rounded-full ${
+                                    confirmAction.type === "success"
+                                        ? "bg-green-100 text-green-700"
+                                        : confirmAction.type === "error"
+                                          ? "bg-red-100 text-red-600"
+                                          : confirmAction.action === "reject"
+                                            ? "bg-red-100 text-red-600"
+                                            : "bg-[#F2D8CC] text-[#C66A4A]"
+                                }`}
+                            >
+                                {confirmAction.type === "success" ? (
+                                    <CheckCircle2 size={23} />
+                                ) : confirmAction.type === "error" ? (
+                                    <AlertCircle size={23} />
+                                ) : confirmAction.action === "reject" ? (
+                                    <XCircle size={23} />
+                                ) : (
+                                    <ShieldCheck size={23} />
+                                )}
+                            </div>
+
+                            <h2
+                                id="enrolment-modal-title"
+                                className="text-lg font-bold text-[#172A46]"
+                            >
+                                {confirmAction.type === "success"
+                                    ? "Decision Completed"
+                                    : confirmAction.type === "error"
+                                      ? "Action Unsuccessful"
+                                      : confirmAction.action === "approve"
+                                        ? "Approve Enrolment?"
+                                        : "Reject Enrolment?"}
+                            </h2>
+
+                            <p className="mt-2 text-sm leading-6 text-gray-600">
+                                {confirmAction.message}
+                            </p>
+
+                            {confirmAction.type === "confirm" && (
+                                <div className="mt-3 rounded-lg bg-[#F4EDE5] px-3 py-2.5">
+                                    <p className="text-sm font-semibold text-[#172A46]">
+                                        Provider Enrolment #{enrolment.id}
+                                    </p>
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        {enrolment.business_name ||
+                                            enrolment.provider ||
+                                            "Provider"}
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                                {confirmAction.type === "confirm" ? (
+                                    <>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setConfirmAction(null)
+                                            }
+                                            disabled={actionLoading}
+                                            className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+                                        >
+                                            Cancel
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={confirmDecision}
+                                            disabled={actionLoading}
+                                            className={`rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                                                confirmAction.action === "approve"
+                                                    ? "bg-[#172A46] hover:bg-[#244866]"
+                                                    : "bg-red-600 hover:bg-red-700"
+                                            }`}
+                                        >
+                                            {actionLoading
+                                                ? "Processing..."
+                                                : confirmAction.action === "approve"
+                                                  ? "Yes, Approve"
+                                                  : "Yes, Reject"}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setConfirmAction(null)
+                                        }
+                                        className="rounded-lg bg-[#172A46] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#244866]"
+                                    >
+                                        Okay
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

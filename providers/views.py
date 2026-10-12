@@ -452,20 +452,18 @@ def approve_provider_enrolment(request, enrolment_id):
             status=status.HTTP_403_FORBIDDEN,
         )
 
-    try:
-        enrolment = ProviderEnrolment.objects.get(id=enrolment_id)
-    except ProviderEnrolment.DoesNotExist:
-        return Response(
-            {"error": "Provider enrolment not found."},
-            status=status.HTTP_404_NOT_FOUND,
-        )
+    with transaction.atomic():
+        try:
+            enrolment = ProviderEnrolment.objects.select_for_update().get(
+                id=enrolment_id
+            )
+        except ProviderEnrolment.DoesNotExist:
+            return Response(
+                {"error": "Provider enrolment not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
-    payment = Payment.objects.filter(
-        enrolment=enrolment,
-        status="pending",
-    ).order_by("-created_at").first()
-
-    if enrolment.status == "approved":
+        # Require a payment that has already been approved.
         payment = Payment.objects.filter(
             enrolment=enrolment,
             status="completed",
@@ -475,63 +473,55 @@ def approve_provider_enrolment(request, enrolment_id):
             return Response(
                 {
                     "error": (
-                        "This enrolment is approved, but no completed "
-                        "payment was found."
+                        "This enrolment cannot be approved because "
+                        "no approved payment was found."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    else:
-        if enrolment.status != "submitted":
-            return Response(
-                {
-                    "error": (
-                        "Only submitted enrolment applications can be approved."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Allow an already-approved enrolment to return its existing
+        # payment and profile information without changing the payment.
+        if enrolment.status != "approved":
+            if enrolment.status != "submitted":
+                return Response(
+                    {
+                        "error": (
+                            "Only submitted enrolment applications "
+                            "can be approved."
+                        )
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        if not payment:
-            return Response(
-                {
-                    "error": (
-                        "No pending payment was found for this enrolment."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        with transaction.atomic():
-            payment.status = "completed"
-            payment.save(update_fields=["status"])
-
-            enrolment.payment_status = "paid"
             enrolment.status = "approved"
-            enrolment.paid_at = timezone.now()
+            enrolment.payment_status = "paid"
+
+            if not enrolment.paid_at:
+                enrolment.paid_at = timezone.now()
+
             enrolment.save(
                 update_fields=[
-                    "payment_status",
                     "status",
+                    "payment_status",
                     "paid_at",
                     "updated_at",
                 ]
             )
 
-    # Create the public provider profile if it does not already exist.
-    provider_profile, created = ProviderProfile.objects.get_or_create(
-        user=enrolment.provider,
-        defaults={
-            "business_name": enrolment.business_name,
-            "service_category": enrolment.service_category,
-            "description": enrolment.description,
-            "location": enrolment.location,
-            "years_of_experience": enrolment.years_of_experience,
-            "phone_number": enrolment.phone_number,
-            "is_available": True,
-        },
-    )
+        # Create the public provider profile if it does not already exist.
+        provider_profile, created = ProviderProfile.objects.get_or_create(
+            user=enrolment.provider,
+            defaults={
+                "business_name": enrolment.business_name,
+                "service_category": enrolment.service_category,
+                "description": enrolment.description,
+                "location": enrolment.location,
+                "years_of_experience": enrolment.years_of_experience,
+                "phone_number": enrolment.phone_number,
+                "is_available": True,
+            },
+        )
 
     return Response(
         {
@@ -562,14 +552,12 @@ def approve_provider_enrolment(request, enrolment_id):
                 "paid_at": enrolment.paid_at,
             },
             "payment": {
-                "id": payment.id if payment else None,
-                "provider": payment.provider.id if payment else None,
-                "enrolment": payment.enrolment.id if payment else None,
-                "amount": str(payment.amount) if payment else None,
-                "transaction_code": (
-                    payment.transaction_code if payment else None
-                ),
-                "status": payment.status if payment else None,
+                "id": payment.id,
+                "provider": payment.provider.id,
+                "enrolment": payment.enrolment.id,
+                "amount": str(payment.amount),
+                "transaction_code": payment.transaction_code,
+                "status": payment.status,
             },
             "provider_profile": {
                 "id": provider_profile.id,
