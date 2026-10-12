@@ -254,6 +254,65 @@ export async function getAdminPayments() {
     return data;
 }
 
+
+/**
+ * Approve a provider subscription payment.
+ * POST /api/admin/payments/<payment_id>/approve/
+ */
+export async function approveAdminPayment(paymentId) {
+    const response = await authenticatedFetch(
+        `${API_URL}/admin/payments/${paymentId}/approve/`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            data.message ||
+            "Failed to approve payment."
+        );
+    }
+
+    return data;
+}
+
+/**
+ * Reject a provider subscription payment.
+ * POST /api/admin/payments/<payment_id>/reject/
+ */
+export async function rejectAdminPayment(paymentId) {
+    const response = await authenticatedFetch(
+        `${API_URL}/admin/payments/${paymentId}/reject/`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.error ||
+            data.message ||
+            "Failed to reject payment."
+        );
+    }
+
+    return data;
+}
+
 // Get admin reports
 export async function getAdminReports() {
     const response = await authenticatedFetch(
