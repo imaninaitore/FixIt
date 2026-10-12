@@ -199,11 +199,11 @@ function Conversation() {
                             rounded-full
                             border-2
                             border-white/60
-                            border-t-blue-600
+                            border-t-[#C66A4A]
                         "
                     />
 
-                    <p className="text-sm font-medium text-slate-700">
+                    <p className="text-sm font-medium text-[#172A46]">
                         Loading conversation...
                     </p>
                 </div>
@@ -224,7 +224,7 @@ function Conversation() {
                 "
                 style={{
                     backgroundImage:
-                        "url('/images/messages.jpg')",
+                        "url('/images/bg.png')",
                 }}
             >
                 <div
@@ -255,14 +255,14 @@ function Conversation() {
                         className="
                             mt-5
                             rounded-xl
-                            bg-blue-600
+                            bg-[#C66A4A]
                             px-4
                             py-2
                             text-sm
                             font-medium
                             text-white
                             transition
-                            hover:bg-blue-700
+                            hover:bg-[#AD563A]
                         "
                     >
                         Back to Messages
@@ -290,7 +290,7 @@ function Conversation() {
             "
             style={{
                 backgroundImage:
-                    "url('/images/messages.jpg')",
+                    "url('/images/bg.png')",
             }}
         >
             {/* Background overlay */}
@@ -333,10 +333,10 @@ function Conversation() {
                             className="
                                 rounded-xl
                                 p-2
-                                text-slate-700
+                                text-[#172A46]
                                 transition
                                 hover:bg-white/30
-                                hover:text-slate-950
+                                hover:text-[#C66A4A]
                             "
                         >
                             <ArrowLeft className="h-5 w-5" />
@@ -352,7 +352,7 @@ function Conversation() {
                                 items-center
                                 justify-center
                                 rounded-full
-                                bg-blue-600
+                                bg-[#172A46]
                                 text-sm
                                 font-bold
                                 text-white
@@ -365,12 +365,12 @@ function Conversation() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <h1 className="truncate text-sm font-bold text-slate-950">
+                            <h1 className="truncate text-sm font-bold text-[#172A46]">
                                 {otherPerson ||
                                     "Conversation"}
                             </h1>
 
-                            <p className="text-xs text-slate-600">
+                            <p className="text-xs text-[#172A46]/70">
                                 FixIt conversation
                             </p>
                         </div>
@@ -379,10 +379,10 @@ function Conversation() {
                             className="
                                 rounded-xl
                                 p-2
-                                text-slate-600
+                                text-[#172A46]/70
                                 transition
                                 hover:bg-white/30
-                                hover:text-slate-950
+                                hover:text-[#C66A4A]
                             "
                         >
                             <MoreVertical className="h-5 w-5" />
@@ -431,18 +431,18 @@ function Conversation() {
                                         items-center
                                         justify-center
                                         rounded-full
-                                        bg-blue-600
+                                        bg-[#C66A4A]
                                         shadow-lg
                                     "
                                 >
                                     <Send className="h-6 w-6 text-white" />
                                 </div>
 
-                                <h2 className="mt-4 text-lg font-semibold text-slate-950">
+                                <h2 className="mt-4 text-lg font-semibold text-[#172A46]">
                                     Start the conversation
                                 </h2>
 
-                                <p className="mt-1 text-sm text-slate-700">
+                                <p className="mt-1 text-sm text-[#172A46]/80">
                                     Send a message to begin
                                     communicating.
                                 </p>
@@ -476,8 +476,8 @@ function Conversation() {
                                                     ? `
                                                         rounded-br-md
                                                         border
-                                                        border-blue-500/30
-                                                        bg-blue-600/90
+                                                        border-[#C66A4A]/40
+                                                        bg-[#172A46]/90
                                                         text-white
                                                     `
                                                     : `
@@ -485,7 +485,7 @@ function Conversation() {
                                                         border
                                                         border-white/40
                                                         bg-white/65
-                                                        text-slate-900
+                                                        text-[#172A46]
                                                     `
                                             }
                                         `}
@@ -500,8 +500,8 @@ function Conversation() {
                                                 text-[10px]
                                                 ${
                                                     isMine
-                                                        ? "text-blue-100"
-                                                        : "text-slate-500"
+                                                        ? "text-[#F2D8CC]"
+                                                        : "text-[#172A46]/60"
                                                 }
                                             `}
                                         >
@@ -584,16 +584,16 @@ function Conversation() {
                                 py-3
                                 text-sm
                                 font-medium
-                                text-slate-900
+                                text-[#172A46]
                                 shadow-sm
                                 outline-none
                                 backdrop-blur-md
                                 transition
-                                placeholder:text-slate-500
-                                focus:border-blue-500/60
+                                placeholder:text-[#172A46]/50
+                                focus:border-[#C66A4A]/60
                                 focus:bg-white/75
                                 focus:ring-2
-                                focus:ring-blue-500/30
+                                focus:ring-[#C66A4A]/30
                             "
                         />
 
@@ -611,11 +611,11 @@ function Conversation() {
                                 items-center
                                 justify-center
                                 rounded-xl
-                                bg-blue-600
+                                bg-[#C66A4A]
                                 text-white
                                 shadow-lg
                                 transition
-                                hover:bg-blue-700
+                                hover:bg-[#AD563A]
                                 disabled:cursor-not-allowed
                                 disabled:opacity-50
                             "

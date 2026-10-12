@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -163,23 +162,23 @@ function Conversations() {
                                 sm:p-6
                             "
                         >
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#C66A4A]">
                                 FixIt Messages
                             </p>
 
                             <div className="mt-2 flex flex-wrap items-center gap-3">
-                                <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+                                <h1 className="text-2xl font-bold tracking-tight text-[#172A46] sm:text-3xl">
                                     Conversations
                                 </h1>
 
                                 {totalUnread > 0 && (
-                                    <span className="rounded-full bg-blue-600 px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                                    <span className="rounded-full bg-[#C66A4A] px-2.5 py-1 text-xs font-bold text-white shadow-sm">
                                         {totalUnread} unread
                                     </span>
                                 )}
                             </div>
 
-                            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-700">
+                            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#172A46]">
                                 {isCustomer
                                     ? "Communicate with service providers about your service requests and keep track of your conversations."
                                     : "Communicate with customers about their service requests and keep track of your conversations."}
@@ -200,8 +199,8 @@ function Conversations() {
                                 justify-center
                                 gap-2
                                 rounded-xl
-                                border border-blue-500/30
-                                bg-blue-600
+                                border border-[#C66A4A]/30
+                                bg-[#C66A4A]
                                 px-8
                                 py-3
                                 text-sm
@@ -209,7 +208,7 @@ function Conversations() {
                                 text-white
                                 shadow-lg
                                 transition
-                                hover:bg-blue-700
+                                hover:bg-[#AD563A]
                                 hover:shadow-xl
                             "
                         >
@@ -240,7 +239,7 @@ function Conversations() {
                                     h-5
                                     w-5
                                     -translate-y-1/2
-                                    text-slate-600
+                                    text-[#172A46]/70
                                 "
                             />
 
@@ -265,11 +264,11 @@ function Conversations() {
                                     pr-4
                                     text-sm
                                     font-medium
-                                    text-slate-900
+                                    text-[#172A46]
                                     outline-none
-                                    placeholder:text-slate-600
+                                    placeholder:text-[#172A46]/65
                                     focus:ring-2
-                                    focus:ring-blue-500/60
+                                    focus:ring-[#C66A4A]/60
                                 "
                             />
                         </div>
@@ -326,11 +325,11 @@ function Conversations() {
                                         rounded-full
                                         border-2
                                         border-white/60
-                                        border-t-blue-600
+                                        border-t-[#C66A4A]
                                     "
                                 />
 
-                                <p className="text-sm font-medium text-slate-700">
+                                <p className="text-sm font-medium text-[#172A46]">
                                     Loading conversations...
                                 </p>
                             </div>
@@ -362,18 +361,18 @@ function Conversations() {
                                         items-center
                                         justify-center
                                         rounded-full
-                                        bg-blue-600/90
+                                        bg-[#C66A4A]/90
                                         shadow-lg
                                     "
                                 >
                                     <MessageSquare className="h-7 w-7 text-white" />
                                 </div>
 
-                                <h2 className="mt-5 text-xl font-semibold text-slate-950">
+                                <h2 className="mt-5 text-xl font-semibold text-[#172A46]">
                                     No conversations yet
                                 </h2>
 
-                                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-700">
+                                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#172A46]/80">
                                     {isCustomer
                                         ? "Your conversations with service providers will appear here."
                                         : "Your conversations with customers will appear here."}
@@ -398,13 +397,13 @@ function Conversations() {
                                     backdrop-blur-md
                                 "
                             >
-                                <Search className="mx-auto h-7 w-7 text-slate-600" />
+                                <Search className="mx-auto h-7 w-7 text-[#172A46]/70" />
 
-                                <h2 className="mt-4 text-lg font-semibold text-slate-950">
+                                <h2 className="mt-4 text-lg font-semibold text-[#172A46]">
                                     No conversations found
                                 </h2>
 
-                                <p className="mt-2 text-sm text-slate-700">
+                                <p className="mt-2 text-sm text-[#172A46]/80">
                                     Try searching for a different{" "}
                                     {isCustomer ? "provider" : "customer"}.
                                 </p>
@@ -437,11 +436,11 @@ function Conversations() {
                                     "
                                 >
                                     <div className="flex items-center justify-between">
-                                        <p className="text-sm font-semibold text-slate-900">
+                                        <p className="text-sm font-semibold text-[#172A46]">
                                             Recent conversations
                                         </p>
 
-                                        <p className="text-xs font-medium text-slate-600">
+                                        <p className="text-xs font-medium text-[#172A46]/70">
                                             {filteredConversations.length} shown
                                         </p>
                                     </div>
@@ -481,7 +480,7 @@ function Conversations() {
                                                         sm:py-5
                                                         ${
                                                             unread > 0
-                                                                ? "bg-blue-500/10"
+                                                                ? "bg-[#C66A4A]/10"
                                                                 : ""
                                                         }
                                                     `}
@@ -503,8 +502,8 @@ function Conversations() {
                                                                 shadow-md
                                                                 ${
                                                                     unread > 0
-                                                                        ? "bg-blue-600 text-white"
-                                                                        : "bg-slate-900/90 text-white"
+                                                                        ? "bg-[#C66A4A] text-white"
+                                                                        : "bg-[#172A46]/90 text-white"
                                                                 }
                                                             `}
                                                         >
@@ -523,8 +522,8 @@ function Conversations() {
                                                                         sm:text-base
                                                                         ${
                                                                             unread > 0
-                                                                                ? "font-bold text-slate-950"
-                                                                                : "font-semibold text-slate-900"
+                                                                                ? "font-bold text-[#172A46]"
+                                                                                : "font-semibold text-[#172A46]/90"
                                                                         }
                                                                     `}
                                                                 >
@@ -533,7 +532,7 @@ function Conversations() {
 
                                                                 <div className="flex shrink-0 items-center gap-2">
                                                                     {unread > 0 && (
-                                                                        <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-blue-600 px-2 text-[11px] font-bold text-white shadow-sm">
+                                                                        <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#C66A4A] px-2 text-[11px] font-bold text-white shadow-sm">
                                                                             {unread > 99
                                                                                 ? "99+"
                                                                                 : unread}
@@ -541,7 +540,7 @@ function Conversations() {
                                                                     )}
 
                                                                     {conversation.is_archived && (
-                                                                        <span className="hidden items-center gap-1 rounded-md bg-white/40 px-2 py-1 text-xs font-medium text-slate-600 sm:inline-flex">
+                                                                        <span className="hidden items-center gap-1 rounded-md bg-white/40 px-2 py-1 text-xs font-medium text-[#172A46]/70 sm:inline-flex">
                                                                             <Archive className="h-3.5 w-3.5" />
                                                                             Archived
                                                                         </span>
@@ -549,13 +548,13 @@ function Conversations() {
                                                                 </div>
                                                             </div>
 
-                                                            <p className="mt-1 truncate text-sm text-slate-700">
+                                                            <p className="mt-1 truncate text-sm text-[#172A46]/80">
                                                                 {isCustomer
                                                                     ? "Service provider"
                                                                     : "Customer"}
                                                             </p>
 
-                                                            <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600">
+                                                            <div className="mt-2 flex items-center gap-1.5 text-xs text-[#172A46]/70">
                                                                 <Clock className="h-3.5 w-3.5 shrink-0" />
 
                                                                 <span className="truncate">
@@ -573,10 +572,10 @@ function Conversations() {
                                                                 h-5
                                                                 w-5
                                                                 shrink-0
-                                                                text-slate-500
+                                                                text-[#172A46]/60
                                                                 transition
                                                                 group-hover:translate-x-1
-                                                                group-hover:text-blue-600
+                                                                group-hover:text-[#C66A4A]
                                                                 sm:block
                                                             "
                                                         />
