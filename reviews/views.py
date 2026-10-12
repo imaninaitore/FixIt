@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db.models import Avg, Count
 
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -13,14 +13,15 @@ from .serializers import ReviewSerializer
 
 
 @api_view(["GET", "POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def provider_reviews(request, provider_id):
     """
     GET:
-        Return all reviews written for a specific provider.
+        Publicly return all reviews written for a specific provider.
 
     POST:
-        Create a review for a specific provider.
+        Allow authenticated customers to create a review for a
+        completed service request belonging to them.
     """
 
     try:
@@ -200,7 +201,7 @@ def pending_reviews(request):
 def review_detail(request, review_id):
     """
     GET:
-        Return one review.
+        Return one review to an authenticated user.
 
     PATCH:
         Update the logged-in customer's own review.
@@ -259,10 +260,10 @@ def review_detail(request, review_id):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def provider_rating_summary(request, provider_id):
     """
-    Return the average rating and total number of reviews
+    Publicly return the average rating and total number of reviews
     for a provider.
     """
 
