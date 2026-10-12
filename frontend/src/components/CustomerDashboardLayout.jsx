@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
@@ -6,7 +6,6 @@ import {
     ClipboardList,
     MessageSquare,
     Star,
-    User,
     Home,
     ChevronLeft,
     ChevronRight,
@@ -16,12 +15,59 @@ import {
 } from "lucide-react";
 
 import { logoutUser } from "../services/authService";
+import { getConversations } from "../services/messagingService";
 
 function CustomerDashboardLayout() {
     const navigate = useNavigate();
 
     const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [unreadMessages, setUnreadMessages] = useState(0);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadUnreadMessages() {
+            try {
+                const data = await getConversations();
+
+                const conversations = Array.isArray(data)
+                    ? data
+                    : data?.results || data?.conversations || [];
+
+                const totalUnread = conversations.reduce(
+                    (total, conversation) => {
+                        const unread =
+                            conversation.unread_count ??
+                            conversation.unread_messages_count ??
+                            conversation.unread_messages ??
+                            0;
+
+                        return total + (Number(unread) || 0);
+                    },
+                    0
+                );
+
+                if (isMounted) {
+                    setUnreadMessages(totalUnread);
+                }
+            } catch (error) {
+                console.error(
+                    "Failed to load unread message count:",
+                    error
+                );
+            }
+        }
+
+        loadUnreadMessages();
+
+        const intervalId = setInterval(loadUnreadMessages, 10000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, []);
 
     const navigationItems = [
         {
@@ -49,11 +95,6 @@ function CustomerDashboardLayout() {
             path: "/reviews",
             icon: Star,
         },
-        {
-            name: "My Profile",
-            path: "/profile",
-            icon: User,
-        },
     ];
 
     const closeMobileSidebar = () => {
@@ -67,7 +108,6 @@ function CustomerDashboardLayout() {
 
     return (
         <div className="min-h-screen bg-[#F4EDE5]">
-
             {/* Mobile menu button */}
             <button
                 type="button"
@@ -89,7 +129,6 @@ function CustomerDashboardLayout() {
             )}
 
             <div className="flex min-h-screen">
-
                 {/* Desktop sidebar */}
                 <aside
                     className={`
@@ -130,6 +169,7 @@ function CustomerDashboardLayout() {
                         <nav className="space-y-2">
                             {navigationItems.map((item) => {
                                 const Icon = item.icon;
+                                const isMessages = item.path === "/messages";
 
                                 return (
                                     <NavLink
@@ -169,10 +209,37 @@ function CustomerDashboardLayout() {
                                                 />
 
                                                 {!collapsed && (
-                                                    <span className="text-sm font-medium">
-                                                        {item.name}
+                                                    <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                                        <span className="text-sm font-medium">
+                                                            {item.name}
+                                                        </span>
+
+                                                        {isMessages &&
+                                                            unreadMessages > 0 && (
+                                                                <span
+                                                                    className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#C66A4A] px-1.5 text-[11px] font-bold leading-none text-white ring-1 ring-white/20"
+                                                                    aria-label={`${unreadMessages} unread messages`}
+                                                                >
+                                                                    {unreadMessages > 99
+                                                                        ? "99+"
+                                                                        : unreadMessages}
+                                                                </span>
+                                                            )}
                                                     </span>
                                                 )}
+
+                                                {collapsed &&
+                                                    isMessages &&
+                                                    unreadMessages > 0 && (
+                                                        <span
+                                                            className="absolute ml-9 -mt-7 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#C66A4A] px-1 text-[9px] font-bold text-white ring-2 ring-[#172A46]"
+                                                            aria-label={`${unreadMessages} unread messages`}
+                                                        >
+                                                            {unreadMessages > 99
+                                                                ? "99+"
+                                                                : unreadMessages}
+                                                        </span>
+                                                    )}
                                             </>
                                         )}
                                     </NavLink>
@@ -183,7 +250,6 @@ function CustomerDashboardLayout() {
 
                     {/* Bottom controls */}
                     <div className="shrink-0 space-y-2 border-t border-[#D9B99B]/20 p-3">
-
                         {/* Home */}
                         <button
                             type="button"
@@ -319,6 +385,7 @@ function CustomerDashboardLayout() {
                         <nav className="space-y-2">
                             {navigationItems.map((item) => {
                                 const Icon = item.icon;
+                                const isMessages = item.path === "/messages";
 
                                 return (
                                     <NavLink
@@ -344,7 +411,7 @@ function CustomerDashboardLayout() {
                                             <>
                                                 <Icon
                                                     className={`
-                                                        h-5 w-5
+                                                        h-5 w-5 shrink-0
                                                         ${
                                                             isActive
                                                                 ? "text-white"
@@ -353,7 +420,21 @@ function CustomerDashboardLayout() {
                                                     `}
                                                 />
 
-                                                <span>{item.name}</span>
+                                                <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                                                    <span>{item.name}</span>
+
+                                                    {isMessages &&
+                                                        unreadMessages > 0 && (
+                                                            <span
+                                                                className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[#C66A4A] px-1.5 text-[11px] font-bold leading-none text-white ring-1 ring-white/20"
+                                                                aria-label={`${unreadMessages} unread messages`}
+                                                            >
+                                                                {unreadMessages > 99
+                                                                    ? "99+"
+                                                                    : unreadMessages}
+                                                            </span>
+                                                        )}
+                                                </span>
                                             </>
                                         )}
                                     </NavLink>
@@ -364,7 +445,6 @@ function CustomerDashboardLayout() {
 
                     {/* Mobile bottom controls */}
                     <div className="shrink-0 border-t border-[#D9B99B]/20 p-3">
-
                         {/* Home */}
                         <button
                             type="button"
@@ -393,7 +473,6 @@ function CustomerDashboardLayout() {
                                 Logout
                             </span>
                         </button>
-
                     </div>
                 </aside>
 
