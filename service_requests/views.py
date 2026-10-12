@@ -374,7 +374,6 @@ def reject_service_request(request, request_id):
         status=status.HTTP_200_OK
     )
 
-
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_service_request_status(request, request_id):
@@ -383,7 +382,7 @@ def update_service_request_status(request, request_id):
         id=request_id
     )
 
-    # Only the assigned provider can start the service.
+    # Only the assigned provider can update the service status.
     if request.user != service_request.provider:
         return Response(
             {
@@ -402,30 +401,44 @@ def update_service_request_status(request, request_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Providers may start work, but only customers can confirm completion.
-    if new_status != "in_progress":
+    # Start work.
+    if new_status == "in_progress":
+        if service_request.status != "accepted":
+            return Response(
+                {
+                    "error": (
+                        "Only accepted requests can be moved to in_progress."
+                    ),
+                    "current_status": service_request.status
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # Mark the service as completed.
+    elif new_status == "completed":
+        if service_request.status != "in_progress":
+            return Response(
+                {
+                    "error": (
+                        "Only in-progress requests can be marked completed."
+                    ),
+                    "current_status": service_request.status
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    else:
         return Response(
             {
                 "error": (
-                    "Providers can only move accepted requests "
-                    "to in_progress. Customers must confirm completion."
+                    "Providers can only move requests to in_progress "
+                    "or completed through this endpoint."
                 )
             },
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if service_request.status != "accepted":
-        return Response(
-            {
-                "error": (
-                    "Only accepted requests can be moved to in_progress."
-                ),
-                "current_status": service_request.status
-            },
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    service_request.status = "in_progress"
+    service_request.status = new_status
     service_request.save()
 
     serializer = ServiceRequestSerializer(
