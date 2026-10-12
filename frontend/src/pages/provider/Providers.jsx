@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -19,12 +18,69 @@ import {
     getProviderCategories,
 } from "../../services/providerService";
 
+const counties = [
+    "Baringo",
+    "Bomet",
+    "Bungoma",
+    "Busia",
+    "Elgeyo-Marakwet",
+    "Embu",
+    "Garissa",
+    "Homa Bay",
+    "Isiolo",
+    "Kajiado",
+    "Kakamega",
+    "Kericho",
+    "Kiambu",
+    "Kilifi",
+    "Kirinyaga",
+    "Kisii",
+    "Kisumu",
+    "Kitui",
+    "Kwale",
+    "Laikipia",
+    "Lamu",
+    "Machakos",
+    "Makueni",
+    "Mandera",
+    "Marsabit",
+    "Meru",
+    "Migori",
+    "Mombasa",
+    "Murang'a",
+    "Nairobi",
+    "Nakuru",
+    "Nandi",
+    "Narok",
+    "Nyamira",
+    "Nyandarua",
+    "Nyeri",
+    "Samburu",
+    "Siaya",
+    "Taita-Taveta",
+    "Tana River",
+    "Tharaka-Nithi",
+    "Trans Nzoia",
+    "Turkana",
+    "Uasin Gishu",
+    "Vihiga",
+    "Wajir",
+    "West Pokot",
+];
+
+function normalizeLocation(value) {
+    return String(value || "")
+        .trim()
+        .replace(/\s+county$/i, "")
+        .trim()
+        .toLowerCase();
+}
+
 function Providers() {
     const [providers, setProviders] = useState([]);
     const [categories, setCategories] = useState([]);
 
     const [search, setSearch] = useState("");
-
     const [currentPage, setCurrentPage] = useState(1);
 
     const [loading, setLoading] = useState(true);
@@ -35,8 +91,9 @@ function Providers() {
 
     const providersPerPage = 8;
 
-    // Read the active category directly from the URL
+    // Read active filters directly from the URL.
     const category = searchParams.get("category") || "all";
+    const selectedLocation = searchParams.get("location") || "all";
 
     useEffect(() => {
         const searchFromUrl = searchParams.get("search") || "";
@@ -58,15 +115,10 @@ function Providers() {
             const data = await getProviderCategories();
 
             if (Array.isArray(data)) {
-                setCategories(
-                    [...new Set(data.filter(Boolean))]
-                );
+                setCategories([...new Set(data.filter(Boolean))]);
             }
         } catch (err) {
-            console.error(
-                "Failed to load provider categories:",
-                err
-            );
+            console.error("Failed to load provider categories:", err);
         }
     }
 
@@ -75,20 +127,8 @@ function Providers() {
             setLoading(true);
             setError("");
 
-            // Get the category directly from the current URL
-            const categoryFromUrl =
-                searchParams.get("category") || "";
-
-            const searchFromUrl =
-                searchParams.get("search") || "";
-
-            console.log(
-                "Loading providers with:",
-                {
-                    search: searchFromUrl,
-                    category: categoryFromUrl,
-                }
-            );
+            const categoryFromUrl = searchParams.get("category") || "";
+            const searchFromUrl = searchParams.get("search") || "";
 
             const data = await getProviders({
                 search: searchFromUrl.trim(),
@@ -100,22 +140,13 @@ function Providers() {
                 return;
             }
 
-            console.log(
-                "Providers returned:",
-                data
-            );
-
             setProviders(data);
             setCurrentPage(1);
         } catch (err) {
-            console.error(
-                "Failed to load service providers:",
-                err
-            );
+            console.error("Failed to load service providers:", err);
 
             setError(
-                err.message ||
-                    "Failed to load service providers."
+                err.message || "Failed to load service providers."
             );
 
             setProviders([]);
@@ -124,81 +155,51 @@ function Providers() {
         }
     }
 
-    function clearSearch() {
-        const params = new URLSearchParams(
-            searchParams
-        );
+    function updateFilters(updates) {
+        const params = new URLSearchParams(searchParams);
 
-        params.delete("search");
+        Object.entries(updates).forEach(([key, value]) => {
+            if (!value || value === "all") {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
 
         navigate(
             params.toString()
                 ? `/providers?${params.toString()}`
                 : "/providers",
-            {
-                replace: true,
-            }
+            { replace: true }
         );
 
         setCurrentPage(1);
+    }
+
+    function clearSearch() {
+        updateFilters({ search: "" });
     }
 
     function clearFilters() {
         setSearch("");
         setCurrentPage(1);
 
-        navigate("/providers", {
-            replace: true,
-        });
+        navigate("/providers", { replace: true });
     }
 
     function handleSearchChange(event) {
         const value = event.target.value;
 
         setSearch(value);
-
-        const params = new URLSearchParams(
-            searchParams
-        );
-
-        if (value.trim()) {
-            params.set("search", value);
-        } else {
-            params.delete("search");
-        }
-
-        navigate(
-            params.toString()
-                ? `/providers?${params.toString()}`
-                : "/providers",
-            {
-                replace: true,
-            }
-        );
+        updateFilters({ search: value.trim() ? value : "" });
     }
 
     function handleCategoryChange(event) {
-        const selectedCategory =
-            event.target.value;
+        updateFilters({ category: event.target.value });
+    }
 
-        setCurrentPage(1);
-
-        if (selectedCategory === "all") {
-            navigate("/providers", {
-                replace: true,
-            });
-
-            return;
-        }
-
-        navigate(
-            `/providers?category=${encodeURIComponent(
-                selectedCategory
-            )}`,
-            {
-                replace: true,
-            }
-        );
+    function handleLocationChange(event) {
+        updateFilters({ location: event.target.value });
     }
 
     function getCategoryDisplayName(categoryName) {
@@ -213,21 +214,29 @@ function Providers() {
         return categoryName;
     }
 
+    // Apply the county filter alongside the existing API filters.
+    const filteredProviders = providers.filter((provider) => {
+        if (selectedLocation === "all") {
+            return true;
+        }
+
+        return (
+            normalizeLocation(provider.location) ===
+            normalizeLocation(selectedLocation)
+        );
+    });
+
     const totalPages = Math.ceil(
-        providers.length / providersPerPage
+        filteredProviders.length / providersPerPage
     );
 
-    const startIndex =
-        (currentPage - 1) * providersPerPage;
+    const startIndex = (currentPage - 1) * providersPerPage;
+    const endIndex = startIndex + providersPerPage;
 
-    const endIndex =
-        startIndex + providersPerPage;
-
-    const currentProviders =
-        providers.slice(
-            startIndex,
-            endIndex
-        );
+    const currentProviders = filteredProviders.slice(
+        startIndex,
+        endIndex
+    );
 
     function goToPage(page) {
         if (page < 1 || page > totalPages) {
@@ -242,6 +251,11 @@ function Providers() {
         });
     }
 
+    const hasActiveFilters =
+        Boolean(search) ||
+        category !== "all" ||
+        selectedLocation !== "all";
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#F7F0E6] via-[#FFFCF7] to-[#EADCC8]">
             <Navbar />
@@ -250,8 +264,7 @@ function Providers() {
             <section
                 className="relative bg-cover bg-center"
                 style={{
-                    backgroundImage:
-                        "url('/images/bg.png')",
+                    backgroundImage: "url('/images/bg.png')",
                 }}
             >
                 <div className="absolute inset-0 bg-[#172638]/80" />
@@ -314,14 +327,7 @@ function Providers() {
                     </p>
 
                     {/* Search Container */}
-                    <div
-                        className="
-                            mx-auto
-                            mt-9
-                            w-full
-                            max-w-4xl
-                        "
-                    >
+                    <div className="mx-auto mt-9 w-full max-w-4xl">
                         <div
                             className="
                                 flex
@@ -335,10 +341,12 @@ function Providers() {
                                 shadow-2xl
                                 backdrop-blur-md
                                 md:flex-row
+                                md:flex-wrap
+                                lg:flex-nowrap
                             "
                         >
                             {/* Search Input */}
-                            <div className="relative flex-1">
+                            <div className="relative min-w-0 flex-1">
                                 <Search
                                     className="
                                         absolute
@@ -354,9 +362,7 @@ function Providers() {
                                 <input
                                     type="text"
                                     value={search}
-                                    onChange={
-                                        handleSearchChange
-                                    }
+                                    onChange={handleSearchChange}
                                     placeholder="Search provider, service or location..."
                                     className="
                                         h-12
@@ -382,6 +388,7 @@ function Providers() {
                                     <button
                                         type="button"
                                         onClick={clearSearch}
+                                        aria-label="Clear search"
                                         className="
                                             absolute
                                             right-4
@@ -398,13 +405,7 @@ function Providers() {
                             </div>
 
                             {/* Category */}
-                            <div
-                                className="
-                                    relative
-                                    w-full
-                                    md:w-60
-                                "
-                            >
+                            <div className="relative w-full md:w-[calc(50%-0.375rem)] lg:w-56 lg:shrink-0">
                                 <Briefcase
                                     className="
                                         pointer-events-none
@@ -421,9 +422,8 @@ function Providers() {
 
                                 <select
                                     value={category}
-                                    onChange={
-                                        handleCategoryChange
-                                    }
+                                    onChange={handleCategoryChange}
+                                    aria-label="Filter by service category"
                                     className="
                                         h-12
                                         w-full
@@ -447,18 +447,78 @@ function Providers() {
                                         All Categories
                                     </option>
 
-                                    {categories.map(
-                                        (item) => (
-                                            <option
-                                                key={item}
-                                                value={item}
-                                            >
-                                                {getCategoryDisplayName(
-                                                    item
-                                                )}
-                                            </option>
-                                        )
-                                    )}
+                                    {categories.map((item) => (
+                                        <option key={item} value={item}>
+                                            {getCategoryDisplayName(item)}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <ChevronDown
+                                    className="
+                                        pointer-events-none
+                                        absolute
+                                        right-4
+                                        top-1/2
+                                        h-4
+                                        w-4
+                                        -translate-y-1/2
+                                        text-slate-400
+                                    "
+                                />
+                            </div>
+
+                            {/* County Filter */}
+                            <div className="relative w-full md:w-[calc(50%-0.375rem)] lg:w-56 lg:shrink-0">
+                                <MapPin
+                                    className="
+                                        pointer-events-none
+                                        absolute
+                                        left-4
+                                        top-1/2
+                                        z-10
+                                        h-4
+                                        w-4
+                                        -translate-y-1/2
+                                        text-slate-400
+                                    "
+                                />
+
+                                <select
+                                    value={selectedLocation}
+                                    onChange={handleLocationChange}
+                                    aria-label="Filter by county"
+                                    className="
+                                        h-12
+                                        w-full
+                                        appearance-none
+                                        rounded-xl
+                                        border
+                                        border-white/20
+                                        bg-white
+                                        pl-11
+                                        pr-10
+                                        text-sm
+                                        text-[#51483F]
+                                        shadow-sm
+                                        outline-none
+                                        focus:border-[#B85C3B]
+                                        focus:ring-2
+                                        focus:ring-[#B85C3B]/20
+                                    "
+                                >
+                                    <option value="all">
+                                        All Counties
+                                    </option>
+
+                                    {counties.map((county) => (
+                                        <option
+                                            key={county}
+                                            value={county}
+                                        >
+                                            {county} County
+                                        </option>
+                                    ))}
                                 </select>
 
                                 <ChevronDown
@@ -518,25 +578,21 @@ function Providers() {
                         </h2>
 
                         <p className="mt-1.5 text-sm text-[#74695F]">
-                            {search ||
-                            category !== "all"
-                                ? `${providers.length} provider${
-                                      providers.length ===
-                                      1
+                            {hasActiveFilters
+                                ? `${filteredProviders.length} provider${
+                                      filteredProviders.length === 1
                                           ? ""
                                           : "s"
                                   } found`
-                                : `${providers.length} provider${
-                                      providers.length ===
-                                      1
+                                : `${filteredProviders.length} provider${
+                                      filteredProviders.length === 1
                                           ? ""
                                           : "s"
                                   } available`}
                         </p>
                     </div>
 
-                    {(search ||
-                        category !== "all") && (
+                    {hasActiveFilters && (
                         <button
                             type="button"
                             onClick={clearFilters}
@@ -634,7 +690,7 @@ function Providers() {
                 {/* No Providers */}
                 {!loading &&
                     !error &&
-                    providers.length === 0 && (
+                    filteredProviders.length === 0 && (
                         <div
                             className="
                                 rounded-2xl
@@ -647,26 +703,21 @@ function Providers() {
                             "
                         >
                             <h2 className="font-semibold text-[#172638]">
-                                {search ||
-                                category !== "all"
+                                {hasActiveFilters
                                     ? "No providers found"
                                     : "No providers available"}
                             </h2>
 
                             <p className="mt-2 text-sm text-[#74695F]">
-                                {search ||
-                                category !== "all"
-                                    ? "Try searching for a different provider, service, location, or category."
+                                {hasActiveFilters
+                                    ? "Try a different search, service category, or county."
                                     : "There are currently no approved service providers available."}
                             </p>
 
-                            {(search ||
-                                category !== "all") && (
+                            {hasActiveFilters && (
                                 <button
                                     type="button"
-                                    onClick={
-                                        clearFilters
-                                    }
+                                    onClick={clearFilters}
                                     className="
                                         mt-5
                                         text-sm
@@ -690,151 +741,165 @@ function Providers() {
                             className="
                                 grid
                                 grid-cols-1
-                                gap-4
+                                gap-3
                                 sm:grid-cols-2
+                                sm:gap-4
                                 lg:grid-cols-3
                                 xl:grid-cols-4
                             "
                         >
-                            {currentProviders.map(
-                                (provider) => (
-                                    <div
-                                        key={provider.id}
-                                        className="
-                                            flex
-                                            min-h-[190px]
-                                            flex-col
-                                            justify-between
-                                            rounded-xl
-                                            border
-                                            border-[#E7DCCB]
-                                            bg-[#FFFCF7]
-                                            p-5
-                                            shadow-sm
-                                            transition
-                                            duration-200
-                                            hover:-translate-y-0.5
-                                            hover:border-[#B85C3B]/50
-                                            hover:shadow-md
-                                        "
-                                    >
-                                        <div>
-                                            {/* Initial + Name */}
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    className="
-                                                        flex
-                                                        h-10
-                                                        w-10
-                                                        shrink-0
-                                                        items-center
-                                                        justify-center
-                                                        rounded-lg
-                                                        bg-[#F3E8D8]
-                                                        text-base
-                                                        font-bold
-                                                        text-[#B85C3B]
-                                                    "
-                                                >
-                                                    {provider
-                                                        .business_name
-                                                        ?.charAt(
-                                                            0
-                                                        )
-                                                        .toUpperCase() ||
-                                                        "P"}
-                                                </div>
-
-                                                <h3
-                                                    className="
-                                                        min-w-0
-                                                        truncate
-                                                        text-sm
-                                                        font-semibold
-                                                        text-[#172638]
-                                                    "
-                                                >
-                                                    {provider.business_name ||
-                                                        "Unnamed Provider"}
-                                                </h3>
-                                            </div>
-
-                                            {/* Service */}
+                            {currentProviders.map((provider) => (
+                                <div
+                                    key={provider.id}
+                                    className="
+                                        flex
+                                        min-w-0
+                                        flex-col
+                                        justify-between
+                                        rounded-xl
+                                        border
+                                        border-[#E7DCCB]
+                                        bg-[#FFFCF7]
+                                        p-3
+                                        shadow-sm
+                                        transition
+                                        duration-200
+                                        hover:-translate-y-0.5
+                                        hover:border-[#B85C3B]/50
+                                        hover:shadow-md
+                                        sm:min-h-[190px]
+                                        sm:p-5
+                                    "
+                                >
+                                    <div>
+                                        {/* Initial + Name */}
+                                        <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
                                             <div
                                                 className="
-                                                    mt-5
                                                     flex
+                                                    h-8
+                                                    w-8
+                                                    shrink-0
                                                     items-center
-                                                    gap-2
+                                                    justify-center
+                                                    rounded-lg
+                                                    bg-[#F3E8D8]
                                                     text-sm
-                                                    text-[#51483F]
+                                                    font-bold
+                                                    text-[#B85C3B]
+                                                    sm:h-10
+                                                    sm:w-10
+                                                    sm:text-base
                                                 "
                                             >
-                                                <Briefcase className="h-4 w-4 shrink-0 text-[#B85C3B]" />
-
-                                                <span className="truncate">
-                                                    {getCategoryDisplayName(
-                                                        provider.service_category
-                                                    ) ||
-                                                        "Service not specified"}
-                                                </span>
+                                                {provider.business_name
+                                                    ?.charAt(0)
+                                                    .toUpperCase() || "P"}
                                             </div>
 
-                                            {/* Location */}
-                                            <div
+                                            <h3
                                                 className="
-                                                    mt-3
-                                                    flex
-                                                    items-center
-                                                    gap-2
-                                                    text-sm
-                                                    text-[#74695F]
+                                                    min-w-0
+                                                    flex-1
+                                                    break-words
+                                                    text-xs
+                                                    font-semibold
+                                                    leading-5
+                                                    text-[#172638]
+                                                    sm:text-sm
                                                 "
                                             >
-                                                <MapPin className="h-4 w-4 shrink-0 text-[#B85C3B]" />
-
-                                                <span className="truncate">
-                                                    {provider.location ||
-                                                        "Location not provided"}
-                                                </span>
-                                            </div>
+                                                {provider.business_name ||
+                                                    "Unnamed Provider"}
+                                            </h3>
                                         </div>
 
-                                        {/* View Details */}
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                navigate(
-                                                    `/providers/${provider.id}`
-                                                )
-                                            }
+                                        {/* Service */}
+                                        <div
                                             className="
-                                                mt-5
-                                                w-full
-                                                rounded-lg
-                                                bg-[#B85C3B]
-                                                px-4
-                                                py-2.5
-                                                text-sm
-                                                font-medium
-                                                text-white
-                                                transition
-                                                hover:bg-[#9F4B30]
+                                                mt-3
+                                                flex
+                                                min-w-0
+                                                items-start
+                                                gap-2
+                                                text-xs
+                                                text-[#51483F]
+                                                sm:mt-5
+                                                sm:text-sm
                                             "
                                         >
-                                            View Details
-                                        </button>
+                                            <Briefcase className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#B85C3B] sm:h-4 sm:w-4" />
+
+                                            <span className="min-w-0 break-words">
+                                                {getCategoryDisplayName(
+                                                    provider.service_category
+                                                ) || "Service not specified"}
+                                            </span>
+                                        </div>
+
+                                        {/* Location */}
+                                        <div
+                                            className="
+                                                mt-2
+                                                flex
+                                                min-w-0
+                                                items-start
+                                                gap-2
+                                                text-xs
+                                                text-[#74695F]
+                                                sm:mt-3
+                                                sm:text-sm
+                                            "
+                                        >
+                                            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#B85C3B] sm:h-4 sm:w-4" />
+
+                                            <span className="min-w-0 break-words">
+                                                {provider.location ||
+                                                    "Location not provided"}
+                                            </span>
+                                        </div>
                                     </div>
-                                )
-                            )}
+
+                                    {/* View Details */}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            navigate(
+                                                `/providers/${provider.id}`
+                                            )
+                                        }
+                                        className="
+                                            mt-3
+                                            w-full
+                                            rounded-lg
+                                            bg-[#B85C3B]
+                                            px-3
+                                            py-2
+                                            text-xs
+                                            font-medium
+                                            text-white
+                                            transition
+                                            hover:bg-[#9F4B30]
+                                            focus:outline-none
+                                            focus:ring-2
+                                            focus:ring-[#B85C3B]/40
+                                            focus:ring-offset-2
+                                            sm:mt-5
+                                            sm:py-2.5
+                                            sm:text-sm
+                                        "
+                                    >
+                                        View Details
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     )}
 
                 {/* Pagination */}
                 {!loading &&
                     !error &&
-                    providers.length >
-                        providersPerPage && (
+                    filteredProviders.length > providersPerPage && (
                         <div
                             className="
                                 mt-9
@@ -846,7 +911,7 @@ function Providers() {
                                 sm:justify-between
                             "
                         >
-                            <p className="text-xs text-[#74695F] sm:text-sm">
+                            <p className="text-center text-xs text-[#74695F] sm:text-left sm:text-sm">
                                 Showing{" "}
                                 <span className="font-medium text-[#172638]">
                                     {startIndex + 1}
@@ -855,31 +920,29 @@ function Providers() {
                                 <span className="font-medium text-[#172638]">
                                     {Math.min(
                                         endIndex,
-                                        providers.length
+                                        filteredProviders.length
                                     )}
                                 </span>{" "}
                                 of{" "}
                                 <span className="font-medium text-[#172638]">
-                                    {providers.length}
+                                    {filteredProviders.length}
                                 </span>{" "}
                                 providers
                             </p>
 
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex max-w-full items-center gap-1.5">
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        goToPage(
-                                            currentPage - 1
-                                        )
+                                        goToPage(currentPage - 1)
                                     }
-                                    disabled={
-                                        currentPage === 1
-                                    }
+                                    disabled={currentPage === 1}
+                                    aria-label="Previous page"
                                     className="
                                         flex
                                         h-9
                                         w-9
+                                        shrink-0
                                         items-center
                                         justify-center
                                         rounded-lg
@@ -898,22 +961,24 @@ function Providers() {
                                 </button>
 
                                 {Array.from(
-                                    {
-                                        length: totalPages,
-                                    },
-                                    (_, index) =>
-                                        index + 1
+                                    { length: totalPages },
+                                    (_, index) => index + 1
                                 ).map((page) => (
                                     <button
                                         type="button"
                                         key={page}
-                                        onClick={() =>
-                                            goToPage(page)
+                                        onClick={() => goToPage(page)}
+                                        aria-label={`Page ${page}`}
+                                        aria-current={
+                                            currentPage === page
+                                                ? "page"
+                                                : undefined
                                         }
                                         className={`
                                             flex
                                             h-9
                                             min-w-9
+                                            shrink-0
                                             items-center
                                             justify-center
                                             rounded-lg
@@ -922,8 +987,7 @@ function Providers() {
                                             font-medium
                                             transition
                                             ${
-                                                currentPage ===
-                                                page
+                                                currentPage === page
                                                     ? "bg-[#172638] text-white"
                                                     : "border border-[#E7DCCB] bg-[#FFFCF7] text-[#51483F] hover:border-[#B85C3B]/50 hover:text-[#B85C3B]"
                                             }
@@ -936,18 +1000,15 @@ function Providers() {
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        goToPage(
-                                            currentPage + 1
-                                        )
+                                        goToPage(currentPage + 1)
                                     }
-                                    disabled={
-                                        currentPage ===
-                                        totalPages
-                                    }
+                                    disabled={currentPage === totalPages}
+                                    aria-label="Next page"
                                     className="
                                         flex
                                         h-9
                                         w-9
+                                        shrink-0
                                         items-center
                                         justify-center
                                         rounded-lg
