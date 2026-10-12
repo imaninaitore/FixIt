@@ -249,9 +249,9 @@ const loadProviderData = async () => {
         return location.pathname.startsWith(path);
     };
 
-    const reviewsPath = profile?.id
-        ? `/providers/${profile.id}/reviews`
-        : "/provider-dashboard";
+    const reviewsPath = profile?.user
+    ? `/providers/${profile.user}/reviews`
+    : "/provider-dashboard";
 
     const sidebarWidth = sidebarCollapsed ? "md:w-20" : "md:w-64";
     const mainMargin = sidebarCollapsed ? "md:ml-20" : "md:ml-64";
