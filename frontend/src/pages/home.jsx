@@ -73,8 +73,8 @@ function Home() {
                     bg-cover
                     bg-center
                     bg-no-repeat
-                    sm:min-h-[100px]
-                    lg:min-h-[200px]
+                    sm:min-h-[400px]
+                    lg:min-h-[480px]
                 "
                 style={{
                     backgroundImage: "url('/images/bg.png')",
@@ -94,14 +94,15 @@ function Home() {
                         relative
                         z-10
                         flex
-                        min-h-[200px]
+                        min-h-[400px]
                         items-start
                         justify-center
-                        px-6
-                        pt-30
+                        px-5
+                        pt-24
                         text-center
-                        sm:min-h-[400px]
                         sm:px-8
+                        sm:pt-28
+                        md:pt-32
                         lg:min-h-[480px]
                         lg:pt-30
                     "
@@ -116,7 +117,6 @@ function Home() {
                                 uppercase
                                 tracking-[0.2em]
                                 text-white/80
-                                sm:mt-10
                                 sm:text-sm
                             "
                         >
@@ -131,7 +131,7 @@ function Home() {
                                 leading-tight
                                 tracking-tight
                                 text-white
-                                sm:text-xl
+                                sm:text-3xl
                                 lg:text-6xl
                             "
                         >
@@ -213,11 +213,11 @@ function Home() {
                         className="
                             rounded-2xl
                             bg-[#F8F6F1]
-                            px-4
-                            py-5
+                            px-3
+                            py-4
                             shadow-[0_12px_40px_rgba(0,0,0,0.16)]
-                            sm:px-6
-                            sm:py-3
+                            sm:px-5
+                            sm:py-5
                             lg:px-10
                             lg:py-5
                         "
@@ -230,7 +230,7 @@ function Home() {
                                 scrollbar-thin
                                 scrollbar-thumb-[#426A86]
                                 scrollbar-track-transparent
-                                sm:overflow-x-visible
+                                md:overflow-x-visible
                             "
                         >
                             <div
@@ -243,10 +243,13 @@ function Home() {
                                     sm:grid
                                     sm:w-full
                                     sm:grid-cols-2
-                                    sm:gap-x-2
+                                    sm:gap-x-4
                                     sm:gap-y-4
                                     md:grid-cols-4
+                                    md:gap-x-3
+                                    md:gap-y-5
                                     lg:grid-cols-8
+                                    lg:gap-x-2
                                 "
                             >
                                 {services.map((service) => {
@@ -346,8 +349,7 @@ function Home() {
                     lg:pt-32
                 "
             >
-               <About />
-
+                <About />
             </section>
 
             {/* Footer */}
