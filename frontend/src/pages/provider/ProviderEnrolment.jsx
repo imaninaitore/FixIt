@@ -614,8 +614,7 @@ function ProviderEnrolment() {
                                 Payment Information
                             </h2>
                             <p className="mt-1 text-sm text-slate-300">
-                                Enter the transaction details for your provider
-                                subscription payment.
+                                send enrolment fee of Ksh 50 to  <span className="text-orange-300 text-lg">0716869670</span>
                             </p>
 
                             <div className="mt-5 grid gap-5 md:grid-cols-2">
